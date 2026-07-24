@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from scripts.evaluate_ocr_model_comparison import (
+    _error_categories,
     configuration_eligibility,
     ocr_model_selection_score,
     select_simplest_material_configuration,
@@ -59,3 +60,51 @@ def test_rejected_custom_recognizer_is_not_default_eligible() -> None:
     )
     assert result["eligible_for_default"] is False
     assert result["default_ineligibility_reason"] == "general_custom_not_accepted"
+
+
+def test_error_categories_are_aggregate_only_and_deterministic() -> None:
+    counts = _error_categories(
+        {
+            "width": "800",
+            "height": "600",
+            "language": "tr",
+            "has_table": "true",
+        },
+        {},
+        {
+            "full_text": "Invoice total 12345",
+            "tables": [],
+            "warnings": [],
+            "ocr": {
+                "mean_confidence": 0.4,
+                "language_route": "general",
+                "recognition_retries": {
+                    "items": [{"selected_variant": "padding_B"}]
+                },
+            },
+        },
+        {"warnings": []},
+        detection={
+            "expected": 10,
+            "predicted": 8,
+            "true_positive": 6,
+            "small_expected": 4,
+            "small_matched": 1,
+        },
+        text={"character_errors": 2, "cer": 0.4},
+        extraction={
+            "entity": {"true_positive": 1, "expected": 2, "predicted": 2},
+            "relation": {"true_positive": 0, "expected": 1},
+        },
+        reference_text="Invoice total 123.45!",
+        reference_fields={"total_amount": "123.45"},
+        predicted_fields={},
+    )
+
+    assert counts["detection_missed_small_text"] == 3
+    assert counts["detection_table_miss_pages"] == 1
+    assert counts["recognition_decimal_confusions"] == 1
+    assert counts["recognition_crop_tight_retry_signals"] == 1
+    assert counts["downstream_ocr_wrong_entity_wrong_pages"] == 1
+    assert counts["downstream_relation_misses"] == 1
+    assert all(isinstance(value, int) for value in counts.values())

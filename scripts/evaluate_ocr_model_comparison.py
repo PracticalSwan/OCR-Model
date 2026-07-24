@@ -8,6 +8,7 @@ import csv
 import hashlib
 import json
 import math
+import re
 import subprocess
 import sys
 import time
@@ -482,6 +483,18 @@ def _evaluate_page(
         for field, value in (result.get("fields") or {}).items()
         if isinstance(value, Mapping)
     }
+    error_counts = _error_categories(
+        row,
+        annotation,
+        page,
+        result,
+        detection=detection,
+        text=text,
+        extraction=extraction,
+        reference_text=reference_text,
+        reference_fields=reference_fields,
+        predicted_fields=predicted_fields,
+    )
     return {
         "failed": failed,
         "error": error,
@@ -508,6 +521,7 @@ def _evaluate_page(
             == str(row.get("document_type", "")).casefold()
         ),
         "duration_seconds": time.perf_counter() - started,
+        "error_counts": error_counts,
     }
 
 
@@ -571,6 +585,13 @@ def _aggregate(observations: list[dict[str, Any]]) -> dict[str, Any]:
         for value in (retry.get("items") or [])
         if isinstance(value, Mapping)
     ]
+    error_names = sorted(
+        {
+            name
+            for item in observations
+            for name in (item.get("error_counts") or {})
+        }
+    )
     return {
         "polygon_precision": detector["precision"],
         "polygon_recall": detector["recall"],
@@ -627,8 +648,174 @@ def _aggregate(observations: list[dict[str, Any]]) -> dict[str, Any]:
             str(value.get("selected_variant", "")) != "original_rectified"
             for value in retry_items
         ),
+        "error_counts": {
+            name: sum(
+                int((item.get("error_counts") or {}).get(name, 0))
+                for item in observations
+            )
+            for name in error_names
+        },
         "normalized_efficiency_score": None,
         "selection_score": None,
+    }
+
+
+def _error_categories(
+    row: Mapping[str, str],
+    annotation: Mapping[str, Any],
+    page: Mapping[str, Any],
+    result: Mapping[str, Any],
+    *,
+    detection: Mapping[str, Any],
+    text: Mapping[str, Any],
+    extraction: Mapping[str, Any],
+    reference_text: str,
+    reference_fields: Mapping[str, str],
+    predicted_fields: Mapping[str, str],
+) -> dict[str, int]:
+    """Return aggregate-only, reproducible public error-category signals."""
+    predicted_text = str(page.get("full_text", ""))
+    reference_normalized = normalized_text(reference_text)
+    predicted_normalized = normalized_text(predicted_text)
+    expected_regions = int(detection.get("expected", 0))
+    predicted_regions = int(detection.get("predicted", 0))
+    true_positive = int(detection.get("true_positive", 0))
+    retries = dict((page.get("ocr") or {}).get("recognition_retries") or {})
+    retry_items = [
+        value
+        for value in (retries.get("items") or [])
+        if isinstance(value, Mapping)
+    ]
+    reference_numbers = re.findall(r"\d+(?:[.,]\d+)*", reference_normalized)
+    predicted_numbers = re.findall(r"\d+(?:[.,]\d+)*", predicted_normalized)
+    reference_identifiers = {
+        value
+        for value in re.findall(r"\b[\w/-]{5,}\b", reference_normalized)
+        if any(character.isdigit() for character in value)
+    }
+    predicted_identifiers = set(
+        re.findall(r"\b[\w/-]{5,}\b", predicted_normalized)
+    )
+    turkish_characters = "çğıöşü"
+    table_expected = str(row.get("has_table", "")).casefold() == "true"
+    table_available = bool(page.get("tables") or [])
+    entity = dict(extraction.get("entity") or {})
+    entity_wrong = (
+        int(entity.get("true_positive", 0))
+        < max(
+            int(entity.get("expected", 0)),
+            int(entity.get("predicted", 0)),
+        )
+    )
+    ocr_wrong = int(text.get("character_errors", 0)) > 0
+    fields_found_but_absent = sum(
+        bool(normalized_text(value))
+        and normalized_text(value) in predicted_normalized
+        and not normalized_text(predicted_fields.get(field, ""))
+        for field, value in reference_fields.items()
+    )
+    warnings = " ".join(
+        str(value)
+        for value in (
+            list(page.get("warnings") or [])
+            + list(result.get("warnings") or [])
+        )
+    ).casefold()
+    low_confidence = page.get("ocr", {}).get("mean_confidence")
+    low_contrast_signal = (
+        low_confidence is not None
+        and float(low_confidence) < 0.55
+        and expected_regions > true_positive
+    )
+    reference_punctuation = re.findall(r"[^\w\s]", reference_text)
+    predicted_punctuation = re.findall(r"[^\w\s]", predicted_text)
+    return {
+        "detection_missed_small_text": max(
+            0,
+            int(detection.get("small_expected", 0))
+            - int(detection.get("small_matched", 0)),
+        ),
+        "detection_merged_region_signals": max(
+            0, expected_regions - predicted_regions
+        ),
+        "detection_split_region_signals": max(
+            0, predicted_regions - expected_regions
+        ),
+        "detection_false_positives": max(
+            0, predicted_regions - true_positive
+        ),
+        "detection_table_miss_pages": int(
+            table_expected and not table_available
+        ),
+        "detection_rotated_miss_pages": int(
+            float(row.get("input_angle", 0.0) or 0.0) % 360.0 != 0.0
+            and expected_regions > true_positive
+        ),
+        "detection_low_contrast_miss_pages": int(low_contrast_signal),
+        "recognition_number_confusions": max(
+            0,
+            len(reference_numbers)
+            - sum(value in predicted_numbers for value in reference_numbers),
+        ),
+        "recognition_decimal_confusions": sum(
+            ("." in value or "," in value) and value not in predicted_numbers
+            for value in reference_numbers
+        ),
+        "recognition_identifier_corruptions": sum(
+            value not in predicted_identifiers for value in reference_identifiers
+        ),
+        "recognition_turkish_character_errors": sum(
+            max(
+                0,
+                reference_normalized.count(character)
+                - predicted_normalized.count(character),
+            )
+            for character in turkish_characters
+        ),
+        "recognition_spacing_error_pages": int(
+            reference_normalized != predicted_normalized
+            and reference_normalized.replace(" ", "")
+            == predicted_normalized.replace(" ", "")
+        ),
+        "recognition_punctuation_losses": max(
+            0, len(reference_punctuation) - len(predicted_punctuation)
+        ),
+        "recognition_crop_tight_retry_signals": sum(
+            str(value.get("selected_variant", ""))
+            not in {"", "original_rectified"}
+            for value in retry_items
+        ),
+        "recognition_low_resolution_error_pages": int(
+            min(int(row["width"]), int(row["height"])) <= 1000
+            and float(text.get("cer", 0.0) or 0.0) > 0.30
+        ),
+        "recognition_language_route_errors": int(
+            str(row.get("language", "")).casefold() in {"th", "thai"}
+            and str(
+                page.get("ocr", {}).get("language_route", "")
+            ).casefold()
+            != "thai"
+        ),
+        "downstream_ocr_correct_entity_wrong_pages": int(
+            not ocr_wrong and entity_wrong
+        ),
+        "downstream_ocr_wrong_entity_wrong_pages": int(
+            ocr_wrong and entity_wrong
+        ),
+        "downstream_field_evidence_found_but_abstained": int(
+            fields_found_but_absent
+        ),
+        "downstream_relation_misses": max(
+            0,
+            int(extraction.get("relation", {}).get("expected", 0))
+            - int(extraction.get("relation", {}).get("true_positive", 0)),
+        ),
+        "downstream_arithmetic_inconsistency_pages": int(
+            "arithmetic" in warnings and "inconsisten" in warnings
+        ),
+        "downstream_table_grouping_failure_pages": int(
+            table_expected and not table_available
+        ),
     }
 
 
