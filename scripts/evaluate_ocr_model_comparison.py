@@ -495,6 +495,14 @@ def _evaluate_page(
         "recognition_retries": dict(
             ocr_evidence.get("recognition_retries") or {}
         ),
+        "nonempty_output": bool(str(page.get("full_text", "")).strip()),
+        "recognized_word_count": len(
+            page.get("ocr", {}).get("words", [])
+        ),
+        "table_available": bool(page.get("tables") or []),
+        "language_route": str(
+            page.get("ocr", {}).get("language_route", "unknown")
+        ),
         "document_type_correct": (
             str(result.get("document_type", {}).get("label", "")).casefold()
             == str(row.get("document_type", "")).casefold()
@@ -590,6 +598,16 @@ def _aggregate(observations: list[dict[str, Any]]) -> dict[str, Any]:
         / max(1, len(observations)),
         "time_per_page_seconds": duration / max(1, len(observations)),
         "page_failure_rate": failures / max(1, len(observations)),
+        "nonempty_output_rate": sum(
+            bool(item.get("nonempty_output", False))
+            for item in observations
+        )
+        / max(1, len(observations)),
+        "table_availability_rate": sum(
+            bool(item.get("table_available", False))
+            for item in observations
+        )
+        / max(1, len(observations)),
         "tiling_triggered_page_count": len(tiling_triggered),
         "tiling_selected_page_count": sum(
             bool(value.get("selected", False)) for value in tiling_triggered
