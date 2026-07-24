@@ -200,12 +200,17 @@ def _load_benchmark(path: Path) -> list[dict[str, str]]:
 
 def _prepare_page(row: dict[str, str]) -> dict[str, Any]:
     _, image_path = resolve_project_input(
-        PROJECT_ROOT, row["source_image_path"], label="benchmark image"
+        PROJECT_ROOT,
+        row["source_image_path"],
+        label="benchmark image",
+        required_prefix="data/raw/public",
     )
     _, annotation_path = resolve_project_input(
         PROJECT_ROOT,
         row["normalized_annotation_path"],
         label="benchmark annotation",
+        required_prefix="data/processed/normalized_ie_annotations",
+        allow_prefix_junction=True,
     )
     if sha256_file(image_path) != row["source_image_sha256"].casefold():
         raise ValueError(f"benchmark image hash drift: {row['page_id']}")
