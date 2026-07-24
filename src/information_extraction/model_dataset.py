@@ -723,10 +723,14 @@ def prepare_model_dataset(
     ocr_variant_split_limits: Mapping[str, int] | None = None,
     manifest_path_override: str | Path | None = None,
     noise_config: OCRNoiseConfig = OCRNoiseConfig(),
+    ocr_profile: str = "adaptive",
 ) -> dict[str, Any]:
     if profile not in PROFILE_LIMITS:
         raise ValueError(f"unsupported model-data profile: {profile}")
     selected_streams = tuple(sorted(set(streams)))
+    selected_ocr_profile = str(ocr_profile).casefold()
+    if selected_ocr_profile not in {"original", "custom", "adaptive"}:
+        raise ValueError(f"unsupported OCR profile: {ocr_profile!r}")
     supported_streams = {"ground_truth", "paddleocr", "hybrid", "ocr_noise"}
     if not selected_streams or not set(selected_streams) <= supported_streams:
         raise ValueError(f"unsupported model-data streams: {selected_streams!r}")
@@ -796,6 +800,7 @@ def prepare_model_dataset(
     if requires_ocr:
         build_provenance = {
             "preprocessing_version": MODEL_DATA_PREPROCESSING_VERSION,
+            "ocr_profile": selected_ocr_profile,
             "orientation_policy": {
                 "cardinal_angles": [0, 90, 180, 270],
                 "polygon_fine_deskew": True,
@@ -840,10 +845,14 @@ def prepare_model_dataset(
             device=device,
             cache=cache,
             preprocessing_version=MODEL_DATA_PREPROCESSING_VERSION,
-            preprocessing_profile="quality_auto",
-            enable_tiling=True,
+            preprocessing_profile=(
+                "quality_auto"
+                if selected_ocr_profile == "adaptive"
+                else "original"
+            ),
+            enable_tiling=selected_ocr_profile == "adaptive",
             adapter_options={
-                "enable_recognition_retries": True,
+                "enable_recognition_retries": selected_ocr_profile == "adaptive",
                 "retry_confidence_threshold": 0.65,
                 "retry_max_candidates": 5,
                 "retry_padding_profile": "B",

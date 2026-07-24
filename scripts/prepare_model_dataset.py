@@ -46,6 +46,11 @@ def main() -> int:
         default=str(PROJECT_ROOT / "reports" / "ocr_upgrade" / "model_registry.json"),
     )
     parser.add_argument(
+        "--ocr-profile",
+        choices=("original", "custom", "adaptive"),
+        default="adaptive",
+    )
+    parser.add_argument(
         "--detector-model",
         choices=("original", "custom", "auto"),
         default="auto",
@@ -90,12 +95,19 @@ def main() -> int:
         anticipated_c_gib=0.25,
         anticipated_asset_gib=anticipated_asset_gib,
     )
+    def profile_choice(value: str) -> str:
+        return (
+            "original"
+            if args.ocr_profile == "original" and value == "auto"
+            else value
+        )
+
     registry = ModelRegistry.from_setup(
         args.model_setup,
         upgrade_registry=args.model_registry,
-        detector_choice=args.detector_model,
-        general_choice=args.general_recognizer,
-        thai_choice=args.thai_recognizer,
+        detector_choice=profile_choice(args.detector_model),
+        general_choice=profile_choice(args.general_recognizer),
+        thai_choice=profile_choice(args.thai_recognizer),
     )
     split_limits = None
     if (
@@ -117,6 +129,7 @@ def main() -> int:
         ocr_variant_limit=args.ocr_variant_limit,
         ocr_variant_split_limits=split_limits,
         manifest_path_override=args.manifest_output,
+        ocr_profile=args.ocr_profile,
     )
     import json
 

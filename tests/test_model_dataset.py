@@ -18,6 +18,7 @@ from src.information_extraction.model_dataset import (
     predict_model_data_ocr,
     profile_manifest_path,
     select_ocr_variant_rows,
+    prepare_model_dataset,
     validate_manifest_profile,
     validate_profile_requirements,
     validate_reusable_example,
@@ -530,4 +531,15 @@ def test_private_ground_truth_example_is_refused() -> None:
             _annotation(),
             profile="final",
             split_group_id="group_1",
+        )
+
+
+def test_model_dataset_rejects_unknown_ocr_profile_before_io() -> None:
+    with pytest.raises(ValueError, match="unsupported OCR profile"):
+        prepare_model_dataset(
+            {},
+            None,  # type: ignore[arg-type]
+            profile="smoke",
+            streams=("ground_truth",),
+            ocr_profile="experimental",
         )
