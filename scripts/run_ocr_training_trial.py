@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -26,6 +27,7 @@ from src.ocr.trials import sha256_tree  # noqa: E402
 from src.rotation_common import (  # noqa: E402
     atomic_write_json,
     atomic_write_text,
+    canonical_json,
     sha256_file,
 )
 
@@ -224,8 +226,9 @@ def main() -> int:
     metadata["status"] = "passed"
     metadata["vendor_clean_after"] = not bool(_git_status(vendor_root))
     metadata["artifact_manifest"] = _artifact_manifest(output_root)
-    atomic_write_json(output_root / "run_metadata.json", metadata)
-    metadata["artifact_tree_sha256"] = sha256_tree(output_root)
+    metadata["artifact_manifest_sha256"] = hashlib.sha256(
+        canonical_json(metadata["artifact_manifest"]).encode("utf-8")
+    ).hexdigest()
     atomic_write_json(output_root / "run_metadata.json", metadata)
     print(json.dumps(metadata, indent=2, ensure_ascii=False))
     return 0
