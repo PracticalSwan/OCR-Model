@@ -143,6 +143,10 @@ def main() -> int:
     manifest_sha = sha256_file(manifest_path)
     checkpoint_sha = sha256_file(checkpoint / "model.safetensors")
     calibration_sha = sha256_file(calibration)
+    registry_payload = json.loads(
+        Path(cfgmod.resolve_path(cfg, "reports") / "ocr_upgrade/model_registry.json")
+        .read_text(encoding="utf-8")
+    )
     summaries: list[dict[str, Any]] = []
     for label in args.configurations:
         definition = CONFIGURATIONS[label]
@@ -218,6 +222,7 @@ def main() -> int:
                 "failure_count": sum(bool(item["failed"]) for item in observations),
                 "duration_seconds": time.perf_counter() - started,
                 "private_row_count": 0,
+                **configuration_eligibility(definition, registry_payload),
             }
         )
         summaries.append(summary)
@@ -242,7 +247,14 @@ def main() -> int:
             efficiency=efficiency,
             failure_rate=float(row["page_failure_rate"]),
         )
-    selected = select_simplest_material_configuration(successful)
+    eligible = [
+        row
+        for row in successful
+        if bool(row.get("eligible_for_default", False))
+    ]
+    if not eligible:
+        raise RuntimeError("no accepted OCR configuration is eligible for default")
+    selected = select_simplest_material_configuration(eligible)
     selected["selected"] = True
     _write_csv(Path(args.output), summaries)
     selection = {
@@ -338,6 +350,46 @@ def select_simplest_material_configuration(
             -float(row["selection_score"]),
         ),
     )
+
+
+def configuration_eligibility(
+    definition: Mapping[str, str],
+    registry_payload: Mapping[str, Any],
+) -> dict[str, Any]:
+    models = registry_payload.get("models")
+    if not isinstance(models, Mapping):
+        raise ValueError("OCR registry has no models mapping")
+    requirements = (
+        ("detector", definition.get("detector")),
+        ("general", definition.get("general")),
+        ("thai", definition.get("thai")),
+    )
+    reasons = []
+    for language, choice in requirements:
+        if choice != "custom":
+            continue
+        candidates = [
+            value
+            for value in models.values()
+            if isinstance(value, Mapping)
+            and value.get("variant") == "custom"
+            and (
+                value.get("role") == "detector"
+                if language == "detector"
+                else value.get("role") == "recognizer"
+                and str(value.get("language", "")).casefold().startswith(language)
+            )
+        ]
+        if not candidates or not any(
+            bool(value.get("available", False))
+            and bool(value.get("accepted", False))
+            for value in candidates
+        ):
+            reasons.append(f"{language}_custom_not_accepted")
+    return {
+        "eligible_for_default": not reasons,
+        "default_ineligibility_reason": ";".join(reasons),
+    }
 
 
 def _evaluate_page(

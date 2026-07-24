@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from scripts.evaluate_ocr_model_comparison import (
+    configuration_eligibility,
     ocr_model_selection_score,
     select_simplest_material_configuration,
 )
@@ -38,3 +39,23 @@ def test_selection_prefers_simpler_configuration_within_one_point() -> None:
         {"configuration": "F", "selection_score": 0.559},
     ]
     assert select_simplest_material_configuration(rows)["configuration"] == "C"
+
+
+def test_rejected_custom_recognizer_is_not_default_eligible() -> None:
+    registry = {
+        "models": {
+            "custom-general": {
+                "variant": "custom",
+                "role": "recognizer",
+                "language": "general",
+                "available": True,
+                "accepted": False,
+            }
+        }
+    }
+    result = configuration_eligibility(
+        {"detector": "original", "general": "custom", "thai": "auto"},
+        registry,
+    )
+    assert result["eligible_for_default"] is False
+    assert result["default_ineligibility_reason"] == "general_custom_not_accepted"
