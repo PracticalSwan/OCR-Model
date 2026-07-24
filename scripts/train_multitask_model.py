@@ -7,6 +7,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 import time
 from collections import Counter, defaultdict
@@ -79,6 +80,11 @@ def main() -> int:
     )
     parser.add_argument("--checkpoint", default=None)
     parser.add_argument(
+        "--trial-id",
+        default=None,
+        help="safe identifier used to retain a separate OCR-upgrade training report",
+    )
+    parser.add_argument(
         "--manifest",
         default=None,
         help="optional profile-compatible model-dataset manifest override",
@@ -101,6 +107,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.resume and args.initial_checkpoint:
         parser.error("--resume and --initial-checkpoint are mutually exclusive")
+    if args.trial_id and not re.fullmatch(r"[A-Za-z0-9._-]+", args.trial_id):
+        parser.error("--trial-id may contain only letters, digits, dot, underscore, and dash")
     if args.max_steps is not None and args.max_steps < 1:
         parser.error("--max-steps must be positive")
     if args.epochs is not None and args.epochs < 1:
@@ -503,6 +511,21 @@ def main() -> int:
             best_metric=best_metric,
             best_epoch=best_epoch,
         )
+        print(
+            json.dumps(
+                {
+                    "event": "epoch_completed",
+                    "trial_id": args.trial_id,
+                    "epoch": epoch + 1,
+                    "optimizer_steps": optimizer_steps,
+                    "selection_composite_score": metrics[
+                        "selection_composite_score"
+                    ],
+                    "best_selection_composite_score": best_metric,
+                }
+            ),
+            flush=True,
+        )
         if stop_requested:
             break
 
@@ -571,6 +594,7 @@ def main() -> int:
         "stopped_early": stop_reason == "early_stopping",
         "stop_reason": stop_reason or "completed_requested_epochs",
         "resume_contract": "deterministic epoch/order and optimizer-boundary next_batch_index",
+        "trial_id": args.trial_id,
     }
     atomic_write_json(checkpoint / "training_state.json", training_state)
     report = {
@@ -621,6 +645,14 @@ def main() -> int:
     }
     report_root = cfgmod.resolve_path(cfg, "reports") / "final_model"
     atomic_write_json(report_root / f"multitask_training_{args.profile}.json", report)
+    if args.trial_id:
+        atomic_write_json(
+            cfgmod.resolve_path(cfg, "reports")
+            / "ocr_upgrade"
+            / "layout_training"
+            / f"{args.trial_id}.json",
+            report,
+        )
     atomic_write_json(
         cfgmod.resolve_path(cfg, "reports") / "information_extraction" / "layout_model_training.json",
         report,
