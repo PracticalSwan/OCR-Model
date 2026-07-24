@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from scripts.verify_ocr_training_environment import (
     prepare_architecture_for_training,
+    resolve_vendor_config_paths,
 )
 
 
@@ -50,3 +51,17 @@ def test_detection_architecture_needs_no_character_channels() -> None:
     )
 
     assert "out_channels" not in config["Architecture"]["Head"]
+
+
+def test_vendor_dictionary_path_is_resolved(tmp_path) -> None:
+    config = {
+        "Global": {
+            "character_dict_path": "ppocr/utils/dict/ppocrv6_dict.txt",
+        }
+    }
+
+    resolve_vendor_config_paths(config, tmp_path)
+
+    assert config["Global"]["character_dict_path"] == str(
+        (tmp_path / "ppocr/utils/dict/ppocrv6_dict.txt").resolve()
+    )

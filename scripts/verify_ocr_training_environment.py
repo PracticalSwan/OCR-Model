@@ -95,6 +95,7 @@ def main() -> int:
         config_path = vendor_root / relative
         config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         config_hashes[role] = sha256_file(config_path)
+        resolve_vendor_config_paths(config, vendor_root)
         prepare_architecture_for_training(config, build_post_process)
         model = build_model(config["Architecture"])
         parameter_count = sum(
@@ -311,6 +312,18 @@ def prepare_architecture_for_training(
     else:
         raise RuntimeError("MultiHead recognizer lacks an auxiliary decoder loss")
     head["out_channels_list"] = out_channels
+
+
+def resolve_vendor_config_paths(
+    config: dict[str, Any],
+    vendor_root: Path,
+) -> None:
+    """Resolve repository-relative dictionary paths without changing the vendor tree."""
+    character_dict = config.get("Global", {}).get("character_dict_path")
+    if character_dict and not Path(character_dict).is_absolute():
+        config["Global"]["character_dict_path"] = str(
+            (vendor_root / character_dict).resolve()
+        )
 
 
 def _shape_product(shape: Any) -> int:
