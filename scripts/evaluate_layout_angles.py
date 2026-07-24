@@ -31,6 +31,11 @@ def main() -> int:
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument(
+        "--manifest",
+        default=None,
+        help="optional final-profile model-dataset manifest override",
+    )
+    parser.add_argument(
         "--calibration", default=str(PROJECT_ROOT / "models" / "multitask_calibration.json")
     )
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="cuda")
@@ -55,7 +60,13 @@ def main() -> int:
     state = json.loads((checkpoint / "training_state.json").read_text(encoding="utf-8"))
     calibration_path = Path(args.calibration).resolve()
     calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
-    manifest_path = profile_manifest_path(cfgmod.resolve_path(cfg, "metadata"), "final")
+    manifest_path = (
+        Path(args.manifest).resolve()
+        if args.manifest
+        else profile_manifest_path(cfgmod.resolve_path(cfg, "metadata"), "final")
+    )
+    if not manifest_path.is_file():
+        raise SystemExit(f"model-dataset manifest is missing: {manifest_path}")
     rows = read_csv_rows(manifest_path)
     build_ids = {row.get("build_id", "") for row in rows}
     if len(build_ids) != 1 or "" in build_ids:

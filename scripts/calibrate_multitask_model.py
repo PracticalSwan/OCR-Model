@@ -50,6 +50,11 @@ def main() -> int:
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
     parser.add_argument("--profile", choices=("development", "final"), required=True)
     parser.add_argument("--checkpoint", required=True)
+    parser.add_argument(
+        "--manifest",
+        default=None,
+        help="optional profile-compatible model-dataset manifest override",
+    )
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--max-length", type=int, default=512)
     parser.add_argument(
@@ -91,9 +96,13 @@ def main() -> int:
         raise SystemExit(f"checkpoint is incomplete: {checkpoint}")
     training_state = json.loads(state_path.read_text(encoding="utf-8"))
 
-    manifest_path = profile_manifest_path(
-        cfgmod.resolve_path(cfg, "metadata"), args.profile
+    manifest_path = (
+        Path(args.manifest).resolve()
+        if args.manifest
+        else profile_manifest_path(cfgmod.resolve_path(cfg, "metadata"), args.profile)
     )
+    if not manifest_path.is_file():
+        raise SystemExit(f"model-dataset manifest is missing: {manifest_path}")
     manifest_rows = read_csv_rows(manifest_path)
     build_ids = {row.get("build_id", "") for row in manifest_rows}
     if len(build_ids) != 1 or "" in build_ids:
