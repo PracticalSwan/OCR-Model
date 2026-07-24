@@ -1,0 +1,8 @@
+schema_version: "1.0"
+trial_id: rec_thai_baseline_official
+kind: thai_recognizer_baseline
+model_name: th_PP-OCRv5_mobile_rec
+model_source: official PaddleOCR 3.7.0 inference export
+selection_split: dev_select
+corpus: synthetic_thai_financial_only
+private_data_allowed: false

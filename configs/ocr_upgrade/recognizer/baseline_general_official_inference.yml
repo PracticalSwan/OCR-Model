@@ -1,0 +1,8 @@
+schema_version: "1.0"
+trial_id: rec_general_baseline_official
+kind: general_recognizer_baseline
+model_name: PP-OCRv6_medium_rec
+model_source: official PaddleOCR 3.7.0 inference export
+selection_split: dev_select
+corpus: dictionary-compatible real public plus 18.99 percent synthetic financial
+private_data_allowed: false
