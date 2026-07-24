@@ -357,6 +357,7 @@ def _evaluate_page(
             language_hint=row.get("language"),
         )
         page = result["pages"][0]
+        ocr_evidence = page.get("ocr") or {}
         failed = False
         error = None
     except Exception as exc:
@@ -367,6 +368,7 @@ def _evaluate_page(
             "key_value_pairs": [],
         }
         result = {"fields": {}, "document_type": {"label": "unknown"}}
+        ocr_evidence = {}
         failed = True
         error = f"{type(exc).__name__}: {exc}"
     references = [
@@ -417,6 +419,10 @@ def _evaluate_page(
         "extraction": extraction,
         "reference_fields": reference_fields,
         "predicted_fields": predicted_fields,
+        "tiling": dict(ocr_evidence.get("tiling") or {}),
+        "recognition_retries": dict(
+            ocr_evidence.get("recognition_retries") or {}
+        ),
         "document_type_correct": (
             str(result.get("document_type", {}).get("label", "")).casefold()
             == str(row.get("document_type", "")).casefold()
@@ -469,6 +475,22 @@ def _aggregate(observations: list[dict[str, Any]]) -> dict[str, Any]:
     )
     failures = sum(bool(item["failed"]) for item in observations)
     duration = sum(float(item["duration_seconds"]) for item in observations)
+    tiling_triggered = [
+        item["tiling"]
+        for item in observations
+        if bool(item["tiling"].get("triggered", False))
+    ]
+    retries = [
+        item["recognition_retries"]
+        for item in observations
+        if item["recognition_retries"]
+    ]
+    retry_items = [
+        value
+        for retry in retries
+        for value in (retry.get("items") or [])
+        if isinstance(value, Mapping)
+    ]
     return {
         "polygon_precision": detector["precision"],
         "polygon_recall": detector["recall"],
@@ -496,6 +518,25 @@ def _aggregate(observations: list[dict[str, Any]]) -> dict[str, Any]:
         / max(1, len(observations)),
         "time_per_page_seconds": duration / max(1, len(observations)),
         "page_failure_rate": failures / max(1, len(observations)),
+        "tiling_triggered_page_count": len(tiling_triggered),
+        "tiling_selected_page_count": sum(
+            bool(value.get("selected", False)) for value in tiling_triggered
+        ),
+        "tiling_duplicate_count": sum(
+            int(value.get("duplicates_removed", 0) or 0)
+            for value in tiling_triggered
+        ),
+        "retried_page_count": len(retries),
+        "retried_word_count": sum(
+            int(value.get("retried_word_count", 0) or 0) for value in retries
+        ),
+        "retry_candidate_count": sum(
+            int(value.get("candidate_count", 0) or 0) for value in retry_items
+        ),
+        "retry_non_original_selection_count": sum(
+            str(value.get("selected_variant", "")) != "original_rectified"
+            for value in retry_items
+        ),
         "normalized_efficiency_score": None,
         "selection_score": None,
     }
