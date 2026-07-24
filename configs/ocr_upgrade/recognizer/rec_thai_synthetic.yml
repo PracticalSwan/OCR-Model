@@ -7,7 +7,7 @@ metadata:
   purpose: Bounded Thai financial-domain continuation using only OFL-font synthetic data.
   selection_split: dev_select
   epochs: 3
-  expected_iterations_per_epoch: 188
+  expected_iterations_per_epoch: 261
   early_stopping: Select the best checkpoint from synthetic Thai DEV_SELECT accuracy.
   claim_boundary: Synthetic and integration evidence only; no real public Thai benchmark is claimed.
   train_data: OFL-font synthetic TRAIN only
@@ -16,7 +16,7 @@ overrides:
     epoch_num: 3
     print_batch_step: 10
     save_epoch_step: 1
-    eval_batch_step: [0, 188]
+    eval_batch_step: [0, 261]
     cal_metric_during_train: true
     max_text_length: 64
     d2s_train_image_shape: [3, 48, 320]

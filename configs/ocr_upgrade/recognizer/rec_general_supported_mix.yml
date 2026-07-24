@@ -7,7 +7,7 @@ metadata:
   purpose: Low-rate continuation on dictionary-compatible real public crops plus the frozen supported synthetic financial mixture.
   selection_split: dev_select
   epochs: 1
-  expected_iterations: 4621
+  expected_iterations: 6429
   early_stopping: Compare the epoch checkpoint on the frozen composite DEV_SELECT score.
   train_data: public TRAIN plus OFL-font synthetic TRAIN only; unsupported target characters are excluded and reported
   actual_synthetic_fraction: 0.18987581504829415
@@ -16,7 +16,7 @@ overrides:
     epoch_num: 1
     print_batch_step: 20
     save_epoch_step: 1
-    eval_batch_step: [0, 4621]
+    eval_batch_step: [0, 6429]
     cal_metric_during_train: true
     max_text_length: 64
     d2s_train_image_shape: [3, 48, 320]
