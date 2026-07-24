@@ -255,6 +255,7 @@ def copy_models(target: Path, asset_root: Path) -> list[dict[str, Any]]:
         )
         setup_source["models"][name]["device"] = "cpu"
     write_json(target / "reports" / "ocr" / "model_setup.json", setup_source)
+    _copy_upgrade_registry(target)
 
     calibration = json.loads(
         (PROJECT_ROOT / "models" / "multitask_calibration.json").read_text(
@@ -311,6 +312,55 @@ def copy_models(target: Path, asset_root: Path) -> list[dict[str, Any]]:
         },
     )
     return records
+
+
+def _copy_upgrade_registry(target: Path) -> None:
+    source_path = PROJECT_ROOT / "reports" / "ocr_upgrade" / "model_registry.json"
+    registry = json.loads(source_path.read_text(encoding="utf-8"))
+    models = registry.get("models")
+    if not isinstance(models, dict):
+        raise ValueError("OCR upgrade registry has no models mapping")
+    included: list[str] = []
+    for model_id, raw in models.items():
+        if not isinstance(raw, dict):
+            raise ValueError(f"invalid OCR registry entry: {model_id}")
+        upstream = str(raw.get("upstream_base", ""))
+        variant = str(raw.get("variant", "")).casefold()
+        available = bool(raw.get("available", False))
+        selected = bool(raw.get("selected", False))
+        accepted = bool(raw.get("accepted", False))
+        if variant == "original" and available:
+            destination_name = upstream
+        elif variant == "custom" and available and selected and accepted:
+            source = Path(str(raw.get("local_path", "")))
+            if not source.is_dir():
+                raise FileNotFoundError(source)
+            destination_name = str(model_id)
+            copy_tree(
+                source,
+                target / "assets" / "ocr_models" / destination_name,
+            )
+        else:
+            raw["available"] = False
+            raw["selected"] = False
+            raw["local_path"] = ""
+            raw["portable_included"] = False
+            raw["portable_exclusion_reason"] = (
+                "not selected and accepted for final portable inference"
+            )
+            continue
+        raw["local_path"] = f"../../assets/ocr_models/{destination_name}"
+        raw["portable_included"] = True
+        included.append(str(model_id))
+    registry["portable"] = True
+    registry["portable_included_model_ids"] = sorted(included)
+    registry["portable_policy"] = (
+        "all original fallbacks plus selected accepted custom inference models"
+    )
+    write_json(
+        target / "reports" / "ocr_upgrade" / "model_registry.json",
+        registry,
+    )
 
 
 def copy_samples(target: Path, asset_root: Path) -> None:
