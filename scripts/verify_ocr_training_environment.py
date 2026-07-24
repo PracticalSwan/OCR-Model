@@ -257,7 +257,7 @@ def _run_training_lifecycle(
     verification_root = environment_root / "verification"
     verification_root.mkdir(parents=True, exist_ok=True)
     checkpoint_path = verification_root / "training_lifecycle.pdparams"
-    paddle.save(model.state_dict(), checkpoint_path)
+    paddle.save(model.state_dict(), str(checkpoint_path))
     reloaded = paddle.nn.Sequential(
         paddle.nn.Conv2D(1, 4, kernel_size=3, padding=1),
         paddle.nn.ReLU(),
@@ -265,7 +265,7 @@ def _run_training_lifecycle(
         paddle.nn.Flatten(),
         paddle.nn.Linear(4, 2),
     )
-    reloaded.set_state_dict(paddle.load(checkpoint_path))
+    reloaded.set_state_dict(paddle.load(str(checkpoint_path)))
     with paddle.no_grad():
         reloaded_logits = reloaded(inputs)
     if tuple(reloaded_logits.shape) != (2, 2):
