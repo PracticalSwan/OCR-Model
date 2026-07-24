@@ -255,6 +255,7 @@ def main() -> int:
             )
         },
         "text_size_recall": _text_size_recall(observations),
+        "error_counts": aggregate.get("error_counts", {}),
         "by_dataset": by_dataset,
         "by_document_type": by_document_type,
         "by_language": by_language,
@@ -292,6 +293,7 @@ def main() -> int:
                 - float(aggregate["end_to_end_entity_f1"])
             ),
         },
+        "error_counts": aggregate.get("error_counts", {}),
         "by_dataset": by_dataset,
         "by_document_type": by_document_type,
         "by_language": by_language,
