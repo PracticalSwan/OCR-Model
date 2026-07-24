@@ -56,6 +56,10 @@ def build_command(
     device: str | None = None,
     max_pages: int | None = None,
     save_visualization: bool = True,
+    ocr_profile: str = "auto",
+    detector_model: str = "auto",
+    general_recognizer: str = "auto",
+    thai_recognizer: str = "auto",
 ) -> list[str]:
     command = [
         str(settings.ocr_python),
@@ -75,6 +79,14 @@ def build_command(
         "--device",
         device or settings.device,
         "--force",
+        "--ocr-profile",
+        ocr_profile,
+        "--detector-model",
+        detector_model,
+        "--general-recognizer",
+        general_recognizer,
+        "--thai-recognizer",
+        thai_recognizer,
     ]
     if save_visualization:
         command.append("--save-visualization")
@@ -93,6 +105,10 @@ def run_extraction(
     max_pages: int | None = None,
     save_visualization: bool = True,
     on_log: Callable[[str], None] | None = None,
+    ocr_profile: str = "auto",
+    detector_model: str = "auto",
+    general_recognizer: str = "auto",
+    thai_recognizer: str = "auto",
 ) -> ExtractionRun:
     runtime = settings or RuntimeSettings.load()
     source = Path(input_path).expanduser().resolve()
@@ -122,6 +138,10 @@ def run_extraction(
         device=device,
         max_pages=max_pages,
         save_visualization=save_visualization,
+        ocr_profile=ocr_profile,
+        detector_model=detector_model,
+        general_recognizer=general_recognizer,
+        thai_recognizer=thai_recognizer,
     )
     lines: list[str] = []
     process = subprocess.Popen(

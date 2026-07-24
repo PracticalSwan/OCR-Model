@@ -317,6 +317,84 @@ def test_registry_requires_exact_names_paths_and_hashes(tmp_path: Path) -> None:
         ModelRegistry.from_setup(setup)
 
 
+def test_registry_selects_versioned_custom_models_and_preserves_original_aliases(
+    tmp_path: Path,
+) -> None:
+    models = {}
+    for name in REQUIRED_MODEL_NAMES:
+        directory = tmp_path / name
+        directory.mkdir()
+        artifact = directory / "inference.json"
+        artifact.write_text(name, encoding="utf-8")
+        models[name] = {
+            "requested_name": name,
+            "resolved_name": name,
+            "resolved_path": str(directory),
+            "role": "detector" if name.endswith("det") else "recognizer",
+            "language": "thai" if name.startswith("th_") else "general",
+            "files": [{
+                "path": artifact.name,
+                "size_bytes": artifact.stat().st_size,
+                "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+            }],
+        }
+    setup = tmp_path / "model_setup.json"
+    setup.write_text(json.dumps({"models": models}), encoding="utf-8")
+
+    custom = tmp_path / "custom-general"
+    custom.mkdir()
+    custom_file = custom / "inference.json"
+    custom_file.write_text("custom", encoding="utf-8")
+    custom_file_sha = hashlib.sha256(custom_file.read_bytes()).hexdigest()
+    custom_model_digest = hashlib.sha256()
+    custom_model_digest.update(custom_file.name.encode("utf-8"))
+    custom_model_digest.update(custom_file_sha.encode("ascii"))
+    upgrade = tmp_path / "upgrade_registry.json"
+    upgrade.write_text(
+        json.dumps({
+            "schema_version": "2.0",
+            "defaults": {
+                "detector": "original",
+                "general_recognizer": "custom",
+                "thai_recognizer": "original",
+            },
+            "models": {
+                "PP-OCRv6_medium_rec_csx4201_v1": {
+                    "available": True,
+                    "variant": "custom",
+                    "role": "recognizer",
+                    "language": "general",
+                    "upstream_base": "PP-OCRv6_medium_rec",
+                    "local_path": str(custom),
+                    "files": [{
+                        "path": custom_file.name,
+                        "size_bytes": custom_file.stat().st_size,
+                        "sha256": custom_file_sha,
+                    }],
+                    "model_sha256": custom_model_digest.hexdigest(),
+                    "license": "Apache-2.0",
+                    "intended_domain": "public financial documents",
+                    "development_metrics": {"wer": 0.4},
+                }
+            },
+        }),
+        encoding="utf-8",
+    )
+
+    registry = ModelRegistry.from_setup(
+        setup,
+        upgrade_registry=upgrade,
+        general_choice="auto",
+    )
+    detector, recognizer = registry.route_models("general")
+
+    assert detector.runtime_name == "PP-OCRv6_medium_det"
+    assert recognizer.name == "PP-OCRv6_medium_rec_csx4201_v1"
+    assert recognizer.runtime_name == "PP-OCRv6_medium_rec"
+    assert registry.require("PP-OCRv6_medium_rec").path.is_dir()
+    assert registry.selection["general_recognizer"] == recognizer.name
+
+
 def test_paddle_adapter_disables_mkldnn_for_portable_cpu_inference() -> None:
     class Registry:
         @staticmethod
@@ -329,3 +407,48 @@ def test_paddle_adapter_disables_mkldnn_for_portable_cpu_inference() -> None:
     adapter = PaddleOCRAdapter(Registry(), "general", device="cpu")
 
     assert adapter.options["enable_mkldnn"] is False
+
+
+def test_paddle_adapter_retries_low_confidence_crop_and_keeps_evidence() -> None:
+    class Registry:
+        @staticmethod
+        def route_models(_route: str):
+            return (
+                SimpleNamespace(name="det", path=Path("det"), artifact_hash="det-hash"),
+                SimpleNamespace(name="rec", path=Path("rec"), artifact_hash="rec-hash"),
+            )
+
+    class Pipeline:
+        @staticmethod
+        def predict(_image):
+            return [{
+                "res": {
+                    "rec_texts": ["T0tal 4S.00"],
+                    "rec_scores": [0.30],
+                    "rec_polys": [[[10, 10], [190, 10], [190, 50], [10, 50]]],
+                }
+            }]
+
+    predictions = iter(
+        [
+            {"text": "Total 45.00", "confidence": 0.95},
+            {"text": "Total 45.00", "confidence": 0.91},
+            {"text": "Total 45.00", "confidence": 0.90},
+            {"text": "Total 45.00", "confidence": 0.89},
+        ]
+    )
+    adapter = PaddleOCRAdapter(
+        Registry(),
+        "general",
+        enable_recognition_retries=True,
+        crop_recognizer=lambda _crop: next(predictions),
+    )
+    adapter._pipeline = Pipeline()
+
+    result = adapter.predict(Image.new("RGB", (220, 80), "white"))
+
+    assert result["full_text"] == "Total 45.00"
+    assert result["words"][0]["confidence"] >= 0.90
+    evidence = result["recognition_retries"]["items"][0]
+    assert evidence["original_candidate"]["text"] == "T0tal 4S.00"
+    assert evidence["candidate_count"] <= 5

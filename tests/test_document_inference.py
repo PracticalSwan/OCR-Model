@@ -12,6 +12,7 @@ from src.information_extraction.entity_worker_client import SubprocessLayoutEnti
 from src.inference.document_io import DocumentInputError, DocumentPage, load_document_pages
 from src.inference.document_pipeline import DocumentPipeline, merge_document_fields
 from src.inference.output_writer import require_private_output_root
+from src.ocr.adaptive import AdaptiveRenderingConfig
 
 
 IDENTITY = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
@@ -107,6 +108,18 @@ class FirstPageFailsOCR(FakeOCR):
         if self.calls == 1:
             raise RuntimeError("synthetic first-page failure")
         return super().extract_page(image, **kwargs)
+
+
+class SizeAwareOCR(FakeOCR):
+    def extract_page(self, image, **kwargs):
+        if image.width <= 100:
+            result = BlankOCR().extract_page(image, **kwargs)
+            result["duration_seconds"] = 0.02
+            return result
+        result = super().extract_page(image, **kwargs)
+        result["orientation"] = 0.0
+        result["duration_seconds"] = 0.03
+        return result
 
 
 class WrongKMeans:
@@ -222,6 +235,58 @@ def test_multipage_failure_isolated_when_continue_is_enabled() -> None:
     assert result["pages"][0]["ocr"]["detector_model"] == "unavailable"
     assert result["pages"][1]["full_text"] == "Custom Key: Value"
     assert any("page 1 failed" in warning for warning in result["warnings"])
+
+
+def test_pdf_adaptive_rendering_reruns_only_weak_page_and_records_selection(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "fixture.pdf"
+    source.write_bytes(b"%PDF-fixture")
+    calls = []
+
+    def rerender(path, *, page_number, dpi, max_pixels):
+        calls.append((Path(path), page_number, dpi, max_pixels))
+        return DocumentPage(
+            page_number,
+            Image.new("RGB", (150, 150), "white"),
+            source_path=Path(path),
+            source_type="pdf",
+            render_dpi=dpi,
+            pdf_page_index=page_number - 1,
+        )
+
+    pipeline = DocumentPipeline(
+        ocr=SizeAwareOCR(),
+        device="cpu",
+        entity_extractor=None,
+        enable_kmeans_display=False,
+        adaptive_rendering=AdaptiveRenderingConfig(
+            base_dpi=200,
+            rerender_dpi=300,
+        ),
+        pdf_rerenderer=rerender,
+    )
+    result, selected_pages = pipeline.extract_pages_with_rendered_pages(
+        document_id="adaptive",
+        source_type="pdf",
+        pages=[
+            DocumentPage(
+                1,
+                Image.new("RGB", (100, 100), "white"),
+                source_path=source,
+                source_type="pdf",
+                render_dpi=200,
+                pdf_page_index=0,
+            )
+        ],
+    )
+
+    assert calls and calls[0][2] == 300
+    assert result["pages"][0]["width"] == 150
+    assert selected_pages[0].image.size == (150, 150)
+    provenance = result["pages"][0]["ocr"]["adaptive_rendering"]
+    assert provenance["selected_dpi"] == 300
+    assert provenance["rerender_reasons"]
 
 
 def test_document_pipeline_uses_all_trained_heads_and_model_tables() -> None:

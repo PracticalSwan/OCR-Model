@@ -10,6 +10,7 @@ from typing import Any, Protocol
 from PIL import Image
 
 from src.ocr.cache import OCRCache, OCRCacheKey
+from src.ocr.adaptive import page_quality_signals
 from src.ocr.fine_deskew import estimate_residual_deskew
 from src.ocr.language_router import (
     normalize_language_mode,
@@ -26,6 +27,12 @@ from src.ocr.orientation_candidates import (
 from src.ocr.paddleocr_adapter import PaddleOCRAdapter
 from src.ocr.preprocessing import preprocess_for_ocr
 from src.ocr.scoring import score_ocr_candidate
+from src.ocr.tiling import (
+    generate_tiles,
+    map_tile_result_to_page,
+    merge_tiled_results,
+    tiling_trigger_reasons,
+)
 
 
 class OCRBackend(Protocol):
@@ -50,6 +57,12 @@ class MultilingualOCR:
         enable_fine_deskew: bool = True,
         fine_deskew_reliability: float = 0.55,
         maximum_fine_candidates: int = 2,
+        enable_tiling: bool = False,
+        tile_grid: tuple[int, int] = (2, 2),
+        tile_overlap: float = 0.15,
+        tile_upscale: float = 1.0,
+        tile_iou_threshold: float = 0.50,
+        tile_minimum_score_gain: float = 0.0,
     ) -> None:
         options = dict(adapter_options or {})
         if general_backend is None:
@@ -68,6 +81,18 @@ class MultilingualOCR:
         self.enable_fine_deskew = bool(enable_fine_deskew)
         self.fine_deskew_reliability = float(fine_deskew_reliability)
         self.maximum_fine_candidates = int(maximum_fine_candidates)
+        self.enable_tiling = bool(enable_tiling)
+        self.tile_grid = tuple(map(int, tile_grid))
+        self.tile_overlap = float(tile_overlap)
+        self.tile_upscale = float(tile_upscale)
+        self.tile_iou_threshold = float(tile_iou_threshold)
+        self.tile_minimum_score_gain = float(tile_minimum_score_gain)
+        # Validate geometry and thresholds before any expensive model initialization.
+        generate_tiles(100, 100, grid=self.tile_grid, overlap=self.tile_overlap)
+        if self.tile_upscale <= 0.0:
+            raise ValueError("tile upscale must be positive")
+        if not 0.0 <= self.tile_iou_threshold <= 1.0:
+            raise ValueError("tile IoU threshold must be in [0, 1]")
 
     def extract_path(
         self,
@@ -114,6 +139,35 @@ class MultilingualOCR:
         """Run OCR without any K-Means input or dependency."""
         started = time.perf_counter()
         image, preprocessing = preprocess_for_ocr(image, self.preprocessing_profile)
+        selected = self._extract_preprocessed(
+            image,
+            language_mode=language_mode,
+            language_hint=language_hint,
+            metadata_language=metadata_language,
+            deskew_angle=deskew_angle,
+        )
+        selected = self._maybe_apply_tiling(
+            image,
+            selected,
+            language_mode=language_mode,
+            language_hint=language_hint,
+            metadata_language=metadata_language,
+            deskew_angle=deskew_angle,
+        )
+        selected["preprocessing"] = preprocessing
+        selected["duration_seconds"] = time.perf_counter() - started
+        return selected
+
+    def _extract_preprocessed(
+        self,
+        image: Image.Image,
+        *,
+        language_mode: str,
+        language_hint: str | None,
+        metadata_language: str | None,
+        deskew_angle: float | None,
+    ) -> dict[str, Any]:
+        """Run route/orientation selection on an already-preprocessed image."""
         mode = normalize_language_mode(language_mode)
         forced_route = route_for_mode(mode)
         candidates = build_orientation_candidates(
@@ -141,13 +195,111 @@ class MultilingualOCR:
         )
         selected = dict(selected)
         selected["route_decision"] = {**route_decision, "thai_evaluation_reasons": route_reasons}
-        selected["preprocessing"] = preprocessing
         selected["candidate_scores"] = [
             candidate for pair in (general_best, thai_best) if pair is not None
             for candidate in pair[0].get("all_candidate_scores", [])
         ]
-        selected["duration_seconds"] = time.perf_counter() - started
         return selected
+
+    def _maybe_apply_tiling(
+        self,
+        image: Image.Image,
+        full_page: dict[str, Any],
+        *,
+        language_mode: str,
+        language_hint: str | None,
+        metadata_language: str | None,
+        deskew_angle: float | None,
+    ) -> dict[str, Any]:
+        signals = page_quality_signals(
+            full_page,
+            image_width=image.width,
+            image_height=image.height,
+        )
+        reasons = tiling_trigger_reasons(
+            signals,
+            image_width=image.width,
+            image_height=image.height,
+        )
+        if not self.enable_tiling or not reasons:
+            output = dict(full_page)
+            output["tiling"] = {
+                "enabled": self.enable_tiling,
+                "triggered": False,
+                "selected": False,
+                "trigger_reasons": reasons,
+                "tile_count": 0,
+            }
+            return output
+        tiles = generate_tiles(
+            image.width,
+            image.height,
+            grid=self.tile_grid,
+            overlap=self.tile_overlap,
+        )
+        mapped_results = []
+        tile_metadata = []
+        for tile in tiles:
+            crop = image.crop((tile.x0, tile.y0, tile.x1, tile.y1))
+            if self.tile_upscale != 1.0:
+                crop = crop.resize(
+                    (
+                        max(2, round(crop.width * self.tile_upscale)),
+                        max(2, round(crop.height * self.tile_upscale)),
+                    ),
+                    Image.Resampling.LANCZOS,
+                )
+            tile_result = self._extract_preprocessed(
+                crop,
+                language_mode=language_mode,
+                language_hint=language_hint,
+                metadata_language=metadata_language,
+                deskew_angle=deskew_angle,
+            )
+            mapped_results.append(
+                map_tile_result_to_page(
+                    tile_result,
+                    tile,
+                    upscale=self.tile_upscale,
+                )
+            )
+            tile_metadata.append(
+                {**tile.as_dict(), "upscale": self.tile_upscale}
+            )
+        merged = merge_tiled_results(
+            mapped_results,
+            image_width=image.width,
+            image_height=image.height,
+            polygon_iou_threshold=self.tile_iou_threshold,
+        )
+        full_score = float(
+            score_ocr_candidate(full_page, image.width, image.height)["total"]
+        )
+        tiled_score = float(
+            score_ocr_candidate(merged, image.width, image.height)["total"]
+        )
+        selected = tiled_score > full_score + self.tile_minimum_score_gain
+        output = dict(merged if selected else full_page)
+        merge_metadata = dict(merged.get("tiling") or {})
+        output["tiling"] = {
+            **merge_metadata,
+            "enabled": True,
+            "triggered": True,
+            "selected": selected,
+            "trigger_reasons": reasons,
+            "tile_count": len(tiles),
+            "grid": list(self.tile_grid),
+            "overlap": self.tile_overlap,
+            "upscale": self.tile_upscale,
+            "full_page_score": full_score,
+            "tiled_score": tiled_score,
+            "minimum_score_gain": self.tile_minimum_score_gain,
+            "tiles": tile_metadata,
+            "selection_reason": (
+                "tiled_quality_gain" if selected else "full_page_not_worse"
+            ),
+        }
+        return output
 
     def _best_route(
         self, route: str, candidates: list, source_image: Image.Image
@@ -236,6 +388,12 @@ class MultilingualOCR:
                 "fine_deskew_reliability": self.fine_deskew_reliability,
                 "maximum_fine_candidates": self.maximum_fine_candidates,
                 "preprocessing_profile": self.preprocessing_profile,
+                "enable_tiling": self.enable_tiling,
+                "tile_grid": self.tile_grid,
+                "tile_overlap": self.tile_overlap,
+                "tile_upscale": self.tile_upscale,
+                "tile_iou_threshold": self.tile_iou_threshold,
+                "tile_minimum_score_gain": self.tile_minimum_score_gain,
             },
             paddleocr_version=str(general["paddleocr_version"]),
             preprocessing_version=self.preprocessing_version,

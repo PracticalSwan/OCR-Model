@@ -48,6 +48,26 @@ def main() -> int:
     parser.add_argument("--continue-on-document-error", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--pdf-dpi", type=int, default=200)
+    parser.add_argument(
+        "--ocr-profile",
+        choices=("original", "custom", "adaptive", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--detector-model",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--general-recognizer",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--thai-recognizer",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
     parser.add_argument("--deskew-angle", type=float, help="optional evidence-backed correction candidate")
     parser.add_argument(
         "--model-checkpoint", "--layout-checkpoint", dest="model_checkpoint"
@@ -97,6 +117,10 @@ def main() -> int:
         confidence_threshold=args.confidence_threshold,
         enable_kmeans_display=not args.disable_kmeans_display,
         require_layout_model=True,
+        ocr_profile=args.ocr_profile,
+        detector_model=args.detector_model,
+        general_recognizer=args.general_recognizer,
+        thai_recognizer=args.thai_recognizer,
     )
     failures = []
     outputs = []
@@ -106,7 +130,7 @@ def main() -> int:
                 document_id, source_type, pages = load_document_pages(
                     source, max_pages=args.max_pages, pdf_dpi=args.pdf_dpi
                 )
-                result = pipeline.extract_pages(
+                result, selected_pages = pipeline.extract_pages_with_rendered_pages(
                     document_id=document_id,
                     source_type=source_type,
                     pages=pages,
@@ -119,7 +143,7 @@ def main() -> int:
                 destination = output if len(inputs) == 1 else output / document_id
                 result_path = write_document_outputs(
                     result,
-                    pages,
+                    selected_pages,
                     destination,
                     force=args.force,
                     save_visualization=args.save_visualization,

@@ -18,6 +18,10 @@ class DocumentInputError(ValueError):
 class DocumentPage:
     page_number: int
     image: Image.Image
+    source_path: Path | None = None
+    source_type: str = "image"
+    render_dpi: int | None = None
+    pdf_page_index: int | None = None
 
 
 def load_document_pages(
@@ -71,7 +75,12 @@ def _load_image(path: Path, *, max_pixels: int) -> DocumentPage:
             normalized = normalize_image(image, max_pixels=max_pixels)
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         raise DocumentInputError(f"image cannot be decoded: {path.name}: {exc}") from exc
-    return DocumentPage(page_number=1, image=normalized)
+    return DocumentPage(
+        page_number=1,
+        image=normalized,
+        source_path=path,
+        source_type="image",
+    )
 
 
 def _load_pdf(
@@ -99,12 +108,74 @@ def _load_pdf(
             page = document.load_page(index)
             pixmap = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
             image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
-            pages.append(DocumentPage(index + 1, normalize_image(image, max_pixels=max_pixels)))
+            pages.append(
+                DocumentPage(
+                    index + 1,
+                    normalize_image(image, max_pixels=max_pixels),
+                    source_path=path,
+                    source_type="pdf",
+                    render_dpi=dpi,
+                    pdf_page_index=index,
+                )
+            )
         return pages
     except DocumentInputError:
         raise
     except Exception as exc:
         raise DocumentInputError(f"PDF rendering failed: {path.name}: {exc}") from exc
+    finally:
+        document.close()
+
+
+def rerender_pdf_page(
+    path: str | Path,
+    *,
+    page_number: int,
+    dpi: int,
+    max_pixels: int = 60_000_000,
+) -> DocumentPage:
+    """Render one known PDF page at a second DPI without decoding other pages."""
+    source = Path(path)
+    if not source.is_file():
+        raise DocumentInputError(f"PDF source no longer exists: {source}")
+    if dpi < 72 or dpi > 600:
+        raise DocumentInputError("PDF DPI must be between 72 and 600")
+    if page_number < 1:
+        raise DocumentInputError("PDF page number must be positive")
+    try:
+        import fitz
+    except ImportError as exc:  # pragma: no cover - environment-specific
+        raise DocumentInputError("PyMuPDF is required for PDF input") from exc
+    try:
+        document = fitz.open(source)
+    except Exception as exc:
+        raise DocumentInputError(f"PDF cannot be opened: {source.name}: {exc}") from exc
+    try:
+        if document.needs_pass:
+            raise DocumentInputError("encrypted or password-protected PDF is unsupported")
+        index = page_number - 1
+        if index >= document.page_count:
+            raise DocumentInputError(
+                f"PDF page {page_number} exceeds page count {document.page_count}"
+            )
+        scale = dpi / 72.0
+        page = document.load_page(index)
+        pixmap = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
+        image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
+        return DocumentPage(
+            page_number,
+            normalize_image(image, max_pixels=max_pixels),
+            source_path=source,
+            source_type="pdf",
+            render_dpi=dpi,
+            pdf_page_index=index,
+        )
+    except DocumentInputError:
+        raise
+    except Exception as exc:
+        raise DocumentInputError(
+            f"PDF page {page_number} rerender failed: {source.name}: {exc}"
+        ) from exc
     finally:
         document.close()
 
