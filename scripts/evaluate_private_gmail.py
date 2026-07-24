@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import subprocess
 import sys
 import time
 from collections import Counter
@@ -17,8 +19,10 @@ from PIL import Image  # noqa: E402
 from src import config as cfgmod  # noqa: E402
 from src.inference.document_io import DocumentPage  # noqa: E402
 from src.inference.document_pipeline import DocumentPipeline  # noqa: E402
-from src.ocr.environment import configure_external_environment  # noqa: E402
-from src.rotation_common import atomic_write_json, deterministic_rank, read_csv_rows  # noqa: E402
+from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
+from src.ocr.model_registry import ModelRegistry  # noqa: E402
+from src.ocr.stack_binding import build_ocr_stack_binding  # noqa: E402
+from src.rotation_common import atomic_write_json, canonical_json, deterministic_rank, read_csv_rows, sha256_file  # noqa: E402
 
 
 def main() -> int:
@@ -32,7 +36,14 @@ def main() -> int:
     if args.limit < 1:
         parser.error("--limit must be positive")
     cfg = cfgmod.load_config(args.config)
-    configure_external_environment(cfgmod.resolve_path(cfg, "external_assets"))
+    asset_root = cfgmod.resolve_path(cfg, "external_assets")
+    configure_external_environment(asset_root)
+    require_storage_gate(
+        asset_root,
+        operation="aggregate-only private Gmail operational evaluation",
+        anticipated_c_gib=0.25,
+        anticipated_asset_gib=4.0,
+    )
     private_manifest = cfgmod.resolve_path(cfg, "metadata") / "private_information_extraction_manifest.csv"
     rows = [
         row for row in read_csv_rows(private_manifest)
@@ -41,6 +52,24 @@ def main() -> int:
     ]
     rows.sort(key=lambda row: deterministic_rank(row["page_id"], 42))
     rows = rows[: args.limit]
+    checkpoint = (
+        Path(args.layout_checkpoint).resolve()
+        if args.layout_checkpoint
+        else Path(str(cfg.get("layout_model", {}).get("inference_checkpoint", ""))).resolve()
+    )
+    calibration = PROJECT_ROOT / "models" / "multitask_calibration.json"
+    profile = str(cfg.get("ocr", {}).get("default_profile", "original"))
+    choice = "original" if profile == "original" else "auto"
+    registry = ModelRegistry.from_setup(
+        args.model_setup,
+        upgrade_registry=cfgmod.resolve_path(cfg, "reports")
+        / "ocr_upgrade"
+        / "model_registry.json",
+        detector_choice=choice,
+        general_choice=choice,
+        thai_choice=choice,
+    )
+    stack = build_ocr_stack_binding(cfg, registry, ocr_profile=profile)
     pipeline = DocumentPipeline.from_config(
         cfg,
         device=args.device,
@@ -84,9 +113,44 @@ def main() -> int:
     report = {
         "schema_version": "1.0",
         "status": "private_test_aggregate",
+        "build_id": "private-operational-"
+        + hashlib.sha256(
+            canonical_json(
+                {
+                    "private_manifest_sha256": sha256_file(private_manifest),
+                    "checkpoint_sha256": sha256_file(
+                        checkpoint / "model.safetensors"
+                    ),
+                    "calibration_sha256": sha256_file(calibration),
+                    "ocr_stack": stack,
+                    "sample_count": attempted,
+                }
+            ).encode("utf-8")
+        ).hexdigest()[:16],
+        "split": "private_operational",
+        "manifest_sha256": sha256_file(private_manifest),
+        "detector_sha256": stack["detector_sha256"],
+        "recognizer_sha256": stack["recognizer_sha256"],
+        "checkpoint_sha256": sha256_file(
+            checkpoint / "model.safetensors"
+        ),
+        "checkpoint_model_sha256": sha256_file(
+            checkpoint / "model.safetensors"
+        ),
+        "calibration_sha256": sha256_file(calibration),
+        "configuration_sha256": stack["preprocessing_sha256"],
+        "source_commit": _git_commit(),
+        "device": args.device,
+        "sample_count": attempted,
+        "failure_count": counts["failed_pages"],
+        "duration_seconds": time.perf_counter() - started,
+        "private_row_count": attempted,
         "attempted_pages": attempted,
         "successful_pages": counts["successful_pages"],
         "failed_pages": counts["failed_pages"],
+        "attempted_documents": attempted,
+        "successful_documents": counts["successful_pages"],
+        "failed_documents": counts["failed_pages"],
         "mean_ocr_words": counts["ocr_words"] / max(1, counts["successful_pages"]),
         "mean_entities": counts["entities"] / max(1, counts["successful_pages"]),
         "mean_relations": counts["relations"] / max(1, counts["successful_pages"]),
@@ -108,8 +172,28 @@ def main() -> int:
         cfgmod.resolve_path(cfg, "reports") / "model_evaluation" / "private_gmail_aggregate.json",
         report,
     )
+    atomic_write_json(
+        cfgmod.resolve_path(cfg, "reports")
+        / "final_model"
+        / "private_test_aggregate.json",
+        report,
+    )
+    atomic_write_json(
+        cfgmod.resolve_path(cfg, "reports")
+        / "ocr_upgrade"
+        / "private_aggregate.json",
+        report,
+    )
     print(json.dumps(report, indent=2))
     return 0 if attempted and counts["successful_pages"] else 1
+
+
+def _git_commit() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        text=True,
+    ).strip()
 
 
 if __name__ == "__main__":

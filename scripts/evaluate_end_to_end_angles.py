@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import statistics
+import subprocess
 import sys
 import time
 from collections import defaultdict
@@ -22,7 +24,9 @@ from src.information_extraction.geometry import rotate_image_and_annotation  # n
 from src.inference.document_io import DocumentPage  # noqa: E402
 from src.inference.document_pipeline import DocumentPipeline  # noqa: E402
 from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
-from src.rotation_common import atomic_write_json, deterministic_rank, read_csv_rows, sha256_file  # noqa: E402
+from src.ocr.model_registry import ModelRegistry  # noqa: E402
+from src.ocr.stack_binding import build_ocr_stack_binding  # noqa: E402
+from src.rotation_common import atomic_write_json, canonical_json, deterministic_rank, read_csv_rows, sha256_file  # noqa: E402
 
 ANGLES = (0, 1, 15, 30, 37, 45, 60, 89, 90, 91, 135, 179, 180, 225, 269, 270, 315, 359)
 
@@ -46,6 +50,22 @@ def main() -> int:
     )
     checkpoint = Path(args.checkpoint).resolve()
     calibration = cfgmod.project_root(cfg) / "models" / "multitask_calibration.json"
+    model_manifest = (
+        cfgmod.resolve_path(cfg, "metadata")
+        / "final_model_dataset_manifest_ocr_v2.csv"
+    )
+    profile = str(cfg.get("ocr", {}).get("default_profile", "original"))
+    choice = "original" if profile == "original" else "auto"
+    registry = ModelRegistry.from_setup(
+        args.model_setup,
+        upgrade_registry=cfgmod.resolve_path(cfg, "reports")
+        / "ocr_upgrade"
+        / "model_registry.json",
+        detector_choice=choice,
+        general_choice=choice,
+        thai_choice=choice,
+    )
+    stack = build_ocr_stack_binding(cfg, registry, ocr_profile=profile)
     samples = _public_samples(cfg, args.pages_per_dataset)
     pipeline = DocumentPipeline.from_config(
         cfg, device=args.device, model_setup=args.model_setup,
@@ -125,8 +145,35 @@ def main() -> int:
         )
     report = {
         "schema_version": "1.0",
+        "status": "passed",
+        "build_id": "ocr-angle-"
+        + hashlib.sha256(
+            canonical_json(
+                {
+                    "manifest_sha256": sha256_file(model_manifest),
+                    "checkpoint_sha256": sha256_file(
+                        checkpoint / "model.safetensors"
+                    ),
+                    "calibration_sha256": sha256_file(calibration),
+                    "ocr_stack": stack,
+                    "angles": ANGLES,
+                }
+            ).encode("utf-8")
+        ).hexdigest()[:16],
         "profile": "final",
         "split": "test_in_domain",
+        "manifest_sha256": sha256_file(model_manifest),
+        "detector_sha256": stack["detector_sha256"],
+        "recognizer_sha256": stack["recognizer_sha256"],
+        "checkpoint_sha256": sha256_file(
+            checkpoint / "model.safetensors"
+        ),
+        "configuration_sha256": stack["preprocessing_sha256"],
+        "source_commit": _git_commit(),
+        "device": args.device,
+        "sample_count": len(samples) * len(ANGLES),
+        "failure_count": 0,
+        "private_row_count": 0,
         "public_only_selection": True,
         "private_document_count": 0,
         "checkpoint": str(checkpoint),
@@ -146,6 +193,12 @@ def main() -> int:
     }
     output = cfgmod.resolve_path(cfg, "reports") / "final_model" / "end_to_end_angle_metrics.json"
     atomic_write_json(output, report)
+    atomic_write_json(
+        cfgmod.resolve_path(cfg, "reports")
+        / "ocr_upgrade"
+        / "angle_metrics.json",
+        report,
+    )
     print(json.dumps(report, indent=2))
     return 0
 
@@ -224,6 +277,14 @@ def _synthetic_thai_page() -> tuple[Image.Image, str]:
     font = ImageFont.truetype(str(font_path), 52) if font_path.is_file() else ImageFont.load_default()
     ImageDraw.Draw(image).text((35, 70), text, fill="black", font=font)
     return image, text
+
+
+def _git_commit() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        text=True,
+    ).strip()
 
 
 if __name__ == "__main__":
