@@ -6,7 +6,9 @@ import argparse
 import json
 import math
 import os
+import subprocess
 import sys
+import time
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -35,6 +37,8 @@ from src.information_extraction.multitask_data import (  # noqa: E402
 )
 from src.information_extraction.multitask_evaluation import validate_evaluation_binding  # noqa: E402
 from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
+from src.ocr.model_registry import ModelRegistry  # noqa: E402
+from src.ocr.stack_binding import build_ocr_stack_binding  # noqa: E402
 from src.rotation_common import atomic_write_json, configuration_hash, read_csv_rows  # noqa: E402
 from scripts.train_multitask_model import (  # noqa: E402
     TokenizedWindowDataset,
@@ -46,6 +50,7 @@ from scripts.train_multitask_model import (  # noqa: E402
 
 
 def main() -> int:
+    started = time.perf_counter()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
     parser.add_argument("--profile", choices=("development", "final"), required=True)
@@ -57,6 +62,34 @@ def main() -> int:
     )
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--max-length", type=int, default=512)
+    parser.add_argument(
+        "--model-setup",
+        default=str(PROJECT_ROOT / "reports" / "ocr" / "model_setup.json"),
+    )
+    parser.add_argument(
+        "--model-registry",
+        default=str(PROJECT_ROOT / "reports" / "ocr_upgrade" / "model_registry.json"),
+    )
+    parser.add_argument(
+        "--ocr-profile",
+        choices=("original", "custom", "adaptive"),
+        default=None,
+    )
+    parser.add_argument(
+        "--detector-model",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--general-recognizer",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--thai-recognizer",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
     parser.add_argument(
         "--streams",
         nargs="+",
@@ -71,6 +104,28 @@ def main() -> int:
     args = parser.parse_args()
 
     cfg = cfgmod.load_config(args.config)
+    selected_ocr_profile = str(
+        args.ocr_profile or cfg.get("ocr", {}).get("default_profile", "original")
+    ).casefold()
+    def profile_choice(value: str) -> str:
+        return (
+            "original"
+            if selected_ocr_profile == "original" and value == "auto"
+            else value
+        )
+
+    registry = ModelRegistry.from_setup(
+        args.model_setup,
+        upgrade_registry=args.model_registry,
+        detector_choice=profile_choice(args.detector_model),
+        general_choice=profile_choice(args.general_recognizer),
+        thai_choice=profile_choice(args.thai_recognizer),
+    )
+    ocr_stack_binding = build_ocr_stack_binding(
+        cfg,
+        registry,
+        ocr_profile=selected_ocr_profile,
+    )
     asset_root = cfgmod.resolve_path(cfg, "external_assets")
     configure_external_environment(asset_root)
     require_storage_gate(
@@ -246,8 +301,9 @@ def main() -> int:
         )
 
     report = {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "profile": args.profile,
+        "build_id": build_id,
         "split": "dev_calibration",
         "token_sources": sorted(token_sources),
         "public_only": True,
@@ -255,10 +311,34 @@ def main() -> int:
         "gmail_fit_rows": 0,
         "checkpoint": str(checkpoint),
         "checkpoint_model_sha256": _sha256(model_path),
+        "checkpoint_sha256": _sha256(model_path),
         "checkpoint_build_id": str(training_state.get("build_id", "")),
         "manifest_path": str(manifest_path),
         "manifest_sha256": _sha256(manifest_path),
+        "dataset_build_sha256": _sha256(manifest_path),
+        "ocr_stack_binding": ocr_stack_binding,
+        "ocr_detector_sha256": ocr_stack_binding["detector_sha256"],
+        "ocr_recognizer_sha256": ocr_stack_binding["recognizer_sha256"],
+        "ocr_preprocessing_sha256": ocr_stack_binding["preprocessing_sha256"],
+        "detector_sha256": ocr_stack_binding["detector_sha256"],
+        "recognizer_sha256": ocr_stack_binding["recognizer_sha256"],
+        "calibration_sha256": None,
+        "configuration_sha256": configuration_hash(
+            {
+                "schema_version": "2.0",
+                "profile": args.profile,
+                "split": "dev_calibration",
+                "token_sources": sorted(token_sources),
+                "max_length": args.max_length,
+                "checkpoint_sha256": _sha256(model_path),
+                "manifest_sha256": _sha256(manifest_path),
+                "ocr_stack_binding": ocr_stack_binding,
+            }
+        ),
+        "source_commit": _git_commit(),
         "example_count": len(examples),
+        "sample_count": len(examples),
+        "failure_count": 0,
         "window_count": len(dataset),
         "temperatures": temperatures,
         "thresholds": thresholds,
@@ -271,6 +351,8 @@ def main() -> int:
             "relation": dict(Counter(tensors["relation"]["labels"].tolist())),
         },
         "device": str(selected_device),
+        "duration_seconds": time.perf_counter() - started,
+        "private_row_count": 0,
     }
     output_path = Path(args.output).resolve()
     atomic_write_json(output_path, report)
@@ -280,9 +362,16 @@ def main() -> int:
         / f"calibration_{args.profile}.json"
     )
     atomic_write_json(report_path, report)
+    upgrade_report_path = (
+        cfgmod.resolve_path(cfg, "reports")
+        / "ocr_upgrade"
+        / "calibration_metrics.json"
+    )
+    atomic_write_json(upgrade_report_path, report)
     print(json.dumps({
         "output": str(output_path),
         "report": str(report_path),
+        "upgrade_report": str(upgrade_report_path),
         "profile": args.profile,
         "build_id": build_id,
         "examples": len(examples),
@@ -414,6 +503,17 @@ def _document_metrics(logits: Any, labels: Any, probabilities: Any, *, temperatu
         "selective_accuracy": float(correct[retained].float().mean()) if bool(retained.any()) else None,
         "class_count": len(DOCUMENT_TYPE_LABELS),
     }
+
+
+def _git_commit() -> str:
+    completed = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return completed.stdout.strip()
 
 
 if __name__ == "__main__":

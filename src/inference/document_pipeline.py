@@ -21,6 +21,7 @@ from src.inference.document_io import rerender_pdf_page
 from src.inference.kmeans_display import KMeansRotationDisplay, safe_kmeans_display
 from src.ocr.cache import OCRCache
 from src.ocr.model_registry import ModelRegistry
+from src.ocr.stack_binding import build_ocr_stack_binding
 from src.ocr.pipeline import MultilingualOCR
 from src.ocr.adaptive import (
     AdaptiveRenderingConfig,
@@ -124,6 +125,11 @@ class DocumentPipeline:
             detector_choice=profile_choice(detector_model),
             general_choice=profile_choice(general_recognizer),
             thai_choice=profile_choice(thai_recognizer),
+        )
+        ocr_stack_binding = build_ocr_stack_binding(
+            cfg,
+            registry,
+            ocr_profile=configured_profile,
         )
         cache = OCRCache(cfgmod.resolve_path(cfg, "ocr_cache")) if cfg.get("ocr", {}).get("cache_enabled", True) else None
         options = {
@@ -241,6 +247,7 @@ class DocumentPipeline:
                 cache_dir=cfgmod.resolve_path(cfg, "layout_models"),
                 max_length=int(cfg.get("layout_model", {}).get("max_length", 512)),
                 calibration_path=calibration,
+                ocr_binding=ocr_stack_binding,
                 confidence_threshold=confidence_threshold,
             )
         except Exception as exc:

@@ -21,6 +21,7 @@ from src.information_extraction.multitask_data import (
     RELATION_LABELS,
     build_inference_relation_pairs,
 )
+from src.ocr.stack_binding import validate_ocr_stack_binding
 from src.rotation_common import sha256_file, stable_id
 
 DEFAULT_THRESHOLDS = {
@@ -333,6 +334,7 @@ class MultiTaskLayoutExtractor:
         max_length: int = 512,
         stride: int = 64,
         calibration_path: str | Path | None = None,
+        ocr_binding: Mapping[str, Any] | None = None,
         confidence_threshold: float | None = None,
     ) -> None:
         checkpoint = Path(checkpoint)
@@ -357,7 +359,7 @@ class MultiTaskLayoutExtractor:
             int(key): str(value) for key, value in self.model.config.id2label.items()
         }
         self.calibration, self.calibration_warnings = _load_calibration(
-            calibration_path, checkpoint
+            calibration_path, checkpoint, expected_ocr_binding=ocr_binding
         )
         if confidence_threshold is not None:
             self.calibration = apply_confidence_floor(
@@ -604,6 +606,8 @@ def _temperature_softmax(logits: Any, temperature: float, torch: Any) -> Any:
 def _load_calibration(
     calibration_path: str | Path | None,
     checkpoint: Path,
+    *,
+    expected_ocr_binding: Mapping[str, Any] | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
     default = {
         "temperatures": dict(DEFAULT_TEMPERATURES),
@@ -620,6 +624,11 @@ def _load_calibration(
     model_path = checkpoint / "model.safetensors"
     if not expected_hash or not model_path.is_file() or sha256_file(model_path) != expected_hash:
         raise ValueError("calibration artifact is not bound to this checkpoint")
+    if expected_ocr_binding is not None:
+        binding = payload.get("ocr_stack_binding")
+        if not isinstance(binding, Mapping):
+            raise ValueError("calibration artifact has no OCR stack binding")
+        validate_ocr_stack_binding(binding, expected_ocr_binding)
     temperatures = {**DEFAULT_TEMPERATURES, **dict(payload.get("temperatures") or {})}
     thresholds = {**DEFAULT_THRESHOLDS, **dict(payload.get("thresholds") or {})}
     for name, value in temperatures.items():
