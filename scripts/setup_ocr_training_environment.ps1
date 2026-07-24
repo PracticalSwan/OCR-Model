@@ -92,6 +92,8 @@ Assert-NativeSuccess 'pip upgrade'
 & $TrainingPython -m pip install 'paddlepaddle-gpu==3.3.0' `
     -i 'https://www.paddlepaddle.org.cn/packages/stable/cu130/'
 Assert-NativeSuccess 'PaddlePaddle GPU installation'
+& $TrainingPython -m pip install 'nvidia-cuda-nvrtc==13.0.48'
+Assert-NativeSuccess 'NVIDIA CUDA 13.0 NVRTC installation'
 & $TrainingPython -m pip install -r (Join-Path $VendorRoot 'requirements.txt')
 Assert-NativeSuccess 'PaddleOCR training requirements installation'
 & $TrainingPython -m pip install 'paddleocr==3.7.0' 'paddlex==3.7.2'

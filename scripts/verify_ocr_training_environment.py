@@ -24,6 +24,7 @@ EXPECTED_PACKAGES = {
     "paddlepaddle-gpu": "3.3.0",
     "paddleocr": "3.7.0",
     "paddlex": "3.7.2",
+    "nvidia-cuda-nvrtc": "13.0.48",
 }
 CONFIG_PATHS = {
     "detector": "configs/det/PP-OCRv6/PP-OCRv6_medium_det.yml",
@@ -270,6 +271,31 @@ def _run_training_lifecycle(
         reloaded_logits = reloaded(inputs)
     if tuple(reloaded_logits.shape) != (2, 2):
         raise RuntimeError("reloaded model output shape mismatch")
+    amp_model = paddle.nn.Linear(8, 4)
+    amp_optimizer = paddle.optimizer.Adam(
+        learning_rate=1e-3,
+        parameters=amp_model.parameters(),
+    )
+    amp_model, amp_optimizer = paddle.amp.decorate(
+        models=amp_model,
+        optimizers=amp_optimizer,
+        level="O2",
+        master_weight=True,
+    )
+    amp_scaler = paddle.amp.GradScaler(
+        init_loss_scaling=32768.0,
+        use_dynamic_loss_scaling=True,
+    )
+    amp_inputs = paddle.randn([4, 8], dtype="float32")
+    with paddle.amp.auto_cast(level="O2"):
+        amp_outputs = amp_model(amp_inputs)
+        amp_loss = paddle.mean(amp_outputs * amp_outputs)
+    if not bool(paddle.isfinite(amp_loss).item()):
+        raise RuntimeError("O2 AMP smoke loss is not finite")
+    scaled_loss = amp_scaler.scale(amp_loss)
+    scaled_loss.backward()
+    amp_scaler.minimize(amp_optimizer, scaled_loss)
+    amp_optimizer.clear_grad()
     return {
         "device": device,
         "forward_pass": True,
@@ -281,6 +307,10 @@ def _run_training_lifecycle(
         "checkpoint_sha256": sha256_file(checkpoint_path),
         "checkpoint_reload": True,
         "output_shape": list(reloaded_logits.shape),
+        "amp_o2_forward_pass": True,
+        "amp_o2_backward_pass": True,
+        "amp_o2_optimizer_step": True,
+        "amp_o2_loss": float(amp_loss.item()),
     }
 
 
