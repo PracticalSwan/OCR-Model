@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -55,6 +57,7 @@ PUBLIC_EVALUATION_SPLITS = (
 
 
 def main() -> int:
+    started = time.perf_counter()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
     parser.add_argument("--profile", choices=("development", "final"), required=True)
@@ -67,6 +70,12 @@ def main() -> int:
     parser.add_argument("--split", choices=PUBLIC_EVALUATION_SPLITS, required=True)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--max-length", type=int, default=512)
+    parser.add_argument(
+        "--ocr-profile",
+        choices=("original", "custom", "adaptive"),
+        default=None,
+        help="OCR stack whose hashes bind this evaluation report",
+    )
     parser.add_argument(
         "--rotation-angle",
         type=float,
@@ -97,7 +106,8 @@ def main() -> int:
 
     cfg = cfgmod.load_config(args.config)
     selected_ocr_profile = str(
-        cfg.get("ocr", {}).get("default_profile", "original")
+        args.ocr_profile
+        or cfg.get("ocr", {}).get("default_profile", "original")
     ).casefold()
     def profile_choice(value: str) -> str:
         return "original" if selected_ocr_profile == "original" else value
@@ -271,23 +281,58 @@ def main() -> int:
                 ),
             }
     report = {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "profile": args.profile,
+        "build_id": evaluation_build_id,
         "split": args.split,
         "token_sources": sorted(token_sources),
         "public_only": True,
         "private_example_count": 0,
         "checkpoint": str(checkpoint),
         "checkpoint_model_sha256": _sha256(model_path),
+        "checkpoint_sha256": _sha256(model_path),
         "checkpoint_build_id": str(training_state.get("build_id", "")),
         "evaluation_build_id": evaluation_build_id,
         "cross_build_comparison": str(training_state.get("build_id", "")) != evaluation_build_id,
         "manifest_path": str(manifest_path),
         "manifest_sha256": _sha256(manifest_path),
+        "detector_sha256": expected_ocr_binding["detector_sha256"],
+        "recognizer_sha256": expected_ocr_binding["recognizer_sha256"],
+        "preprocessing_sha256": expected_ocr_binding[
+            "preprocessing_sha256"
+        ],
+        "calibration_sha256": (
+            _sha256(calibration_path)
+            if calibration_path is not None
+            else None
+        ),
+        "configuration_sha256": configuration_hash(
+            {
+                "schema_version": "2.0",
+                "profile": args.profile,
+                "split": args.split,
+                "token_sources": sorted(token_sources),
+                "rotation_angle": float(args.rotation_angle) % 360.0,
+                "max_length": args.max_length,
+                "checkpoint_sha256": _sha256(model_path),
+                "manifest_sha256": _sha256(manifest_path),
+                "calibration_sha256": (
+                    _sha256(calibration_path)
+                    if calibration_path is not None
+                    else None
+                ),
+                "ocr_stack_binding": expected_ocr_binding,
+            }
+        ),
+        "source_commit": _git_commit(),
         "example_count": len(examples),
+        "sample_count": len(examples),
+        "failure_count": 0,
         "window_count": len(dataset),
         "rotation_angle": float(args.rotation_angle) % 360.0,
         "device": str(selected_device),
+        "duration_seconds": time.perf_counter() - started,
+        "private_row_count": 0,
         "calibration": (
             {
                 "path": str(calibration_path),
@@ -307,6 +352,14 @@ def main() -> int:
     atomic_write_json(report_path, report)
     print(json.dumps({**report, "report_path": str(report_path)}, indent=2))
     return 0
+
+
+def _git_commit() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        text=True,
+    ).strip()
 
 
 if __name__ == "__main__":
