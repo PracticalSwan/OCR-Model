@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "status": "passed",
+  "build_id": "ocr-benchmark-8854b5f20deb6611",
+  "generated_at_utc": "2026-07-24T06:48:59.958651+00:00",
+  "split": "dev_select",
+  "manifest_path": "C:/Assumption University/CSX4201/Project/data/metadata/ocr_benchmark_manifest.csv",
+  "manifest_sha256": "1786af155d1c2c3e69224c87f1885da3a62ef59617d7d57ff4d7d4bea661e3ec",
+  "source_commit": "28df2a4b7ae6f0fa35b922eddc85b0ce3dab878e",
+  "selection_seed": 42,
+  "sample_count": 400,
+  "failure_count": 0,
+  "duration_seconds": 32.235497900051996,
+  "private_row_count": 0,
+  "counts_by_dataset": {
+    "fatura": 283,
+    "funsd": 20,
+    "sroie": 97
+  },
+  "available_dev_select_counts": {
+    "fatura": 996,
+    "funsd": 20,
+    "sroie": 97
+  },
+  "counts_by_document_type": {
+    "form": 20,
+    "invoice": 283,
+    "receipt": 97
+  },
+  "counts_by_language": {
+    "en": 117,
+    "tr": 283
+  },
+  "counts_by_quality": {
+    "clean": 22,
+    "degraded": 378
+  },
+  "counts_by_text_density": {
+    "high": 366,
+    "medium": 34
+  },
+  "counts_by_character_size": {
+    "high": 277,
+    "low": 1,
+    "medium": 122
+  },
+  "counts_by_resolution": {
+    "high": 24,
+    "low": 1,
+    "medium": 375
+  },
+  "counts_by_diagnostic_rotation": {
+    "0": 303,
+    "37": 97
+  },
+  "field_presence": {
+    "has_table": 283,
+    "has_amount": 385,
+    "has_date": 383,
+    "has_identifier": 378
+  },
+  "document_family_count": 121,
+  "exact_source_hash_duplicate_groups": 4,
+  "license_sources": {
+    "fatura": {
+      "id": "CC-BY-4.0-Zenodo-8261508",
+      "source": "https://zenodo.org/records/8261508",
+      "note": "Zenodo record declares Creative Commons Attribution 4.0."
+    },
+    "funsd": {
+      "id": "FUNSD-EPFL-NC-RESEARCH-EDUCATION",
+      "source": "https://guillaumejaume.github.io/FUNSD/work/",
+      "note": "Official terms restrict use to non-commercial research and education."
+    },
+    "sroie": {
+      "id": "MIT-ZZZDAVID-ICDAR2019-SROIE-REPOSITORY",
+      "source": "https://github.com/zzzDavid/ICDAR-2019-SROIE",
+      "note": "The public source repository containing the corrected dataset declares MIT; the original challenge may retain additional underlying rights."
+    }
+  },
+  "storage_gate": {
+    "minimum_c_free_gib": 15.0,
+    "minimum_asset_free_gib": 15.0,
+    "anticipated_c_gib": 0.05,
+    "anticipated_asset_gib": 0.05,
+    "passed": true,
+    "errors": [],
+    "c_free_gib": 41.052,
+    "projected_c_free_gib": 41.002,
+    "asset_free_gib": 367.21,
+    "projected_asset_free_gib": 367.16
+  },
+  "selection_policy": {
+    "all_funsd_dev_select": true,
+    "all_sroie_dev_select": true,
+    "minimum_fatura": 283,
+    "minimum_total": 400,
+    "fatura_strategy": "exact-hash unique first, then deterministic round-robin across family/document/quality/density/size/resolution/table/field strata"
+  }
+}
