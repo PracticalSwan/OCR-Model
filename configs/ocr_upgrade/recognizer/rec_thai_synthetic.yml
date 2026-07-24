@@ -11,6 +11,7 @@ metadata:
   early_stopping: Select the best checkpoint from synthetic Thai DEV_SELECT accuracy.
   claim_boundary: Synthetic and integration evidence only; no real public Thai benchmark is claimed.
   train_data: OFL-font synthetic TRAIN only
+  environment_gate: O2 AMP lifecycle passed with CUDA 13.0 NVRTC 13.0.48.
 overrides:
   Global:
     epoch_num: 3
@@ -22,6 +23,10 @@ overrides:
     d2s_train_image_shape: [3, 48, 320]
     character_dict_path: D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv5_th_dict.txt
     use_visualdl: false
+    use_amp: true
+    amp_level: O2
+    scale_loss: 1.0
+    use_dynamic_loss_scaling: false
   Optimizer:
     lr:
       name: Cosine

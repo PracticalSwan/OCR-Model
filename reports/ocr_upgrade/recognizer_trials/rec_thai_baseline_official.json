@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "build_id": "ocr-recognizer-eval-a5d527ebc117127c",
+  "generated_at_utc": "2026-07-24T09:38:13.499205+00:00",
+  "split": "dev_select",
+  "manifest_sha256": "43382cbba7807bcf736fe85dead236d1a71f9b5568aaeb86faf03212de4956d1",
+  "detector_sha256": "eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d",
+  "recognizer_sha256": "cfbe184aa358ce0f3f7707e245a13015b53dfa5ed86118f10b7625f728159b1a",
+  "checkpoint_sha256": "7fd9230cef2748d1c0519ba2b3d1d6df7c2a667d6aec24e4a6a150903c0f40a6",
+  "calibration_sha256": null,
+  "configuration_sha256": "c5828fba657bf5a3a960c454e530a75563b0106cfb2d2b3a513da3ba873cb0ae",
+  "source_commit": "070478c40b1a763f7bab78db753bb9507bcbcf3f",
+  "device": "gpu:0",
+  "sample_count": 2000,
+  "failure_count": 0,
+  "duration_seconds": 6.013657699921168,
+  "private_row_count": 0,
+  "metrics": {
+    "sample_count": 2000,
+    "reference_characters": 48737,
+    "character_errors": 1750,
+    "cer": 0.035907011100396,
+    "reference_words": 5454,
+    "word_errors": 1280,
+    "wer": 0.2346901356802347,
+    "exact_line_accuracy": 0.5445,
+    "numeric_exact_match": 0.46048537647790916,
+    "amount_exact_match": 0.0,
+    "date_exact_match": 0.4311377245508982,
+    "identifier_exact_match": 0.386,
+    "currency_exact_match": 0.49101796407185627,
+    "email_exact_match": null,
+    "turkish_character_accuracy": null,
+    "english_exact_match": 0.6597796143250688,
+    "confidence_all_finite": true,
+    "confidence_ece": 0.4051720174252986,
+    "confidence_brier": 0.39820982810735794,
+    "duration_seconds": 6.013657699921168,
+    "time_per_sample_seconds": 0.003006828849960584,
+    "failure_count": 0,
+    "selection_score": 0.5196498907475366,
+    "track": "thai",
+    "trial_id": "rec_thai_baseline_official",
+    "peak_gpu_memory_bytes": 276839424,
+    "source_manifests": [
+      {
+        "path": "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition/dataset_manifest.csv",
+        "sha256": "cbc1fc8950558210df8b684af6bc7f59126673233376ffa12b6d31c1948a4ac4"
+      }
+    ],
+    "dictionary": {
+      "path": "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv5_th_dict.txt",
+      "sha256": "acc2b4734336349a01654683fa0df6347b66aff0947f5591069ba062b597df80",
+      "compatible_evaluated_samples": 2000,
+      "excluded_sample_count": 0,
+      "excluded_by_codepoint": {},
+      "excluded_sample_ids_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "policy": "Unrepresentable targets are excluded and reported; target text is never silently mutated."
+    },
+    "predictions_path": "D:/CSX4201/vision-info-extraction-assets/evaluations/ocr_upgrade/recognizer/rec_thai_baseline_official/predictions.jsonl",
+    "predictions_sha256": "1c768325252c2fa8581c64be09da945b8f1b02a4c761b40de4bf4fc5d7676297",
+    "model_directory": "D:/CSX4201/vision-info-extraction-assets/cache/paddlex/official_models/th_PP-OCRv5_mobile_rec"
+  },
+  "model_name": "th_PP-OCRv5_mobile_rec",
+  "environment": {
+    "python": "3.10.11",
+    "paddle": "3.3.0",
+    "paddleocr": "3.7.0",
+    "paddlex": "3.7.2"
+  }
+}

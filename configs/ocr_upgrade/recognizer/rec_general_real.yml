@@ -10,6 +10,7 @@ metadata:
   expected_iterations: 5208
   early_stopping: Compare the epoch checkpoint on the frozen composite DEV_SELECT score.
   train_data: public TRAIN only
+  environment_gate: O2 AMP lifecycle passed with CUDA 13.0 NVRTC 13.0.48.
 overrides:
   Global:
     epoch_num: 1
@@ -21,6 +22,10 @@ overrides:
     d2s_train_image_shape: [3, 48, 320]
     character_dict_path: D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv6_dict.txt
     use_visualdl: false
+    use_amp: true
+    amp_level: O2
+    scale_loss: 1.0
+    use_dynamic_loss_scaling: false
   Optimizer:
     lr:
       name: Cosine
