@@ -15,10 +15,10 @@
         "anticipated_asset_gib": 0.0,
         "passed": true,
         "errors": [],
-        "c_free_gib": 32.702,
-        "projected_c_free_gib": 32.702,
-        "asset_free_gib": 367.072,
-        "projected_asset_free_gib": 367.072
+        "c_free_gib": 41.126,
+        "projected_c_free_gib": 41.126,
+        "asset_free_gib": 367.21,
+        "projected_asset_free_gib": 367.21
       }
     },
     {
