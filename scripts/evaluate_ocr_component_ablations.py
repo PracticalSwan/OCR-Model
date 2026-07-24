@@ -81,6 +81,11 @@ def main() -> int:
         "--calibration",
         default=str(PROJECT_ROOT / "models/multitask_calibration.json"),
     )
+    parser.add_argument(
+        "--disable-calibration",
+        action="store_true",
+        help="Use conservative checkpoint defaults during component selection.",
+    )
     parser.add_argument("--device", choices=("cpu", "gpu:0"), default="gpu:0")
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument(
@@ -108,13 +113,17 @@ def main() -> int:
     manifest_path = Path(args.benchmark_manifest).resolve()
     rows = _balanced_rows(_load_rows(manifest_path), args.limit)
     checkpoint = Path(args.checkpoint).resolve()
-    calibration = Path(args.calibration).resolve()
+    calibration = (
+        None if args.disable_calibration else Path(args.calibration).resolve()
+    )
     source_commit = _git_commit()
     provenance = {
         "split": "dev_select",
         "manifest_sha256": sha256_file(manifest_path),
         "checkpoint_sha256": sha256_file(checkpoint / "model.safetensors"),
-        "calibration_sha256": sha256_file(calibration),
+        "calibration_sha256": (
+            sha256_file(calibration) if calibration is not None else None
+        ),
         "source_commit": source_commit,
         "device": args.device,
         "sample_count": len(rows),
@@ -128,7 +137,12 @@ def main() -> int:
         run_cfg["ocr"]["orientation_candidates"] = [0]
         run_cfg["ocr"]["preprocessing_profile"] = "original"
         run_cfg["ocr"]["adaptive_preprocessing_profile"] = (
-            "quality_auto"
+            str(
+                cfg.get("ocr", {}).get(
+                    "adaptive_preprocessing_profile",
+                    "quality_auto",
+                )
+            )
             if definition["adaptive_preprocessing"]
             else "original"
         )
@@ -145,6 +159,7 @@ def main() -> int:
             model_setup=args.model_setup,
             layout_checkpoint=checkpoint,
             calibration_path=calibration,
+            use_layout_calibration=calibration is not None,
             enable_kmeans_display=False,
             require_layout_model=True,
             ocr_profile=str(definition["ocr_profile"]),

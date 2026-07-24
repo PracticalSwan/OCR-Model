@@ -120,7 +120,7 @@ ocr:
   model_registry: "reports/ocr_upgrade/model_registry.json"
   preprocessing_version: "3.0-domain-adapted-adaptive"
   preprocessing_profile: "original"
-  adaptive_preprocessing_profile: "quality_auto"
+  adaptive_preprocessing_profile: "grayscale_normalized"
   paddle_cache_home: "D:/CSX4201/vision-info-extraction-assets/cache/paddlex"
   detector:
     name: "PP-OCRv6_medium_det"

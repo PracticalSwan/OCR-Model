@@ -53,6 +53,19 @@ def main() -> int:
         default=str(PROJECT_ROOT / "reports/ocr_upgrade/model_registry.json"),
     )
     parser.add_argument("--device", choices=("cpu", "gpu:0"), default="gpu:0")
+    parser.add_argument(
+        "--preprocessing-profile",
+        choices=(
+            "original",
+            "grayscale_normalized",
+            "adaptive_contrast",
+            "background_normalized",
+            "sharpen",
+            "denoise",
+            "quality_auto",
+        ),
+        default="grayscale_normalized",
+    )
     parser.add_argument("--pages", type=int, default=9)
     parser.add_argument(
         "--output",
@@ -83,7 +96,7 @@ def main() -> int:
         device=args.device,
         cardinal_angles=(0, 90, 180, 270),
         preprocessing_version="3.0-orientation-dev-select",
-        preprocessing_profile="quality_auto",
+        preprocessing_profile=args.preprocessing_profile,
         enable_fine_deskew=True,
         maximum_fine_candidates=2,
         enable_tiling=False,
@@ -166,7 +179,7 @@ def main() -> int:
                     "cardinal_angles": [0, 90, 180, 270],
                     "fine_deskew": True,
                     "maximum_fine_candidates": 2,
-                    "preprocessing": "quality_auto",
+                    "preprocessing": args.preprocessing_profile,
                 }
             ).encode("utf-8")
         ).hexdigest(),

@@ -846,7 +846,12 @@ def prepare_model_dataset(
             cache=cache,
             preprocessing_version=MODEL_DATA_PREPROCESSING_VERSION,
             preprocessing_profile=(
-                "quality_auto"
+                str(
+                    cfg.get("ocr", {}).get(
+                        "adaptive_preprocessing_profile",
+                        "quality_auto",
+                    )
+                )
                 if selected_ocr_profile == "adaptive"
                 else "original"
             ),
