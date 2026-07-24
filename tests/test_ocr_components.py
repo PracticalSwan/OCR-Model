@@ -348,7 +348,9 @@ def test_registry_selects_versioned_custom_models_and_preserves_original_aliases
     custom_file_sha = hashlib.sha256(custom_file.read_bytes()).hexdigest()
     custom_model_digest = hashlib.sha256()
     custom_model_digest.update(custom_file.name.encode("utf-8"))
+    custom_model_digest.update(b"\0")
     custom_model_digest.update(custom_file_sha.encode("ascii"))
+    custom_model_digest.update(b"\n")
     upgrade = tmp_path / "upgrade_registry.json"
     upgrade.write_text(
         json.dumps({

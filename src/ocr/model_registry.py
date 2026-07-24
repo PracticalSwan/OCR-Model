@@ -45,10 +45,15 @@ class ModelArtifact:
 
     @property
     def artifact_hash(self) -> str:
+        """Match the path-and-content tree digest used by OCR trial reports."""
         digest = hashlib.sha256()
-        for item in sorted(self.files, key=lambda value: str(value["path"])):
+        for item in sorted(
+            self.files, key=lambda value: str(value["path"]).casefold()
+        ):
             digest.update(str(item["path"]).encode("utf-8"))
+            digest.update(b"\0")
             digest.update(str(item["sha256"]).encode("ascii"))
+            digest.update(b"\n")
         return digest.hexdigest()
 
 

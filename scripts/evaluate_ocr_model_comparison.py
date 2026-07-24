@@ -1,0 +1,622 @@
+#!/usr/bin/env python3
+"""Compare the frozen A-F OCR configurations on public DEV_SELECT only."""
+from __future__ import annotations
+
+import argparse
+import copy
+import csv
+import hashlib
+import json
+import math
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any, Mapping
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from PIL import Image  # noqa: E402
+
+from src import config as cfgmod  # noqa: E402
+from src.evaluation.critical_field_ocr import evaluate_critical_fields  # noqa: E402
+from src.evaluation.metrics import extraction_metrics, normalized_text, ocr_text_metrics  # noqa: E402
+from src.inference.document_io import DocumentPage  # noqa: E402
+from src.inference.document_pipeline import DocumentPipeline  # noqa: E402
+from src.ocr.benchmark import resolve_project_input  # noqa: E402
+from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
+from src.ocr.errors import OCRModelUnavailable  # noqa: E402
+from src.ocr.training_data import convert_detection_annotation, critical_fields_by_token  # noqa: E402
+from src.ocr.trials import aggregate_detector_results, detector_page_result  # noqa: E402
+from src.rotation_common import (  # noqa: E402
+    atomic_write_json,
+    atomic_write_text,
+    canonical_json,
+    sha256_file,
+)
+
+
+CONFIGURATIONS: dict[str, dict[str, str]] = {
+    "A": {
+        "description": "original detector + original recognizers",
+        "ocr_profile": "original",
+        "detector": "original",
+        "general": "original",
+        "thai": "original",
+    },
+    "B": {
+        "description": "custom detector + original recognizers",
+        "ocr_profile": "custom",
+        "detector": "custom",
+        "general": "original",
+        "thai": "original",
+    },
+    "C": {
+        "description": "original detector + accepted custom recognizers",
+        "ocr_profile": "custom",
+        "detector": "original",
+        "general": "custom",
+        "thai": "auto",
+    },
+    "D": {
+        "description": "custom detector + accepted custom recognizers",
+        "ocr_profile": "custom",
+        "detector": "custom",
+        "general": "custom",
+        "thai": "auto",
+    },
+    "E": {
+        "description": "registry-selected detector and recognizers",
+        "ocr_profile": "custom",
+        "detector": "auto",
+        "general": "auto",
+        "thai": "auto",
+    },
+    "F": {
+        "description": "adaptive preprocessing, tiling, and recognition retries",
+        "ocr_profile": "adaptive",
+        "detector": "auto",
+        "general": "auto",
+        "thai": "auto",
+    },
+}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
+    parser.add_argument(
+        "--benchmark-manifest",
+        default=str(PROJECT_ROOT / "data/metadata/ocr_benchmark_manifest.csv"),
+    )
+    parser.add_argument(
+        "--model-setup",
+        default=str(PROJECT_ROOT / "reports/ocr/model_setup.json"),
+    )
+    parser.add_argument("--checkpoint", required=True)
+    parser.add_argument(
+        "--calibration",
+        default=str(PROJECT_ROOT / "models/multitask_calibration.json"),
+    )
+    parser.add_argument("--device", choices=("cpu", "gpu:0"), default="gpu:0")
+    parser.add_argument(
+        "--configurations",
+        nargs="+",
+        choices=tuple(CONFIGURATIONS),
+        default=list(CONFIGURATIONS),
+    )
+    parser.add_argument("--limit", type=int, default=400)
+    parser.add_argument(
+        "--output",
+        default=str(PROJECT_ROOT / "reports/ocr_upgrade/ocr_model_comparison.csv"),
+    )
+    parser.add_argument(
+        "--selection-output",
+        default=str(PROJECT_ROOT / "reports/ocr_upgrade/ocr_model_selection.json"),
+    )
+    args = parser.parse_args()
+    if not 1 <= args.limit <= 400:
+        parser.error("--limit must be in [1, 400]")
+
+    cfg = cfgmod.load_config(args.config)
+    configure_external_environment(cfgmod.resolve_path(cfg, "external_assets"))
+    require_storage_gate(
+        cfgmod.resolve_path(cfg, "external_assets"),
+        operation="public DEV_SELECT OCR A-F comparison",
+        anticipated_c_gib=0.25,
+        anticipated_asset_gib=2.0,
+    )
+    manifest_path = Path(args.benchmark_manifest).resolve()
+    rows = _load_rows(manifest_path)[: args.limit]
+    checkpoint = Path(args.checkpoint).resolve()
+    calibration = Path(args.calibration).resolve()
+    for required in (
+        checkpoint / "model.safetensors",
+        checkpoint / "training_state.json",
+        calibration,
+    ):
+        if not required.is_file():
+            raise SystemExit(f"required comparison artifact is missing: {required}")
+
+    source_commit = _git_commit()
+    manifest_sha = sha256_file(manifest_path)
+    checkpoint_sha = sha256_file(checkpoint / "model.safetensors")
+    calibration_sha = sha256_file(calibration)
+    summaries: list[dict[str, Any]] = []
+    for label in args.configurations:
+        definition = CONFIGURATIONS[label]
+        started = time.perf_counter()
+        print(f"configuration {label}: {definition['description']}", flush=True)
+        try:
+            run_cfg = copy.deepcopy(cfg)
+            run_cfg.setdefault("ocr", {})["orientation_candidates"] = [0]
+            run_cfg["ocr"]["cache_enabled"] = False
+            pipeline = DocumentPipeline.from_config(
+                run_cfg,
+                device=args.device,
+                model_setup=args.model_setup,
+                layout_checkpoint=checkpoint,
+                calibration_path=calibration,
+                enable_kmeans_display=False,
+                require_layout_model=True,
+                ocr_profile=definition["ocr_profile"],
+                detector_model=definition["detector"],
+                general_recognizer=definition["general"],
+                thai_recognizer=definition["thai"],
+            )
+        except OCRModelUnavailable as exc:
+            summaries.append(
+                _unavailable_row(
+                    label,
+                    definition,
+                    exc,
+                    manifest_sha=manifest_sha,
+                    checkpoint_sha=checkpoint_sha,
+                    calibration_sha=calibration_sha,
+                    source_commit=source_commit,
+                    device=args.device,
+                    sample_count=len(rows),
+                    duration_seconds=time.perf_counter() - started,
+                )
+            )
+            continue
+
+        observations = []
+        try:
+            for index, row in enumerate(rows, start=1):
+                observations.append(_evaluate_page(pipeline, row))
+                if index % 25 == 0 or index == len(rows):
+                    print(
+                        f"configuration {label}: {index}/{len(rows)}",
+                        flush=True,
+                    )
+        finally:
+            pipeline.close()
+        summary = _aggregate(observations)
+        config_hash = hashlib.sha256(
+            canonical_json(definition).encode("utf-8")
+        ).hexdigest()
+        summary.update(
+            {
+                "configuration": label,
+                "description": definition["description"],
+                "status": "passed",
+                "selected": False,
+                "ocr_profile": definition["ocr_profile"],
+                "detector_choice": definition["detector"],
+                "general_recognizer_choice": definition["general"],
+                "thai_recognizer_choice": definition["thai"],
+                "split": "dev_select",
+                "manifest_sha256": manifest_sha,
+                "checkpoint_sha256": checkpoint_sha,
+                "calibration_sha256": calibration_sha,
+                "configuration_sha256": config_hash,
+                "source_commit": source_commit,
+                "device": args.device,
+                "sample_count": len(rows),
+                "failure_count": sum(bool(item["failed"]) for item in observations),
+                "duration_seconds": time.perf_counter() - started,
+                "private_row_count": 0,
+            }
+        )
+        summaries.append(summary)
+
+    successful = [row for row in summaries if row.get("status") == "passed"]
+    if not successful:
+        raise RuntimeError("all requested OCR comparison configurations were unavailable")
+    fastest = min(float(row["time_per_page_seconds"]) for row in successful)
+    for row in successful:
+        efficiency = min(
+            1.0, fastest / max(1e-9, float(row["time_per_page_seconds"]))
+        )
+        row["normalized_efficiency_score"] = efficiency
+        row["selection_score"] = ocr_model_selection_score(
+            detection_f1=float(row["polygon_f1"]),
+            coverage=float(row["recognized_text_coverage"]),
+            wer=float(row["wer"]),
+            critical_exact=float(row["critical_field_exact_match"]),
+            entity_f1=float(row["end_to_end_entity_f1"]),
+            canonical_accuracy=float(row["end_to_end_canonical_accuracy"]),
+            relation_f1=float(row["end_to_end_relation_f1"]),
+            efficiency=efficiency,
+            failure_rate=float(row["page_failure_rate"]),
+        )
+    selected = select_simplest_material_configuration(successful)
+    selected["selected"] = True
+    _write_csv(Path(args.output), summaries)
+    selection = {
+        "schema_version": "1.0",
+        "status": "passed",
+        "build_id": "ocr-model-selection-"
+        + hashlib.sha256(canonical_json(summaries).encode("utf-8")).hexdigest()[:16],
+        "split": "dev_select",
+        "manifest_sha256": manifest_sha,
+        "checkpoint_sha256": checkpoint_sha,
+        "calibration_sha256": calibration_sha,
+        "source_commit": source_commit,
+        "device": args.device,
+        "sample_count": sum(int(row.get("sample_count", 0)) for row in successful),
+        "failure_count": sum(int(row.get("failure_count", 0)) for row in successful),
+        "duration_seconds": sum(float(row["duration_seconds"]) for row in successful),
+        "private_row_count": 0,
+        "selected_configuration": selected["configuration"],
+        "selected_ocr_profile": selected["ocr_profile"],
+        "selected_score": selected["selection_score"],
+        "configurations": summaries,
+        "selection_formula": (
+            "0.20*polygon_f1 + 0.15*coverage + 0.10*(1-clamped_wer) + "
+            "0.15*critical_exact + 0.15*entity_f1 + 0.10*canonical_accuracy + "
+            "0.05*relation_f1 + 0.05*efficiency + 0.05*(1-failure_rate)"
+        ),
+        "selection_rule": (
+            "select the lowest-complexity configuration within 0.01 of the best "
+            "score; keep A when the best gain is below 0.02"
+        ),
+        "kmeans_controls_ocr": False,
+        "test_private_tuning_rows": 0,
+        "limitations": [
+            "DEV_SELECT contains raster images, so PDF 200-to-300-DPI rerendering is measured in the separate adaptive-rendering report.",
+            "Configurations B and D remain unavailable when no custom detector passed its hardware-bounded training and acceptance gate.",
+        ],
+    }
+    atomic_write_json(Path(args.selection_output), selection)
+    print(json.dumps(selection, indent=2, ensure_ascii=False))
+    return 0
+
+
+def ocr_model_selection_score(
+    *,
+    detection_f1: float,
+    coverage: float,
+    wer: float,
+    critical_exact: float,
+    entity_f1: float,
+    canonical_accuracy: float,
+    relation_f1: float,
+    efficiency: float,
+    failure_rate: float,
+) -> float:
+    return (
+        0.20 * _clamp(detection_f1)
+        + 0.15 * _clamp(coverage)
+        + 0.10 * (1.0 - _clamp(wer))
+        + 0.15 * _clamp(critical_exact)
+        + 0.15 * _clamp(entity_f1)
+        + 0.10 * _clamp(canonical_accuracy)
+        + 0.05 * _clamp(relation_f1)
+        + 0.05 * _clamp(efficiency)
+        + 0.05 * (1.0 - _clamp(failure_rate))
+    )
+
+
+def select_simplest_material_configuration(
+    rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    if not rows:
+        raise ValueError("no successful OCR configurations")
+    complexity = {"A": 0, "C": 1, "E": 2, "B": 3, "D": 4, "F": 5}
+    best = max(rows, key=lambda row: float(row["selection_score"]))
+    baseline = next(
+        (row for row in rows if row.get("configuration") == "A"),
+        None,
+    )
+    if (
+        baseline is not None
+        and float(best["selection_score"]) - float(baseline["selection_score"]) < 0.02
+    ):
+        return baseline
+    material = [
+        row
+        for row in rows
+        if float(row["selection_score"]) + 0.01 >= float(best["selection_score"])
+    ]
+    return min(
+        material,
+        key=lambda row: (
+            complexity.get(str(row.get("configuration")), 99),
+            -float(row["selection_score"]),
+        ),
+    )
+
+
+def _evaluate_page(
+    pipeline: DocumentPipeline,
+    row: Mapping[str, str],
+) -> dict[str, Any]:
+    image_path, annotation = _load_page(row)
+    started = time.perf_counter()
+    try:
+        with Image.open(image_path) as source:
+            image = source.convert("RGB")
+        result = pipeline.extract_pages(
+            document_id=f"ocr_compare_{row['page_id']}",
+            source_type="image",
+            pages=[DocumentPage(1, image)],
+            language="auto",
+            language_hint=row.get("language"),
+        )
+        page = result["pages"][0]
+        failed = False
+        error = None
+    except Exception as exc:
+        page = {
+            "ocr": {"words": []},
+            "full_text": "",
+            "entities": [],
+            "key_value_pairs": [],
+        }
+        result = {"fields": {}, "document_type": {"label": "unknown"}}
+        failed = True
+        error = f"{type(exc).__name__}: {exc}"
+    references = [
+        {"polygon": region["points"], "token_ids": region.get("token_ids", [])}
+        for region in convert_detection_annotation(annotation)
+    ]
+    critical_ids = {
+        token_id
+        for token_id, fields in critical_fields_by_token(annotation).items()
+        if fields
+    }
+    detection = detector_page_result(
+        references,
+        [
+            {"polygon": word.get("polygon")}
+            for word in page.get("ocr", {}).get("words", [])
+        ],
+        page_width=int(row["width"]),
+        page_height=int(row["height"]),
+        critical_token_ids=critical_ids,
+        duration_seconds=time.perf_counter() - started,
+    )
+    detection["failed"] = failed
+    reference_text = " ".join(
+        str(token.get("text", ""))
+        for token in annotation.get("tokens") or []
+        if str(token.get("text", "")).strip()
+    )
+    text = ocr_text_metrics(reference_text, str(page.get("full_text", "")))
+    extraction = extraction_metrics(annotation, page, result.get("fields") or {})
+    reference_fields = {
+        field: str(value.get("raw_text") or value.get("value") or "")
+        for field, value in (annotation.get("canonical_fields") or {}).items()
+        if isinstance(value, Mapping)
+        and str(value.get("raw_text") or value.get("value") or "").strip()
+    }
+    predicted_fields = {
+        field: str(value.get("value") or "")
+        for field, value in (result.get("fields") or {}).items()
+        if isinstance(value, Mapping)
+    }
+    return {
+        "failed": failed,
+        "error": error,
+        "detection": detection,
+        "text": text,
+        "reference_words": len(normalized_text(reference_text).split()),
+        "extraction": extraction,
+        "reference_fields": reference_fields,
+        "predicted_fields": predicted_fields,
+        "document_type_correct": (
+            str(result.get("document_type", {}).get("label", "")).casefold()
+            == str(row.get("document_type", "")).casefold()
+        ),
+        "duration_seconds": time.perf_counter() - started,
+    }
+
+
+def _aggregate(observations: list[dict[str, Any]]) -> dict[str, Any]:
+    detector = aggregate_detector_results(
+        [item["detection"] for item in observations]
+    )
+    reference_characters = sum(
+        int(item["text"]["reference_characters"]) for item in observations
+    )
+    character_errors = sum(
+        int(item["text"]["character_errors"]) for item in observations
+    )
+    reference_words = sum(int(item["reference_words"]) for item in observations)
+    word_errors = sum(int(item["text"]["word_errors"]) for item in observations)
+    entity_tp = sum(
+        int(item["extraction"]["entity"]["true_positive"]) for item in observations
+    )
+    entity_expected = sum(
+        int(item["extraction"]["entity"]["expected"]) for item in observations
+    )
+    entity_predicted = sum(
+        int(item["extraction"]["entity"]["predicted"]) for item in observations
+    )
+    relation_tp = sum(
+        int(item["extraction"]["relation"]["true_positive"]) for item in observations
+    )
+    relation_expected = sum(
+        int(item["extraction"]["relation"]["expected"]) for item in observations
+    )
+    relation_predicted = sum(
+        int(item["extraction"]["relation"]["predicted"]) for item in observations
+    )
+    field_applicable = sum(
+        int(item["extraction"]["canonical_fields"]["applicable"])
+        for item in observations
+    )
+    field_correct = sum(
+        int(item["extraction"]["canonical_fields"]["correct"])
+        for item in observations
+    )
+    critical = evaluate_critical_fields(
+        [item["reference_fields"] for item in observations],
+        [item["predicted_fields"] for item in observations],
+    )
+    failures = sum(bool(item["failed"]) for item in observations)
+    duration = sum(float(item["duration_seconds"]) for item in observations)
+    return {
+        "polygon_precision": detector["precision"],
+        "polygon_recall": detector["recall"],
+        "polygon_f1": detector["f1"],
+        "recognized_text_coverage": max(
+            0.0, 1.0 - character_errors / max(1, reference_characters)
+        ),
+        "cer": character_errors / max(1, reference_characters),
+        "wer": word_errors / max(1, reference_words),
+        "critical_field_exact_match": critical["aggregate"][
+            "critical_exact_match"
+        ],
+        "critical_field_count": critical["evaluated_field_count"],
+        "end_to_end_entity_f1": _f1(
+            entity_tp, entity_predicted, entity_expected
+        ),
+        "end_to_end_canonical_accuracy": field_correct
+        / max(1, field_applicable),
+        "end_to_end_relation_f1": _f1(
+            relation_tp, relation_predicted, relation_expected
+        ),
+        "document_type_accuracy": sum(
+            bool(item["document_type_correct"]) for item in observations
+        )
+        / max(1, len(observations)),
+        "time_per_page_seconds": duration / max(1, len(observations)),
+        "page_failure_rate": failures / max(1, len(observations)),
+        "normalized_efficiency_score": None,
+        "selection_score": None,
+    }
+
+
+def _unavailable_row(
+    label: str,
+    definition: Mapping[str, str],
+    exc: Exception,
+    *,
+    manifest_sha: str,
+    checkpoint_sha: str,
+    calibration_sha: str,
+    source_commit: str,
+    device: str,
+    sample_count: int,
+    duration_seconds: float,
+) -> dict[str, Any]:
+    return {
+        "configuration": label,
+        "description": definition["description"],
+        "status": "unavailable",
+        "selected": False,
+        "ocr_profile": definition["ocr_profile"],
+        "detector_choice": definition["detector"],
+        "general_recognizer_choice": definition["general"],
+        "thai_recognizer_choice": definition["thai"],
+        "split": "dev_select",
+        "manifest_sha256": manifest_sha,
+        "checkpoint_sha256": checkpoint_sha,
+        "calibration_sha256": calibration_sha,
+        "configuration_sha256": hashlib.sha256(
+            canonical_json(definition).encode("utf-8")
+        ).hexdigest(),
+        "source_commit": source_commit,
+        "device": device,
+        "sample_count": 0,
+        "requested_sample_count": sample_count,
+        "failure_count": 0,
+        "duration_seconds": duration_seconds,
+        "private_row_count": 0,
+        "unavailable_reason": f"{type(exc).__name__}: {exc}",
+    }
+
+
+def _load_rows(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    if len(rows) != 400:
+        raise ValueError(f"frozen OCR benchmark must contain 400 rows, found {len(rows)}")
+    if any(row.get("split") != "dev_select" for row in rows):
+        raise ValueError("OCR model comparison accepts DEV_SELECT only")
+    if any(str(row.get("is_private", "")).casefold() != "false" for row in rows):
+        raise ValueError("private row found in OCR model comparison manifest")
+    return rows
+
+
+def _load_page(row: Mapping[str, str]) -> tuple[Path, dict[str, Any]]:
+    _, image_path = resolve_project_input(
+        PROJECT_ROOT,
+        row["source_image_path"],
+        label="benchmark image",
+        required_prefix="data/raw/public",
+    )
+    _, annotation_path = resolve_project_input(
+        PROJECT_ROOT,
+        row["normalized_annotation_path"],
+        label="benchmark annotation",
+        required_prefix="data/processed/normalized_ie_annotations",
+        allow_prefix_junction=True,
+    )
+    if sha256_file(image_path) != row["source_image_sha256"].casefold():
+        raise ValueError(f"benchmark image hash drift: {row['page_id']}")
+    if sha256_file(annotation_path) != row["annotation_sha256"].casefold():
+        raise ValueError(f"benchmark annotation hash drift: {row['page_id']}")
+    return image_path, json.loads(annotation_path.read_text(encoding="utf-8"))
+
+
+def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    fields: list[str] = []
+    for row in rows:
+        for field in row:
+            if field not in fields:
+                fields.append(field)
+    from io import StringIO
+
+    stream = StringIO(newline="")
+    writer = csv.DictWriter(
+        stream,
+        fieldnames=fields,
+        lineterminator="\n",
+        extrasaction="ignore",
+    )
+    writer.writeheader()
+    writer.writerows(rows)
+    atomic_write_text(path, stream.getvalue())
+
+
+def _f1(true_positive: int, predicted: int, expected: int) -> float:
+    precision = true_positive / predicted if predicted else 0.0
+    recall = true_positive / expected if expected else 0.0
+    return (
+        2.0 * precision * recall / (precision + recall)
+        if precision + recall
+        else 0.0
+    )
+
+
+def _clamp(value: float) -> float:
+    if not math.isfinite(float(value)):
+        return 0.0
+    return max(0.0, min(1.0, float(value)))
+
+
+def _git_commit() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        text=True,
+    ).strip()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

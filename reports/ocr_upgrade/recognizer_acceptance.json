@@ -1,0 +1,24 @@
+{
+  "accepted": false,
+  "criteria": {
+    "wer_improvement_or_floor": false,
+    "critical_field_exact_gain": true,
+    "numeric_and_amount_no_regression": true,
+    "english_no_material_regression": true,
+    "turkish_valid": true,
+    "confidence_finite": true,
+    "export_reload_passed": true,
+    "dictionary_match_passed": true,
+    "processing_time_acceptable": true,
+    "no_private_data": true
+  },
+  "wer_relative_gain": 0.1146914404323217,
+  "critical_field_exact_gain": 0.3155548852054341,
+  "baseline_selection_score": 0.2948377309605481,
+  "candidate_selection_score": 0.425805418476788,
+  "baseline_trial_id": "rec_general_baseline_official",
+  "candidate_trial_id": "rec_general_real",
+  "selected_trial_id": "rec_general_baseline_official",
+  "baseline_report": "C:/Assumption University/CSX4201/Project/reports/ocr_upgrade/recognizer_trials/rec_general_baseline_official.json",
+  "candidate_report": "reports/ocr_upgrade/recognizer_trials/rec_general_real.json"
+}
