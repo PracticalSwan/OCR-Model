@@ -83,6 +83,7 @@ class DocumentPipeline:
         confidence_threshold: float | None = None,
         enable_kmeans_display: bool = True,
         require_layout_model: bool = False,
+        use_layout_calibration: bool = True,
         ocr_profile: str | None = None,
         detector_model: str = "auto",
         general_recognizer: str = "auto",
@@ -229,10 +230,20 @@ class DocumentPipeline:
             else cfgmod.resolve_path(cfg, "ie_checkpoints") / "layoutxlm_multitask" / "final"
         )
         configured_calibration = cfg.get("layout_model", {}).get("calibration")
-        calibration = Path(calibration_path) if calibration_path else (
-            _resolve_configured_path(cfg, configured_calibration)
-            if configured_calibration
-            else cfgmod.project_root(cfg) / "models" / "multitask_calibration.json"
+        calibration = (
+            (
+                Path(calibration_path)
+                if calibration_path
+                else (
+                    _resolve_configured_path(cfg, configured_calibration)
+                    if configured_calibration
+                    else cfgmod.project_root(cfg)
+                    / "models"
+                    / "multitask_calibration.json"
+                )
+            )
+            if use_layout_calibration
+            else None
         )
         try:
             from src.information_extraction.entity_worker_client import (

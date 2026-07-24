@@ -99,6 +99,15 @@ def main() -> int:
         "--calibration",
         default=str(PROJECT_ROOT / "models/multitask_calibration.json"),
     )
+    parser.add_argument(
+        "--disable-calibration",
+        action="store_true",
+        help=(
+            "Use the checkpoint's conservative default thresholds for this "
+            "pre-selection comparison. Final evaluation still requires a "
+            "fresh OCR-stack-bound calibration."
+        ),
+    )
     parser.add_argument("--device", choices=("cpu", "gpu:0"), default="gpu:0")
     parser.add_argument(
         "--configurations",
@@ -130,19 +139,24 @@ def main() -> int:
     manifest_path = Path(args.benchmark_manifest).resolve()
     rows = _load_rows(manifest_path)[: args.limit]
     checkpoint = Path(args.checkpoint).resolve()
-    calibration = Path(args.calibration).resolve()
+    calibration = (
+        None if args.disable_calibration else Path(args.calibration).resolve()
+    )
     for required in (
         checkpoint / "model.safetensors",
         checkpoint / "training_state.json",
-        calibration,
     ):
         if not required.is_file():
             raise SystemExit(f"required comparison artifact is missing: {required}")
+    if calibration is not None and not calibration.is_file():
+        raise SystemExit(
+            f"required comparison artifact is missing: {calibration}"
+        )
 
     source_commit = _git_commit()
     manifest_sha = sha256_file(manifest_path)
     checkpoint_sha = sha256_file(checkpoint / "model.safetensors")
-    calibration_sha = sha256_file(calibration)
+    calibration_sha = sha256_file(calibration) if calibration is not None else None
     registry_payload = json.loads(
         Path(cfgmod.resolve_path(cfg, "reports") / "ocr_upgrade/model_registry.json")
         .read_text(encoding="utf-8")
@@ -162,6 +176,7 @@ def main() -> int:
                 model_setup=args.model_setup,
                 layout_checkpoint=checkpoint,
                 calibration_path=calibration,
+                use_layout_calibration=calibration is not None,
                 enable_kmeans_display=False,
                 require_layout_model=True,
                 ocr_profile=definition["ocr_profile"],
@@ -286,6 +301,11 @@ def main() -> int:
             "score; keep A when the best gain is below 0.02"
         ),
         "kmeans_controls_ocr": False,
+        "calibration_mode": (
+            "checkpoint_default_thresholds"
+            if calibration is None
+            else "explicit_calibration_artifact"
+        ),
         "test_private_tuning_rows": 0,
         "limitations": [
             "DEV_SELECT contains raster images, so PDF 200-to-300-DPI rerendering is measured in the separate adaptive-rendering report.",
@@ -601,7 +621,7 @@ def _unavailable_row(
     *,
     manifest_sha: str,
     checkpoint_sha: str,
-    calibration_sha: str,
+    calibration_sha: str | None,
     source_commit: str,
     device: str,
     sample_count: int,
