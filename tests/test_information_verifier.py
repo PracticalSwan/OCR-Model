@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import csv
+import json
 from pathlib import Path
 
 import pytest
 
 from scripts.verify_information_extraction import (
     _integration_semantic_errors,
+    _metric_report_provenance_errors,
     _private_name_scan,
     _secret_scan,
     _split_leakage_summary,
+    _upgrade_report_inventory,
     _valid_locked_unseen_evaluation,
 )
 
@@ -133,4 +137,62 @@ def test_unseen_evaluation_requires_locked_100_page_zero_failure_run() -> None:
     report["failed_pages"] = 1
     assert not _valid_locked_unseen_evaluation(
         report, checkpoint_model_sha256=checkpoint_hash
+    )
+
+
+def test_metric_report_provenance_accepts_json_and_csv_alias(
+    tmp_path: Path,
+) -> None:
+    values = {
+        "build_id": "build",
+        "split": "dev_select",
+        "manifest_sha256": "a" * 64,
+        "detector_sha256": "b" * 64,
+        "recognizer_sha256": "c" * 64,
+        "checkpoint_sha256": "d" * 64,
+        "calibration_sha256": "",
+        "configuration_hash": "e" * 64,
+        "source_commit": "1" * 40,
+        "device": "gpu:0",
+        "sample_count": 1,
+        "failure_count": 0,
+        "duration_seconds": 1.0,
+        "private_row_count": 0,
+    }
+    json_path = tmp_path / "metrics.json"
+    json_path.write_text(json.dumps(values), encoding="utf-8")
+    csv_path = tmp_path / "metrics.csv"
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(values))
+        writer.writeheader()
+        writer.writerow(values)
+
+    assert _metric_report_provenance_errors(json_path) == []
+    assert _metric_report_provenance_errors(csv_path) == []
+
+
+def test_upgrade_inventory_reports_missing_and_bad_provenance(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "training_environment.json").write_text(
+        json.dumps({"build_id": "incomplete"}),
+        encoding="utf-8",
+    )
+
+    inventory = _upgrade_report_inventory(
+        tmp_path,
+        required_files=(
+            "training_environment.json",
+            "final_upgrade_summary.md",
+        ),
+        metric_files=("training_environment.json",),
+    )
+
+    assert inventory["missing"] == ["final_upgrade_summary.md"]
+    assert "training_environment.json" in inventory["provenance_errors"]
+    assert any(
+        "duration_seconds" in error
+        for error in inventory["provenance_errors"][
+            "training_environment.json"
+        ]
     )

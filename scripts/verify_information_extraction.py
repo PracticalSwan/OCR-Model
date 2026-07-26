@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import re
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,76 @@ from src.ocr.model_registry import ModelRegistry, REQUIRED_MODEL_NAMES  # noqa: 
 from src.rotation_common import atomic_write_json, read_csv_rows, sha256_file  # noqa: E402
 
 
+OCR_UPGRADE_REQUIRED_REPORTS = (
+    "preimplementation_audit.md",
+    "baseline_snapshot.json",
+    "benchmark_summary.json",
+    "benchmark_selection.md",
+    "training_environment.json",
+    "pretrained_training_models.json",
+    "detector_trials.csv",
+    "recognizer_trials.csv",
+    "thai_trials.csv",
+    "preprocessing_ablation.csv",
+    "preprocessing_selection.json",
+    "adaptive_rendering_metrics.json",
+    "tiling_metrics.json",
+    "crop_padding_metrics.json",
+    "orientation_metrics.json",
+    "critical_field_metrics.json",
+    "ocr_model_comparison.csv",
+    "layout_stream_trials.csv",
+    "layout_adaptation_trials.csv",
+    "calibration_metrics.json",
+    "locked_test_ocr_metrics.json",
+    "locked_test_end_to_end_metrics.json",
+    "angle_metrics.json",
+    "unseen_coru_metrics.json",
+    "private_aggregate.json",
+    "error_analysis.md",
+    "final_ocr_model_card.md",
+    "final_upgrade_summary.md",
+)
+OCR_UPGRADE_METRIC_REPORTS = (
+    "training_environment.json",
+    "pretrained_training_models.json",
+    "detector_trials.csv",
+    "recognizer_trials.csv",
+    "thai_trials.csv",
+    "preprocessing_ablation.csv",
+    "preprocessing_selection.json",
+    "adaptive_rendering_metrics.json",
+    "tiling_metrics.json",
+    "crop_padding_metrics.json",
+    "orientation_metrics.json",
+    "critical_field_metrics.json",
+    "ocr_model_comparison.csv",
+    "layout_stream_trials.csv",
+    "layout_adaptation_trials.csv",
+    "calibration_metrics.json",
+    "locked_test_ocr_metrics.json",
+    "locked_test_end_to_end_metrics.json",
+    "angle_metrics.json",
+    "unseen_coru_metrics.json",
+    "private_aggregate.json",
+)
+METRIC_PROVENANCE_FIELDS = (
+    "build_id",
+    "split",
+    "manifest_sha256",
+    "detector_sha256",
+    "recognizer_sha256",
+    "checkpoint_sha256",
+    "calibration_sha256",
+    "source_commit",
+    "device",
+    "sample_count",
+    "failure_count",
+    "duration_seconds",
+    "private_row_count",
+)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
@@ -36,9 +108,34 @@ def main() -> int:
     args = parser.parse_args()
     cfg = cfgmod.load_config(args.config)
     checks: list[dict[str, Any]] = []
+    verification_timestamp = datetime.now(timezone.utc).isoformat()
+    verification_command = subprocess.list2cmdline(
+        [sys.executable, *sys.argv]
+    )
 
-    def check(name: str, passed: bool, detail: Any = None) -> None:
-        checks.append({"name": name, "passed": bool(passed), "detail": detail})
+    def check(
+        name: str,
+        passed: bool,
+        detail: Any = None,
+        *,
+        evidence_path: str | Path | None = None,
+        relevant_hashes: dict[str, str | None] | None = None,
+        command: str | None = None,
+    ) -> None:
+        checks.append(
+            {
+                "name": name,
+                "command": command or verification_command,
+                "status": "passed" if passed else "failed",
+                "passed": bool(passed),
+                "evidence_path": (
+                    str(evidence_path) if evidence_path is not None else None
+                ),
+                "timestamp": verification_timestamp,
+                "relevant_hashes": relevant_hashes or {},
+                "detail": detail,
+            }
+        )
 
     if args.run_integration:
         ocr_python = cfgmod.resolve_path(cfg, "ocr_environment") / "Scripts" / "python.exe"
@@ -197,7 +294,18 @@ def main() -> int:
     ocr_verification = _json(cfgmod.resolve_path(cfg, "reports") / "ocr" / "model_verification.json")
     check("ocr_model_verification", bool(ocr_verification and ocr_verification.get("passed") is True))
 
-    evaluation = _json(final_root / "evaluations" / "final_test_in_domain_ground_truth.json")
+    evaluation_path = (
+        final_root
+        / "evaluations"
+        / "ocr_upgrade_locked_test_ground_truth.json"
+    )
+    if not evaluation_path.is_file():
+        evaluation_path = (
+            final_root
+            / "evaluations"
+            / "final_test_in_domain_ground_truth.json"
+        )
+    evaluation = _json(evaluation_path)
     private_aggregate = _json(final_root / "private_test_aggregate.json")
     unseen_evaluation = _json(final_root / "unseen_domain_metrics.json")
     layout_angles = _json(final_root / "layout_angle_metrics.json")
@@ -336,10 +444,81 @@ def main() -> int:
             {"hit_count": private_name_hit_count},
         )
 
+    upgrade_root = (
+        cfgmod.resolve_path(cfg, "reports") / "ocr_upgrade"
+    )
+    if args.complete:
+        upgrade_inventory = _upgrade_report_inventory(upgrade_root)
+        check(
+            "ocr_upgrade_required_reports",
+            not upgrade_inventory["missing"],
+            upgrade_inventory["missing"],
+            evidence_path=upgrade_root,
+        )
+        check(
+            "ocr_upgrade_metric_report_provenance",
+            not upgrade_inventory["provenance_errors"],
+            upgrade_inventory["provenance_errors"],
+            evidence_path=upgrade_root,
+        )
+        selection = _json(upgrade_root / "ocr_model_selection.json")
+        check(
+            "ocr_upgrade_selection_uses_dev_select_only",
+            bool(
+                selection
+                and selection.get("split") == "dev_select"
+                and selection.get("test_private_tuning_rows") == 0
+                and selection.get("selected_configuration")
+            ),
+            None if selection is None else selection.get(
+                "selected_configuration"
+            ),
+            evidence_path=upgrade_root / "ocr_model_selection.json",
+            relevant_hashes={
+                "manifest_sha256": (
+                    None
+                    if selection is None
+                    else selection.get("manifest_sha256")
+                ),
+                "checkpoint_sha256": (
+                    None
+                    if selection is None
+                    else selection.get("checkpoint_sha256")
+                ),
+            },
+        )
+        locked_run = _json(upgrade_root / "locked_test_run.json")
+        check(
+            "ocr_upgrade_one_time_locked_test",
+            _valid_locked_test_run(locked_run, upgrade_root),
+            None if locked_run is None else locked_run.get("sample_count"),
+            evidence_path=upgrade_root / "locked_test_run.json",
+            relevant_hashes={
+                "manifest_sha256": (
+                    None
+                    if locked_run is None
+                    else locked_run.get("manifest_sha256")
+                ),
+                "checkpoint_sha256": (
+                    None
+                    if locked_run is None
+                    else locked_run.get("checkpoint_sha256")
+                ),
+                "calibration_sha256": (
+                    None
+                    if locked_run is None
+                    else locked_run.get("calibration_sha256")
+                ),
+            },
+        )
+
     failed = [item for item in checks if not item["passed"]]
     report = {
         "schema_version": "1.0",
         "status": "passed" if not failed else "failed",
+        "generated_at_utc": verification_timestamp,
+        "command": verification_command,
+        "source_commit": _git_commit(),
         "complete_mode": args.complete,
         "checks_passed": len(checks) - len(failed),
         "checks_total": len(checks),
@@ -349,6 +528,8 @@ def main() -> int:
         cfgmod.resolve_path(cfg, "reports") / "verification" / "information_extraction_verification.json",
         report,
     )
+    if args.complete:
+        atomic_write_json(upgrade_root / "verification.json", report)
     print(json.dumps(report, indent=2))
     return 0 if not failed else 1
 
@@ -370,6 +551,104 @@ def _valid_locked_unseen_evaluation(
         and report.get("failed_pages") == 0
         and report.get("checkpoint_model_sha256") == checkpoint_model_sha256
     )
+
+
+def _upgrade_report_inventory(
+    root: Path,
+    *,
+    required_files: tuple[str, ...] = OCR_UPGRADE_REQUIRED_REPORTS,
+    metric_files: tuple[str, ...] = OCR_UPGRADE_METRIC_REPORTS,
+) -> dict[str, Any]:
+    missing = sorted(
+        name for name in required_files if not (root / name).is_file()
+    )
+    provenance_errors = {
+        name: errors
+        for name in metric_files
+        if (root / name).is_file()
+        and (errors := _metric_report_provenance_errors(root / name))
+    }
+    return {
+        "missing": missing,
+        "provenance_errors": provenance_errors,
+    }
+
+
+def _metric_report_provenance_errors(path: Path) -> list[str]:
+    try:
+        if path.suffix.casefold() == ".csv":
+            with path.open("r", encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+        else:
+            value = json.loads(path.read_text(encoding="utf-8"))
+            rows = [value] if isinstance(value, dict) else []
+    except (OSError, csv.Error, json.JSONDecodeError) as exc:
+        return [f"unreadable:{type(exc).__name__}"]
+    if not rows:
+        return ["empty_report"]
+    errors = []
+    for index, row in enumerate(rows):
+        missing = [
+            field for field in METRIC_PROVENANCE_FIELDS if field not in row
+        ]
+        if (
+            "configuration_sha256" not in row
+            and "configuration_hash" not in row
+        ):
+            missing.append("configuration_hash")
+        if missing:
+            errors.append(
+                f"row_{index}:missing:" + ",".join(sorted(missing))
+            )
+            continue
+        for field in (
+            "sample_count",
+            "failure_count",
+            "duration_seconds",
+            "private_row_count",
+        ):
+            try:
+                if float(row[field]) < 0:
+                    raise ValueError
+            except (TypeError, ValueError):
+                errors.append(f"row_{index}:invalid_nonnegative:{field}")
+        for field in ("build_id", "split", "source_commit", "device"):
+            if not str(row.get(field, "")).strip():
+                errors.append(f"row_{index}:empty:{field}")
+    return errors
+
+
+def _valid_locked_test_run(
+    report: dict[str, Any] | None,
+    root: Path,
+) -> bool:
+    if not report or report.get("split") != "test_in_domain":
+        return False
+    completed = report.get("completed_outputs")
+    if not isinstance(completed, dict):
+        return False
+    expected = {
+        "ocr": root / "locked_test_ocr_metrics.json",
+        "end_to_end": root / "locked_test_end_to_end_metrics.json",
+        "critical": root / "critical_field_metrics.json",
+    }
+    for name, path in expected.items():
+        value = completed.get(name)
+        if (
+            not isinstance(value, dict)
+            or not path.is_file()
+            or value.get("sha256") != sha256_file(path)
+        ):
+            return False
+    return int(report.get("private_row_count", -1)) == 0
+
+
+def _git_commit() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        text=True,
+    ).strip()
 
 
 def _json(path: Path) -> dict[str, Any] | None:
