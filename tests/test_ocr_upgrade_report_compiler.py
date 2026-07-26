@@ -4,6 +4,7 @@ import pytest
 
 from scripts.compile_ocr_upgrade_reports import (
     ERROR_CATEGORIES,
+    _selected_ocr_profile,
     error_category_rows,
     render_error_analysis,
 )
@@ -70,3 +71,10 @@ def test_error_analysis_refuses_missing_executed_category() -> None:
         match="recognition_turkish_character_errors",
     ):
         error_category_rows(evidence)
+
+
+def test_selected_ocr_profile_uses_actual_selection_schema() -> None:
+    assert (
+        _selected_ocr_profile({"selected_ocr_profile": "adaptive"})
+        == "adaptive"
+    )

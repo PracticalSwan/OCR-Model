@@ -498,7 +498,7 @@ def render_model_card(evidence: Mapping[str, Any]) -> str:
         f"`{_cell(thai.get('recognizer_sha256'))}` | Custom synthetic-data "
         "model selected within its stated evidence boundary. |",
         f"| OCR profile | {_cell(selection.get('selected_configuration'))} "
-        f"({_cell(selection.get('selected_profile'))}) | "
+        f"({_cell(_selected_ocr_profile(selection))}) | "
         f"`{_cell(selection.get('configuration_hash') or selection.get('configuration_sha256'))}` | "
         "Selected on public DEV_SELECT only. |",
         f"| LayoutXLM | {_cell(layout.get('trial_id'))} | "
@@ -608,7 +608,7 @@ def render_upgrade_summary(evidence: Mapping[str, Any]) -> str:
         "",
         f"- Selected OCR configuration: "
         f"`{_cell(selected_ocr.get('selected_configuration'))}` "
-        f"(`{_cell(selected_ocr.get('selected_profile'))}`).",
+        f"(`{_cell(_selected_ocr_profile(selected_ocr))}`).",
         f"- Selected preprocessing: "
         f"`{_cell(evidence['preprocessing'].get('chosen_profile'))}`.",
         f"- Selected LayoutXLM trial: `{_cell(selected_layout.get('trial_id'))}` "
@@ -743,6 +743,12 @@ def _metric(report: Mapping[str, Any], name: str) -> Any:
     if isinstance(metrics, Mapping) and name in metrics:
         return metrics[name]
     return report.get(name)
+
+
+def _selected_ocr_profile(selection: Mapping[str, Any]) -> Any:
+    return selection.get("selected_ocr_profile") or selection.get(
+        "selected_profile"
+    )
 
 
 def _number(value: Any) -> str:
