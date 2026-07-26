@@ -596,6 +596,8 @@ def _aggregate(observations: list[dict[str, Any]]) -> dict[str, Any]:
         "polygon_precision": detector["precision"],
         "polygon_recall": detector["recall"],
         "polygon_f1": detector["f1"],
+        "small_text_recall": detector["small_text_recall"],
+        "critical_region_recall": detector["critical_region_recall"],
         "recognized_text_coverage": max(
             0.0, 1.0 - character_errors / max(1, reference_characters)
         ),
@@ -636,6 +638,19 @@ def _aggregate(observations: list[dict[str, Any]]) -> dict[str, Any]:
         "tiling_duplicate_count": sum(
             int(value.get("duplicates_removed", 0) or 0)
             for value in tiling_triggered
+        ),
+        "tiling_duplicate_rate": (
+            sum(
+                int(value.get("duplicates_removed", 0) or 0)
+                for value in tiling_triggered
+            )
+            / max(
+                1,
+                sum(
+                    int(value.get("input_word_count", 0) or 0)
+                    for value in tiling_triggered
+                ),
+            )
         ),
         "retried_page_count": len(retries),
         "retried_word_count": sum(

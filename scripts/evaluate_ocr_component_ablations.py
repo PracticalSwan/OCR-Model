@@ -33,31 +33,39 @@ from scripts.evaluate_ocr_model_comparison import (  # noqa: E402
 
 COMPONENTS: dict[str, dict[str, Any]] = {
     "base": {
-        "ocr_profile": "custom",
         "adaptive_preprocessing": False,
         "tiling": False,
         "recognition_retries": False,
     },
     "preprocessing_only": {
-        "ocr_profile": "adaptive",
         "adaptive_preprocessing": True,
         "tiling": False,
         "recognition_retries": False,
     },
     "tiling_only": {
-        "ocr_profile": "adaptive",
         "adaptive_preprocessing": False,
         "tiling": True,
         "recognition_retries": False,
     },
-    "recognition_retries_only": {
-        "ocr_profile": "adaptive",
+    "crop_padding_a": {
         "adaptive_preprocessing": False,
         "tiling": False,
         "recognition_retries": True,
+        "padding_profile": "A",
+    },
+    "crop_padding_b": {
+        "adaptive_preprocessing": False,
+        "tiling": False,
+        "recognition_retries": True,
+        "padding_profile": "B",
+    },
+    "crop_padding_c": {
+        "adaptive_preprocessing": False,
+        "tiling": False,
+        "recognition_retries": True,
+        "padding_profile": "C",
     },
     "combined": {
-        "ocr_profile": "adaptive",
         "adaptive_preprocessing": True,
         "tiling": True,
         "recognition_retries": True,
@@ -89,6 +97,12 @@ def main() -> int:
     parser.add_argument("--device", choices=("cpu", "gpu:0"), default="gpu:0")
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument(
+        "--base-profile",
+        choices=("auto", "original", "custom", "adaptive"),
+        default="auto",
+        help="Frozen A-F winner; auto reads ocr.default_profile from config.",
+    )
+    parser.add_argument(
         "--components",
         nargs="+",
         choices=tuple(COMPONENTS),
@@ -116,10 +130,29 @@ def main() -> int:
     calibration = (
         None if args.disable_calibration else Path(args.calibration).resolve()
     )
+    base_profile = (
+        str(cfg.get("ocr", {}).get("default_profile", "original")).casefold()
+        if args.base_profile == "auto"
+        else args.base_profile
+    )
+    if base_profile not in {"original", "custom", "adaptive"}:
+        raise ValueError(f"unsupported selected OCR profile: {base_profile!r}")
     source_commit = _git_commit()
     provenance = {
+        "build_id": "ocr-component-ablation-"
+        + hashlib.sha256(
+            canonical_json(
+                {
+                    "manifest": sha256_file(manifest_path),
+                    "base_profile": base_profile,
+                    "components": args.components,
+                }
+            ).encode("utf-8")
+        ).hexdigest()[:16],
         "split": "dev_select",
         "manifest_sha256": sha256_file(manifest_path),
+        "detector_sha256": None,
+        "recognizer_sha256": None,
         "checkpoint_sha256": sha256_file(checkpoint / "model.safetensors"),
         "calibration_sha256": (
             sha256_file(calibration) if calibration is not None else None
@@ -131,7 +164,13 @@ def main() -> int:
     }
     results: dict[str, dict[str, Any]] = {}
     for component in args.components:
-        definition = COMPONENTS[component]
+        definition = _effective_definition(
+            component,
+            COMPONENTS[component],
+            base_profile=base_profile,
+            cfg=cfg,
+            completed_results=results,
+        )
         run_cfg = copy.deepcopy(cfg)
         run_cfg.setdefault("ocr", {})["cache_enabled"] = False
         run_cfg["ocr"]["orientation_candidates"] = [0]
@@ -152,6 +191,9 @@ def main() -> int:
         run_cfg["ocr"].setdefault("recognition_retries", {})["enabled"] = bool(
             definition["recognition_retries"]
         )
+        run_cfg["ocr"]["recognition_retries"]["padding_profile"] = str(
+            definition["padding_profile"]
+        )
         started = time.perf_counter()
         pipeline = DocumentPipeline.from_config(
             run_cfg,
@@ -163,7 +205,21 @@ def main() -> int:
             enable_kmeans_display=False,
             require_layout_model=True,
             ocr_profile=str(definition["ocr_profile"]),
+            detector_model=str(definition["detector_choice"]),
+            general_recognizer=str(definition["general_recognizer_choice"]),
+            thai_recognizer=str(definition["thai_recognizer_choice"]),
         )
+        model_hashes = _pipeline_model_hashes(pipeline)
+        if provenance["detector_sha256"] is None:
+            provenance.update(model_hashes)
+        elif any(
+            provenance[name] != model_hashes[name]
+            for name in ("detector_sha256", "recognizer_sha256")
+        ):
+            pipeline.close()
+            raise RuntimeError(
+                "component ablation changed OCR model artifacts between trials"
+            )
         observations = []
         try:
             for index, row in enumerate(rows, start=1):
@@ -197,10 +253,12 @@ def main() -> int:
         output_root / "recognition_retry_metrics.json",
         component="recognition_retries",
         baseline=base,
-        candidate=results.get("recognition_retries_only"),
+        candidate=_selected_padding_result(results),
         provenance=provenance,
         results=results,
     )
+    padding_results = _padding_results(results)
+    selected_padding = _select_padding_profile(padding_results)
     crop_report = {
         **retry_report,
         "component": "crop_padding",
@@ -209,7 +267,36 @@ def main() -> int:
             "B": {"horizontal": 0.05, "vertical": 0.12},
             "C": {"horizontal": 0.07, "vertical": 0.15},
         },
-        "selected_default_profile": "B",
+        "selected_default_profile": selected_padding,
+        "profile_results": padding_results,
+        "sample_count": (
+            (1 + len(padding_results)) * int(provenance["sample_count"])
+            if base is not None and padding_results
+            else 0
+        ),
+        "failure_count": (
+            int(base["failure_count"])
+            + sum(
+                int(result["failure_count"])
+                for result in padding_results.values()
+            )
+            if base is not None
+            else 0
+        ),
+        "duration_seconds": (
+            float(base["duration_seconds"])
+            + sum(
+                float(result["duration_seconds"])
+                for result in padding_results.values()
+            )
+            if base is not None
+            else 0.0
+        ),
+        "selection_formula": (
+            "0.40*critical_exact + 0.20*coverage + 0.15*(1-clamped_wer) "
+            "+ 0.10*entity_f1 + 0.05*canonical_accuracy + "
+            "0.05*efficiency + 0.05*(1-failure_rate); ties prefer A, then B, then C"
+        ),
         "maximum_retry_candidates": int(
             cfg.get("ocr", {})
             .get("recognition_retries", {})
@@ -228,7 +315,12 @@ def main() -> int:
         **provenance,
         "sample_count": len(results) * int(provenance["sample_count"]),
         "configuration_sha256": hashlib.sha256(
-            canonical_json(COMPONENTS).encode("utf-8")
+            canonical_json(
+                {
+                    name: value["definition"]
+                    for name, value in results.items()
+                }
+            ).encode("utf-8")
         ).hexdigest(),
         "failure_count": sum(
             int(value["failure_count"]) for value in results.values()
@@ -304,6 +396,8 @@ def _metric_deltas(
         return {}
     fields = (
         "polygon_f1",
+        "small_text_recall",
+        "critical_region_recall",
         "recognized_text_coverage",
         "cer",
         "wer",
@@ -313,11 +407,138 @@ def _metric_deltas(
         "end_to_end_relation_f1",
         "time_per_page_seconds",
         "page_failure_rate",
+        "tiling_duplicate_rate",
     )
     return {
         field: float(candidate["metrics"][field])
         - float(baseline["metrics"][field])
         for field in fields
+    }
+
+
+def _effective_definition(
+    component: str,
+    definition: dict[str, Any],
+    *,
+    base_profile: str,
+    cfg: dict[str, Any],
+    completed_results: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Hold model artifacts fixed while enabling one adaptive component."""
+    adaptive = any(
+        bool(definition[name])
+        for name in (
+            "adaptive_preprocessing",
+            "tiling",
+            "recognition_retries",
+        )
+    )
+    model_choice = "original" if base_profile == "original" else "auto"
+    padding_profile = str(
+        definition.get("padding_profile")
+        or (
+            _select_padding_profile(_padding_results(completed_results))
+            if component == "combined"
+            else ""
+        )
+        or cfg.get("ocr", {})
+        .get("recognition_retries", {})
+        .get("padding_profile", "B")
+    ).upper()
+    if padding_profile not in {"A", "B", "C"}:
+        raise ValueError(f"unsupported crop padding profile: {padding_profile!r}")
+    return {
+        **definition,
+        "ocr_profile": "adaptive" if adaptive else base_profile,
+        "detector_choice": model_choice,
+        "general_recognizer_choice": model_choice,
+        "thai_recognizer_choice": model_choice,
+        "padding_profile": padding_profile,
+    }
+
+
+def _padding_results(
+    results: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    return {
+        profile: results[name]
+        for profile, name in (
+            ("A", "crop_padding_a"),
+            ("B", "crop_padding_b"),
+            ("C", "crop_padding_c"),
+        )
+        if name in results
+    }
+
+
+def _padding_selection_score(
+    result: dict[str, Any],
+    *,
+    fastest_seconds: float,
+) -> float:
+    metrics = result["metrics"]
+    efficiency = min(
+        1.0,
+        fastest_seconds
+        / max(1e-9, float(metrics["time_per_page_seconds"])),
+    )
+    clamp = lambda value: max(0.0, min(1.0, float(value)))
+    return (
+        0.40 * clamp(metrics["critical_field_exact_match"])
+        + 0.20 * clamp(metrics["recognized_text_coverage"])
+        + 0.15 * (1.0 - clamp(metrics["wer"]))
+        + 0.10 * clamp(metrics["end_to_end_entity_f1"])
+        + 0.05 * clamp(metrics["end_to_end_canonical_accuracy"])
+        + 0.05 * efficiency
+        + 0.05 * (1.0 - clamp(metrics["page_failure_rate"]))
+    )
+
+
+def _select_padding_profile(
+    results: dict[str, dict[str, Any]],
+) -> str | None:
+    if not results:
+        return None
+    fastest = min(
+        float(result["metrics"]["time_per_page_seconds"])
+        for result in results.values()
+    )
+    order = {"A": 0, "B": 1, "C": 2}
+    scored = [
+        (
+            _padding_selection_score(
+                result,
+                fastest_seconds=fastest,
+            ),
+            -order[profile],
+            profile,
+        )
+        for profile, result in results.items()
+    ]
+    return max(scored)[2]
+
+
+def _selected_padding_result(
+    results: dict[str, dict[str, Any]],
+) -> dict[str, Any] | None:
+    padding = _padding_results(results)
+    selected = _select_padding_profile(padding)
+    return padding.get(selected) if selected is not None else None
+
+
+def _pipeline_model_hashes(
+    pipeline: DocumentPipeline,
+) -> dict[str, str]:
+    general = pipeline.ocr.backends["general"]
+    thai = pipeline.ocr.backends["thai"]
+    return {
+        "detector_sha256": general.detector.artifact_hash,
+        "recognizer_sha256": hashlib.sha256(
+            (
+                general.recognizer.artifact_hash
+                + thai.recognizer.artifact_hash
+            ).encode("ascii")
+        ).hexdigest(),
     }
 
 
