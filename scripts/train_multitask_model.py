@@ -85,6 +85,14 @@ def main() -> int:
         help="safe identifier used to retain a separate OCR-upgrade training report",
     )
     parser.add_argument(
+        "--publish-canonical-report",
+        action="store_true",
+        help=(
+            "Also update canonical final-model reports. Trial runs do not "
+            "publish canonically unless this flag is explicit."
+        ),
+    )
+    parser.add_argument(
         "--manifest",
         default=None,
         help="optional profile-compatible model-dataset manifest override",
@@ -643,22 +651,44 @@ def main() -> int:
             "Canonical supervision trains evidence-token field labels; final value generation and abstention are evaluated separately.",
         ],
     }
-    report_root = cfgmod.resolve_path(cfg, "reports") / "final_model"
-    atomic_write_json(report_root / f"multitask_training_{args.profile}.json", report)
-    if args.trial_id:
-        atomic_write_json(
-            cfgmod.resolve_path(cfg, "reports")
-            / "ocr_upgrade"
-            / "layout_training"
-            / f"{args.trial_id}.json",
-            report,
-        )
-    atomic_write_json(
-        cfgmod.resolve_path(cfg, "reports") / "information_extraction" / "layout_model_training.json",
-        report,
-    )
+    for report_path in _training_report_targets(
+        cfgmod.resolve_path(cfg, "reports"),
+        profile=args.profile,
+        trial_id=args.trial_id,
+        publish_canonical=args.publish_canonical_report,
+    ):
+        atomic_write_json(report_path, report)
     print(json.dumps(report, indent=2))
     return 0 if reload_result["passed"] else 1
+
+
+def _training_report_targets(
+    reports_root: Path,
+    *,
+    profile: str,
+    trial_id: str | None,
+    publish_canonical: bool,
+) -> list[Path]:
+    targets = []
+    if trial_id:
+        targets.append(
+            reports_root
+            / "ocr_upgrade"
+            / "layout_training"
+            / f"{trial_id}.json"
+        )
+    if not trial_id or publish_canonical:
+        targets.extend(
+            (
+                reports_root
+                / "final_model"
+                / f"multitask_training_{profile}.json",
+                reports_root
+                / "information_extraction"
+                / "layout_model_training.json",
+            )
+        )
+    return targets
 
 
 class TokenizedWindowDataset:
