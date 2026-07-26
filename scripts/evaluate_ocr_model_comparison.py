@@ -303,8 +303,7 @@ def main() -> int:
     selection = {
         "schema_version": "1.0",
         "status": "passed",
-        "build_id": "ocr-model-selection-"
-        + hashlib.sha256(canonical_json(summaries).encode("utf-8")).hexdigest()[:16],
+        "build_id": _selection_report_build_id(summaries),
         "split": "dev_select",
         "manifest_sha256": manifest_sha,
         "detector_sha256": selected["detector_sha256"],
@@ -1012,6 +1011,7 @@ def _finalize_existing_reports(
         raise ValueError("selected OCR configuration is missing or unsuccessful")
     selection.update(
         {
+            "build_id": _selection_report_build_id(rows),
             "detector_sha256": selected["detector_sha256"],
             "recognizer_sha256": selected["recognizer_sha256"],
             "configuration_sha256": selected["configuration_sha256"],
@@ -1020,6 +1020,15 @@ def _finalize_existing_reports(
     )
     _write_csv(csv_path, rows)
     atomic_write_json(selection_path, selection)
+
+
+def _selection_report_build_id(rows: list[dict[str, Any]]) -> str:
+    return (
+        "ocr-model-selection-"
+        + hashlib.sha256(
+            canonical_json(rows).encode("utf-8")
+        ).hexdigest()[:16]
+    )
 
 
 def _load_rows(path: Path) -> list[dict[str, str]]:

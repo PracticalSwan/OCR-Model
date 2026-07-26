@@ -5,6 +5,7 @@ import pytest
 from scripts.evaluate_ocr_model_comparison import (
     _comparison_build_id,
     _error_categories,
+    _selection_report_build_id,
     configuration_eligibility,
     ocr_model_selection_score,
     select_simplest_material_configuration,
@@ -29,6 +30,18 @@ def test_comparison_build_id_is_bound_to_manifest_checkpoint_and_trials() -> Non
     )
     assert first == repeated
     assert first != changed
+
+
+def test_selection_report_build_id_changes_with_finalized_rows() -> None:
+    original = [{"configuration": "A", "detector_sha256": None}]
+    finalized = [{"configuration": "A", "detector_sha256": "a" * 64}]
+
+    assert _selection_report_build_id(original) != _selection_report_build_id(
+        finalized
+    )
+    assert _selection_report_build_id(finalized).startswith(
+        "ocr-model-selection-"
+    )
 
 
 def test_ocr_model_selection_score_uses_the_frozen_weights() -> None:
