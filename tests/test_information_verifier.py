@@ -8,6 +8,7 @@ import pytest
 
 from scripts.verify_information_extraction import (
     _integration_semantic_errors,
+    _load_execution_evidence,
     _metric_report_provenance_errors,
     _private_name_scan,
     _secret_scan,
@@ -196,3 +197,55 @@ def test_upgrade_inventory_reports_missing_and_bad_provenance(
             "training_environment.json"
         ]
     )
+
+
+def test_execution_evidence_requires_exact_passing_artifact_backed_matrix(
+    tmp_path: Path,
+) -> None:
+    evidence = tmp_path / "evidence.json"
+    artifact = tmp_path / "artifact.json"
+    artifact.write_text("{}", encoding="utf-8")
+    evidence.write_text(
+        json.dumps(
+            {
+                "checks": [
+                    {
+                        "name": "host_tests",
+                        "command": "python -m pytest -q",
+                        "status": "passed",
+                        "evidence_path": str(artifact),
+                        "timestamp": "2026-07-26T12:00:00+00:00",
+                        "relevant_hashes": {"source_commit": "a" * 40},
+                        "detail": {"passed": 365, "skipped": 2},
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    checks, errors = _load_execution_evidence(
+        evidence,
+        required_names=("host_tests",),
+    )
+
+    assert errors == []
+    assert checks[0]["passed"] is True
+    assert checks[0]["evidence_path"] == str(artifact)
+
+    payload = json.loads(evidence.read_text(encoding="utf-8"))
+    payload["checks"][0]["status"] = "failed"
+    payload["checks"][0]["evidence_path"] = str(tmp_path / "missing.json")
+    payload["checks"].append(dict(payload["checks"][0]))
+    evidence.write_text(json.dumps(payload), encoding="utf-8")
+
+    checks, errors = _load_execution_evidence(
+        evidence,
+        required_names=("host_tests", "compileall"),
+    )
+
+    assert checks[0]["passed"] is False
+    assert any("status_not_passed" in error for error in errors)
+    assert any("evidence_path_missing" in error for error in errors)
+    assert any("duplicate_name" in error for error in errors)
+    assert any("missing_checks:compileall" in error for error in errors)

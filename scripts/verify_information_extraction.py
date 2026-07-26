@@ -93,6 +93,38 @@ METRIC_PROVENANCE_FIELDS = (
     "duration_seconds",
     "private_row_count",
 )
+FINAL_EXECUTION_CHECKS = (
+    "all_original_tests",
+    "all_new_ocr_tests",
+    "python_compilation",
+    "ocr_training_environment_verification",
+    "model_download_verification",
+    "detector_export_reload_verification",
+    "recognizer_export_reload_verification",
+    "thai_model_verification",
+    "benchmark_verification",
+    "split_leakage_verification",
+    "storage_verification",
+    "cache_provenance_verification",
+    "original_profile_inference",
+    "custom_profile_inference",
+    "adaptive_profile_inference",
+    "image_inference",
+    "pdf_inference",
+    "multipage_inference",
+    "rotated_inference",
+    "thai_integration_inference",
+    "unknown_document_inference",
+    "layoutxlm_checkpoint_reload",
+    "calibration_verification",
+    "locked_evaluation",
+    "coru_evaluation",
+    "private_aggregate_operational_test",
+    "schema_verification",
+    "privacy_scan",
+    "git_staged_file_scan",
+    "portable_package_verification",
+)
 
 
 def main() -> int:
@@ -105,13 +137,28 @@ def main() -> int:
         help="execute the synthetic GPU integration runner before validating its evidence",
     )
     parser.add_argument("--model-setup", default=str(PROJECT_ROOT / "reports" / "ocr" / "model_setup.json"))
+    parser.add_argument(
+        "--execution-evidence",
+        default=str(
+            PROJECT_ROOT
+            / "reports"
+            / "ocr_upgrade"
+            / "verification_executions.json"
+        ),
+        help=(
+            "Executed final command ledger. Complete mode requires one passing, "
+            "artifact-backed record for every mandated verification surface."
+        ),
+    )
     args = parser.parse_args()
-    cfg = cfgmod.load_config(args.config)
+    config_path = Path(args.config).resolve()
+    cfg = cfgmod.load_config(config_path)
     checks: list[dict[str, Any]] = []
     verification_timestamp = datetime.now(timezone.utc).isoformat()
     verification_command = subprocess.list2cmdline(
         [sys.executable, *sys.argv]
     )
+    config_sha256 = sha256_file(config_path)
 
     def check(
         name: str,
@@ -129,10 +176,13 @@ def main() -> int:
                 "status": "passed" if passed else "failed",
                 "passed": bool(passed),
                 "evidence_path": (
-                    str(evidence_path) if evidence_path is not None else None
+                    str(evidence_path)
+                    if evidence_path is not None
+                    else str(config_path)
                 ),
                 "timestamp": verification_timestamp,
-                "relevant_hashes": relevant_hashes or {},
+                "relevant_hashes": relevant_hashes
+                or {"config_sha256": config_sha256},
                 "detail": detail,
             }
         )
@@ -144,7 +194,7 @@ def main() -> int:
                 str(ocr_python),
                 "scripts/run_integration_smoke.py",
                 "--config",
-                str(Path(args.config).resolve()),
+                str(config_path),
                 "--model-setup",
                 str(Path(args.model_setup).resolve()),
                 "--device",
@@ -334,7 +384,7 @@ def main() -> int:
         evidence_passed, evidence_detail = _validate_integration_evidence(
             integration,
             cfg=cfg,
-            config_path=Path(args.config).resolve(),
+            config_path=config_path,
             model_setup_path=Path(args.model_setup).resolve(),
         )
         check("integration_evidence_cryptographically_bound", evidence_passed, evidence_detail)
@@ -511,6 +561,23 @@ def main() -> int:
                 ),
             },
         )
+        execution_path = Path(args.execution_evidence).resolve()
+        execution_checks, execution_errors = _load_execution_evidence(
+            execution_path,
+            required_names=FINAL_EXECUTION_CHECKS,
+        )
+        checks.extend(execution_checks)
+        check(
+            "final_execution_evidence_complete",
+            not execution_errors,
+            execution_errors,
+            evidence_path=execution_path,
+            relevant_hashes=(
+                {"execution_evidence_sha256": sha256_file(execution_path)}
+                if execution_path.is_file()
+                else {"config_sha256": config_sha256}
+            ),
+        )
 
     failed = [item for item in checks if not item["passed"]]
     report = {
@@ -616,6 +683,93 @@ def _metric_report_provenance_errors(path: Path) -> list[str]:
             if not str(row.get(field, "")).strip():
                 errors.append(f"row_{index}:empty:{field}")
     return errors
+
+
+def _load_execution_evidence(
+    path: Path,
+    *,
+    required_names: tuple[str, ...] = FINAL_EXECUTION_CHECKS,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Validate the final command ledger and normalize it for verification."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [], [f"unreadable_execution_evidence:{type(exc).__name__}"]
+    raw_checks = payload.get("checks") if isinstance(payload, dict) else None
+    if not isinstance(raw_checks, list):
+        return [], ["execution_evidence_checks_must_be_a_list"]
+
+    errors: list[str] = []
+    normalized: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    required = set(required_names)
+    for index, raw in enumerate(raw_checks):
+        if not isinstance(raw, dict):
+            errors.append(f"row_{index}:not_an_object")
+            continue
+        name = str(raw.get("name", "")).strip()
+        if not name:
+            errors.append(f"row_{index}:missing_name")
+            continue
+        if name in seen:
+            errors.append(f"row_{index}:duplicate_name:{name}")
+            continue
+        seen.add(name)
+        command = str(raw.get("command", "")).strip()
+        status = str(raw.get("status", "")).strip().casefold()
+        timestamp = str(raw.get("timestamp", "")).strip()
+        evidence_value = str(raw.get("evidence_path", "")).strip()
+        hashes = raw.get("relevant_hashes")
+        row_errors = []
+        if not command:
+            row_errors.append("missing_command")
+        if status != "passed":
+            row_errors.append("status_not_passed")
+        if not timestamp:
+            row_errors.append("missing_timestamp")
+        evidence_path = (
+            Path(evidence_value)
+            if evidence_value
+            else None
+        )
+        if evidence_path is not None and not evidence_path.is_absolute():
+            evidence_path = (PROJECT_ROOT / evidence_path).resolve()
+        if evidence_path is None:
+            row_errors.append("missing_evidence_path")
+        elif not evidence_path.exists():
+            row_errors.append("evidence_path_missing")
+        if not isinstance(hashes, dict) or not hashes:
+            row_errors.append("missing_relevant_hashes")
+            hashes = {}
+        elif any(
+            not str(key).strip() or not str(value).strip()
+            for key, value in hashes.items()
+        ):
+            row_errors.append("empty_relevant_hash")
+        if row_errors:
+            errors.append(f"row_{index}:{name}:" + ",".join(row_errors))
+        normalized.append(
+            {
+                "name": name,
+                "command": command,
+                "status": status or "failed",
+                "passed": status == "passed" and not row_errors,
+                "evidence_path": (
+                    str(evidence_path) if evidence_path is not None else None
+                ),
+                "timestamp": timestamp,
+                "relevant_hashes": dict(hashes),
+                "detail": raw.get("detail"),
+            }
+        )
+
+    missing = sorted(required - seen)
+    unexpected = sorted(seen - required)
+    if missing:
+        errors.append("missing_checks:" + ",".join(missing))
+    if unexpected:
+        errors.append("unexpected_checks:" + ",".join(unexpected))
+    return normalized, errors
 
 
 def _valid_locked_test_run(
