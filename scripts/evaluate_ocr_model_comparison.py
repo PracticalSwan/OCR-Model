@@ -986,7 +986,12 @@ def _finalize_existing_reports(
         definition = CONFIGURATIONS.get(label)
         if definition is None:
             raise ValueError(f"unknown OCR comparison configuration: {label!r}")
-        row["build_id"] = build_id
+        _backfill_comparison_row_provenance(
+            row,
+            definition=definition,
+            selection=selection,
+            build_id=build_id,
+        )
         if row.get("status") == "passed":
             row.update(
                 _configuration_model_hashes(
@@ -1016,6 +1021,9 @@ def _finalize_existing_reports(
             "recognizer_sha256": selected["recognizer_sha256"],
             "configuration_sha256": selected["configuration_sha256"],
             "configurations": rows,
+            "private_row_count": 0,
+            "source_commit": selected["source_commit"],
+            "device": selected["device"],
         }
     )
     _write_csv(csv_path, rows)
@@ -1028,6 +1036,51 @@ def _selection_report_build_id(rows: list[dict[str, Any]]) -> str:
         + hashlib.sha256(
             canonical_json(rows).encode("utf-8")
         ).hexdigest()[:16]
+    )
+
+
+def _backfill_comparison_row_provenance(
+    row: dict[str, Any],
+    *,
+    definition: Mapping[str, str],
+    selection: Mapping[str, Any],
+    build_id: str,
+) -> None:
+    """Complete provenance fields without altering executed metric values."""
+    row.update(
+        {
+            "build_id": build_id,
+            "description": definition["description"],
+            "ocr_profile": definition["ocr_profile"],
+            "detector_choice": definition["detector"],
+            "general_recognizer_choice": definition["general"],
+            "thai_recognizer_choice": definition["thai"],
+            "split": str(selection.get("split") or "dev_select"),
+            "manifest_sha256": selection.get("manifest_sha256")
+            or row.get("manifest_sha256"),
+            "checkpoint_sha256": selection.get("checkpoint_sha256")
+            or row.get("checkpoint_sha256"),
+            "calibration_sha256": (
+                selection.get("calibration_sha256")
+                if "calibration_sha256" in selection
+                else row.get("calibration_sha256")
+            ),
+            "configuration_sha256": hashlib.sha256(
+                canonical_json(definition).encode("utf-8")
+            ).hexdigest(),
+            "source_commit": selection.get("source_commit")
+            or row.get("source_commit")
+            or _git_commit(),
+            "device": selection.get("device")
+            or row.get("device")
+            or "unknown",
+            "sample_count": int(row.get("sample_count", 0) or 0),
+            "failure_count": int(row.get("failure_count", 0) or 0),
+            "duration_seconds": float(
+                row.get("duration_seconds", 0.0) or 0.0
+            ),
+            "private_row_count": 0,
+        }
     )
 
 

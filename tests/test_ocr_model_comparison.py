@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 
 from scripts.evaluate_ocr_model_comparison import (
+    CONFIGURATIONS,
+    _backfill_comparison_row_provenance,
     _comparison_build_id,
     _error_categories,
     _selection_report_build_id,
@@ -42,6 +44,37 @@ def test_selection_report_build_id_changes_with_finalized_rows() -> None:
     assert _selection_report_build_id(finalized).startswith(
         "ocr-model-selection-"
     )
+
+
+def test_finalizer_backfills_complete_metric_provenance() -> None:
+    row = {
+        "configuration": "A",
+        "status": "passed",
+        "duration_seconds": 1.25,
+    }
+    selection = {
+        "split": "dev_select",
+        "manifest_sha256": "a" * 64,
+        "checkpoint_sha256": "b" * 64,
+        "calibration_sha256": None,
+        "source_commit": "c" * 40,
+        "device": "gpu:0",
+    }
+
+    _backfill_comparison_row_provenance(
+        row,
+        definition=CONFIGURATIONS["A"],
+        selection=selection,
+        build_id="comparison-build",
+    )
+
+    assert row["build_id"] == "comparison-build"
+    assert row["split"] == "dev_select"
+    assert row["sample_count"] == 0
+    assert row["failure_count"] == 0
+    assert row["duration_seconds"] == 1.25
+    assert row["private_row_count"] == 0
+    assert len(row["configuration_sha256"]) == 64
 
 
 def test_ocr_model_selection_score_uses_the_frozen_weights() -> None:
