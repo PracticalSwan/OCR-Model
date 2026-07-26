@@ -19,6 +19,7 @@ from src.information_extraction.ocr_noise import (
 from src.ocr.cache import OCRCache
 from src.ocr.model_registry import ModelRegistry
 from src.ocr.pipeline import MultilingualOCR
+from src.ocr.stack_binding import build_ocr_stack_binding
 from src.rotation_common import (
     atomic_write_csv,
     atomic_write_json,
@@ -31,6 +32,7 @@ from src.rotation_common import (
 
 PROFILE_LIMITS = {"smoke": 32, "development": 1_500, "final": 0}
 MODEL_DATA_PREPROCESSING_VERSION = "3.0-domain-adapted-adaptive"
+OCR_VARIANT_SPLITS = frozenset({"train", "dev_select"})
 PUBLIC_MODEL_SPLITS = (
     ("train", 0.70),
     ("dev_select", 0.10),
@@ -741,7 +743,7 @@ def prepare_model_dataset(
             "use either ocr_variant_limit or ocr_variant_split_limits, not both"
         )
     for split, value in (ocr_variant_split_limits or {}).items():
-        if split not in {name for name, _ in PUBLIC_MODEL_SPLITS}:
+        if split not in OCR_VARIANT_SPLITS:
             raise ValueError(f"unsupported OCR variant split: {split}")
         if int(value) < 0:
             raise ValueError("OCR variant split limits must be non-negative")
@@ -775,11 +777,18 @@ def prepare_model_dataset(
     requires_ocr = bool({"paddleocr", "hybrid"} & set(selected_streams))
     if ocr_variant_limit and not requires_ocr:
         raise ValueError("OCR variant limit requires a paddleocr or hybrid stream")
+    ocr_variant_candidates = [
+        row
+        for row in candidates
+        if row.get("project_split") in OCR_VARIANT_SPLITS
+    ]
     if requires_ocr and ocr_variant_split_limits:
         variant_rows = []
         for split, split_limit in sorted(ocr_variant_split_limits.items()):
             split_rows = [
-                row for row in candidates if row.get("project_split") == split
+                row
+                for row in ocr_variant_candidates
+                if row.get("project_split") == split
             ]
             variant_rows.extend(
                 select_ocr_variant_rows(split_rows, int(split_limit))
@@ -788,7 +797,10 @@ def prepare_model_dataset(
             )
     else:
         variant_rows = (
-            select_ocr_variant_rows(candidates, ocr_variant_limit)
+            select_ocr_variant_rows(
+                ocr_variant_candidates,
+                ocr_variant_limit,
+            )
             if requires_ocr
             else []
         )
@@ -797,7 +809,13 @@ def prepare_model_dataset(
         "\n".join(sorted(variant_page_ids)).encode("utf-8")
     ).hexdigest()
     build_provenance: dict[str, Any] = {}
+    ocr_stack_binding: dict[str, Any] = {}
     if requires_ocr:
+        ocr_stack_binding = build_ocr_stack_binding(
+            cfg,
+            registry,
+            ocr_profile=selected_ocr_profile,
+        )
         build_provenance = {
             "preprocessing_version": MODEL_DATA_PREPROCESSING_VERSION,
             "ocr_profile": selected_ocr_profile,
@@ -809,12 +827,14 @@ def prepare_model_dataset(
             "ocr_model_artifact_hashes": _selected_model_artifact_hashes(
                 registry
             ),
+            "ocr_stack_binding": ocr_stack_binding,
             "ocr_variant_selection": {
                 "requested_limit": ocr_variant_limit,
                 "split_limits": dict(ocr_variant_split_limits or {}),
                 "selected_page_count": len(variant_rows),
                 "page_ids_sha256": variant_selection_sha256,
                 "balance_keys": ["dataset", "project_split"],
+                "allowed_splits": sorted(OCR_VARIANT_SPLITS),
             },
         }
     if "ocr_noise" in selected_streams:
@@ -840,28 +860,12 @@ def prepare_model_dataset(
     output_root.mkdir(parents=True, exist_ok=True)
     cache = OCRCache(cfgmod.resolve_path(cfg, "ocr_cache"))
     if requires_ocr and ocr_pipeline is None:
+        runtime_options = _multilingual_ocr_options(ocr_stack_binding)
         ocr_pipeline = MultilingualOCR(
             registry=registry,
             device=device,
             cache=cache,
-            preprocessing_version=MODEL_DATA_PREPROCESSING_VERSION,
-            preprocessing_profile=(
-                str(
-                    cfg.get("ocr", {}).get(
-                        "adaptive_preprocessing_profile",
-                        "quality_auto",
-                    )
-                )
-                if selected_ocr_profile == "adaptive"
-                else "original"
-            ),
-            enable_tiling=selected_ocr_profile == "adaptive",
-            adapter_options={
-                "enable_recognition_retries": selected_ocr_profile == "adaptive",
-                "retry_confidence_threshold": 0.65,
-                "retry_max_candidates": 5,
-                "retry_padding_profile": "B",
-            },
+            **runtime_options,
         )
     manifest_rows: list[dict[str, Any]] = []
     exclusions: Counter[str] = Counter()
@@ -1036,6 +1040,60 @@ def _selected_model_artifact_hashes(
     return {
         artifact.name: artifact.artifact_hash
         for artifact in (detector, general, thai)
+    }
+
+
+def _multilingual_ocr_options(
+    stack_binding: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Translate a frozen stack binding into the direct OCR runtime options."""
+    policy = dict(stack_binding.get("preprocessing_policy") or {})
+    tiling = dict(policy.get("tiling") or {})
+    retries = dict(policy.get("recognition_retries") or {})
+    return {
+        "cardinal_angles": tuple(
+            float(value)
+            for value in policy.get(
+                "orientation_candidates",
+                [0, 90, 180, 270],
+            )
+        ),
+        "preprocessing_version": str(
+            policy.get(
+                "preprocessing_version",
+                MODEL_DATA_PREPROCESSING_VERSION,
+            )
+        ),
+        "preprocessing_profile": str(
+            policy.get("preprocessing_profile", "original")
+        ),
+        "enable_fine_deskew": bool(
+            policy.get("enable_continuous_deskew", True)
+        ),
+        "enable_tiling": bool(tiling.get("enabled", False)),
+        "tile_grid": tuple(tiling.get("grid", [2, 2])),
+        "tile_overlap": float(tiling.get("overlap", 0.15)),
+        "tile_upscale": float(tiling.get("upscale", 1.0)),
+        "tile_iou_threshold": float(
+            tiling.get("polygon_iou_threshold", 0.50)
+        ),
+        "tile_minimum_score_gain": float(
+            tiling.get("minimum_score_gain", 0.0)
+        ),
+        "adapter_options": {
+            "enable_recognition_retries": bool(
+                retries.get("enabled", False)
+            ),
+            "retry_confidence_threshold": float(
+                retries.get("confidence_threshold", 0.65)
+            ),
+            "retry_max_candidates": int(
+                retries.get("maximum_candidates", 5)
+            ),
+            "retry_padding_profile": str(
+                retries.get("padding_profile", "B")
+            ),
+        },
     }
 
 
