@@ -8,6 +8,7 @@ from src.evaluation.metrics import (
 )
 from scripts.evaluate_end_to_end_angles import (
     _aggregate_angle,
+    _micro_f1,
     _with_rotation_retention,
 )
 
@@ -130,3 +131,26 @@ def test_end_to_end_angle_rotation_retention_uses_upright_denominators() -> None
         "critical_field_exact_match": 0.5,
     })
     assert retained[1]["extraction_retention_vs_upright"] == 0.5
+
+
+def test_angle_f1_aggregates_counts_instead_of_averaging_pages() -> None:
+    rows = [
+        {
+            "entity_true_positive": 90,
+            "entity_expected": 100,
+            "entity_predicted": 100,
+            "entity_f1": 0.9,
+        },
+        {
+            "entity_true_positive": 0,
+            "entity_expected": 1,
+            "entity_predicted": 1,
+            "entity_f1": 0.0,
+        },
+    ]
+
+    assert _micro_f1(
+        rows,
+        prefix="entity",
+        fallback_field="entity_f1",
+    ) == pytest.approx(180 / 202)

@@ -20,7 +20,7 @@ from PIL import Image, ImageDraw, ImageFont  # noqa: E402
 
 from src import config as cfgmod  # noqa: E402
 from src.evaluation.critical_field_ocr import evaluate_critical_fields  # noqa: E402
-from src.evaluation.metrics import extraction_metrics, ocr_text_metrics, text_detection_metrics  # noqa: E402
+from src.evaluation.metrics import extraction_metrics, normalized_text, ocr_text_metrics, text_detection_metrics  # noqa: E402
 from src.information_extraction.geometry import rotate_image_and_annotation  # noqa: E402
 from src.inference.document_io import DocumentPage  # noqa: E402
 from src.inference.document_pipeline import DocumentPipeline  # noqa: E402
@@ -131,11 +131,30 @@ def main() -> int:
                     "dataset": sample["dataset"],
                     "recognized_text_coverage": text["recognized_text_coverage"],
                     "wer": text["wer"],
+                    "reference_character_count": text[
+                        "reference_characters"
+                    ],
+                    "character_error_count": text["character_errors"],
+                    "reference_word_count": len(
+                        normalized_text(reference_text).split()
+                    ),
+                    "word_error_count": text["word_errors"],
                     "detection_f1": detection["f1"],
+                    "detection_true_positive": detection["true_positive"],
+                    "detection_expected": detection["expected"],
+                    "detection_predicted": detection["predicted"],
                     "entity_f1": extraction["entity"]["f1"],
+                    "entity_true_positive": extraction["entity"][
+                        "true_positive"
+                    ],
                     "entity_expected": extraction["entity"]["expected"],
+                    "entity_predicted": extraction["entity"]["predicted"],
                     "relation_f1": extraction["relation"]["f1"],
+                    "relation_true_positive": extraction["relation"][
+                        "true_positive"
+                    ],
                     "relation_expected": extraction["relation"]["expected"],
+                    "relation_predicted": extraction["relation"]["predicted"],
                     "field_correct": extraction["canonical_fields"]["correct"],
                     "field_applicable": extraction["canonical_fields"]["applicable"],
                     "entity_count": len(page["entities"]),
@@ -270,7 +289,33 @@ def _aggregate_angle(angle: int, rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     field_applicable = sum(row["field_applicable"] for row in rows)
-    detections = [row["detection_f1"] for row in rows if row["detection_f1"] is not None]
+    reference_characters = sum(
+        int(row.get("reference_character_count", 0)) for row in rows
+    )
+    character_errors = sum(
+        int(row.get("character_error_count", 0)) for row in rows
+    )
+    reference_words = sum(
+        int(row.get("reference_word_count", 0)) for row in rows
+    )
+    word_errors = sum(
+        int(row.get("word_error_count", 0)) for row in rows
+    )
+    detection_f1 = _micro_f1(
+        rows,
+        prefix="detection",
+        fallback_field="detection_f1",
+    )
+    entity_f1 = _micro_f1(
+        rows,
+        prefix="entity",
+        fallback_field="entity_f1",
+    )
+    relation_f1 = _micro_f1(
+        rows,
+        prefix="relation",
+        fallback_field="relation_f1",
+    )
     canonical_accuracy = (
         sum(row["field_correct"] for row in rows) / field_applicable
         if field_applicable
@@ -282,11 +327,21 @@ def _aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     )
     return {
         "page_count": len(rows),
-        "recognized_text_coverage": statistics.fmean(row["recognized_text_coverage"] for row in rows),
-        "wer": statistics.fmean(row["wer"] for row in rows),
-        "detection_f1": statistics.fmean(detections) if detections else None,
-        "entity_f1": statistics.fmean(row["entity_f1"] for row in rows),
-        "relation_f1": statistics.fmean(row["relation_f1"] for row in rows),
+        "recognized_text_coverage": (
+            max(0.0, 1.0 - character_errors / reference_characters)
+            if reference_characters
+            else statistics.fmean(
+                row["recognized_text_coverage"] for row in rows
+            )
+        ),
+        "wer": (
+            word_errors / reference_words
+            if reference_words
+            else statistics.fmean(row["wer"] for row in rows)
+        ),
+        "detection_f1": detection_f1,
+        "entity_f1": entity_f1,
+        "relation_f1": relation_f1,
         "canonical_field_accuracy": canonical_accuracy,
         "field_accuracy": canonical_accuracy,
         "critical_field_exact_match": critical["aggregate"][
@@ -330,6 +385,38 @@ def _aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "empty_ocr": sum(not row["nonempty"] for row in rows),
         },
     }
+
+
+def _micro_f1(
+    rows: list[dict[str, Any]],
+    *,
+    prefix: str,
+    fallback_field: str,
+) -> float | None:
+    true_positive_key = f"{prefix}_true_positive"
+    expected_key = f"{prefix}_expected"
+    predicted_key = f"{prefix}_predicted"
+    if rows and all(
+        key in row
+        for row in rows
+        for key in (true_positive_key, expected_key, predicted_key)
+    ):
+        true_positive = sum(int(row[true_positive_key]) for row in rows)
+        expected = sum(int(row[expected_key]) for row in rows)
+        predicted = sum(int(row[predicted_key]) for row in rows)
+        precision = true_positive / predicted if predicted else 0.0
+        recall = true_positive / expected if expected else 0.0
+        return (
+            2.0 * precision * recall / (precision + recall)
+            if precision + recall
+            else 0.0
+        )
+    values = [
+        float(row[fallback_field])
+        for row in rows
+        if row.get(fallback_field) is not None
+    ]
+    return statistics.fmean(values) if values else None
 
 
 def _with_rotation_retention(
