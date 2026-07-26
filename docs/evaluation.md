@@ -111,12 +111,29 @@ coverage and detection on unfamiliar layouts constrain real extraction.
 
 ## OCR preprocessing selection
 
-The public dev-select ablation uses one deterministic page per labeled dataset.
-`original`, grayscale normalization, and optional Paddle orientation modules
-tie at 0.9033 mean alignment coverage; original wins the explicit no-change
-tie break. Denoise falls to 0.8473. Background normalization/quality-auto
-slightly reduce coverage. Raster-derived PDF results tie at 200/250/300 DPI,
-so 200 is chosen for lower cost. Test and private data are not used.
+The public preprocessing ablation uses the fixed 400-page DEV_SELECT benchmark:
+283 FATURA, 20 FUNSD, and 97 SROIE pages. `grayscale_normalized` wins the
+preprocessing-only composite score at 0.521288, versus 0.517138 for original
+preprocessing. Denoising is rejected at 0.461808. This preprocessing result is
+retained for the optional adaptive profile rather than promoted on its own.
+
+The full A-F comparison evaluates OCR and downstream extraction together on
+the same 400 pages:
+
+| Configuration | Status | Score | Entity F1 | WER | Seconds/page |
+|---|---|---:|---:|---:|---:|
+| A: all original | selected | 0.368311 | 0.137946 | 0.758754 | 2.573 |
+| C: custom general recognizer | ineligible | 0.395077 | 0.436529 | 0.735421 | 7.457 |
+| E: accepted registry choices | eligible | 0.368899 | 0.137946 | 0.758754 | 2.543 |
+| F: adaptive stack | eligible | 0.339679 | 0.137002 | 0.761867 | 6.158 |
+
+B and D are unavailable because no custom detector passed its bounded
+hardware/acceptance gate. C is not eligible because its custom general
+recognizer failed the WER and Turkish-character acceptance criteria. E is
+effectively identical to A on this non-Thai benchmark and improves the
+selection score by only 0.000588, below the material-gain threshold. The
+frozen default is therefore A (`original`). All comparison rows have zero
+failures and zero private rows; TEST, CORU, and Gmail were not used.
 
 ## Unseen CORU
 
