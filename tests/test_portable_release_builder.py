@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 import scripts.build_portable_release as builder
 from scripts.build_portable_release import copy_application
 
@@ -86,3 +88,59 @@ def test_portable_registry_keeps_originals_and_selected_custom_only(
         / "thai_custom"
         / "model.json"
     ).is_file()
+
+
+def test_selected_layout_checkpoint_uses_config_and_calibration_binding(
+    tmp_path: Path, monkeypatch
+) -> None:
+    source_root = tmp_path / "source"
+    checkpoint = tmp_path / "selected" / "checkpoint"
+    checkpoint.mkdir(parents=True)
+    model = checkpoint / "model.safetensors"
+    model.write_bytes(b"selected-layout-model")
+    expected_hash = builder.sha256_file(model)
+    (source_root / "models").mkdir(parents=True)
+    (source_root / "config.yaml").write_text(
+        "layout_model:\n"
+        f"  inference_checkpoint: {checkpoint.as_posix()}\n",
+        encoding="utf-8",
+    )
+    (source_root / "models" / "multitask_calibration.json").write_text(
+        json.dumps({"checkpoint_model_sha256": expected_hash}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(builder, "PROJECT_ROOT", source_root)
+
+    resolved, actual_hash, calibration = builder.selected_layout_checkpoint(
+        tmp_path / "legacy-assets"
+    )
+
+    assert resolved == checkpoint.resolve()
+    assert actual_hash == expected_hash
+    assert calibration["checkpoint_model_sha256"] == expected_hash
+
+
+def test_selected_layout_checkpoint_rejects_stale_calibration(
+    tmp_path: Path, monkeypatch
+) -> None:
+    source_root = tmp_path / "source"
+    checkpoint = tmp_path / "selected" / "checkpoint"
+    checkpoint.mkdir(parents=True)
+    (checkpoint / "model.safetensors").write_bytes(b"new-layout-model")
+    (source_root / "models").mkdir(parents=True)
+    (source_root / "config.yaml").write_text(
+        "layout_model:\n"
+        f"  inference_checkpoint: {checkpoint.as_posix()}\n",
+        encoding="utf-8",
+    )
+    (source_root / "models" / "multitask_calibration.json").write_text(
+        json.dumps({"checkpoint_model_sha256": "0" * 64}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(builder, "PROJECT_ROOT", source_root)
+
+    with pytest.raises(
+        ValueError,
+        match="selected checkpoint is not bound to the current calibration",
+    ):
+        builder.selected_layout_checkpoint(tmp_path / "legacy-assets")
