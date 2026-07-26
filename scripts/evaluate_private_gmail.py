@@ -74,8 +74,11 @@ def main() -> int:
         cfg,
         device=args.device,
         model_setup=args.model_setup,
-        layout_checkpoint=args.layout_checkpoint,
+        layout_checkpoint=checkpoint,
+        calibration_path=calibration,
         enable_kmeans_display=False,
+        require_layout_model=True,
+        ocr_profile=profile,
     )
     counts: Counter[str] = Counter()
     confidences: list[float] = []
