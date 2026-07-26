@@ -28,6 +28,7 @@ from src.inference.document_pipeline import DocumentPipeline  # noqa: E402
 from src.ocr.benchmark import resolve_project_input  # noqa: E402
 from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
 from src.ocr.errors import OCRModelUnavailable  # noqa: E402
+from src.ocr.model_registry import ModelRegistry  # noqa: E402
 from src.ocr.training_data import convert_detection_annotation, critical_fields_by_token  # noqa: E402
 from src.ocr.trials import aggregate_detector_results, detector_page_result  # noqa: E402
 from src.rotation_common import (  # noqa: E402
@@ -125,6 +126,14 @@ def main() -> int:
         "--selection-output",
         default=str(PROJECT_ROOT / "reports/ocr_upgrade/ocr_model_selection.json"),
     )
+    parser.add_argument(
+        "--finalize-existing",
+        action="store_true",
+        help=(
+            "Backfill model hashes and build IDs in an already completed "
+            "comparison without rerunning OCR."
+        ),
+    )
     args = parser.parse_args()
     if not 1 <= args.limit <= 400:
         parser.error("--limit must be in [1, 400]")
@@ -158,10 +167,24 @@ def main() -> int:
     manifest_sha = sha256_file(manifest_path)
     checkpoint_sha = sha256_file(checkpoint / "model.safetensors")
     calibration_sha = sha256_file(calibration) if calibration is not None else None
-    registry_payload = json.loads(
-        Path(cfgmod.resolve_path(cfg, "reports") / "ocr_upgrade/model_registry.json")
-        .read_text(encoding="utf-8")
+    registry_path = Path(
+        cfgmod.resolve_path(cfg, "reports") / "ocr_upgrade/model_registry.json"
     )
+    registry_payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    build_id = _comparison_build_id(
+        manifest_sha=manifest_sha,
+        checkpoint_sha=checkpoint_sha,
+        configurations=args.configurations,
+    )
+    if args.finalize_existing:
+        _finalize_existing_reports(
+            csv_path=Path(args.output),
+            selection_path=Path(args.selection_output),
+            model_setup=Path(args.model_setup),
+            registry_path=registry_path,
+            build_id=build_id,
+        )
+        return 0
     summaries: list[dict[str, Any]] = []
     for label in args.configurations:
         definition = CONFIGURATIONS[label]
@@ -185,12 +208,14 @@ def main() -> int:
                 general_recognizer=definition["general"],
                 thai_recognizer=definition["thai"],
             )
+            model_hashes = _pipeline_model_hashes(pipeline)
         except OCRModelUnavailable as exc:
             summaries.append(
                 _unavailable_row(
                     label,
                     definition,
                     exc,
+                    build_id=build_id,
                     manifest_sha=manifest_sha,
                     checkpoint_sha=checkpoint_sha,
                     calibration_sha=calibration_sha,
@@ -220,6 +245,7 @@ def main() -> int:
         summary.update(
             {
                 "configuration": label,
+                "build_id": build_id,
                 "description": definition["description"],
                 "status": "passed",
                 "selected": False,
@@ -238,6 +264,7 @@ def main() -> int:
                 "failure_count": sum(bool(item["failed"]) for item in observations),
                 "duration_seconds": time.perf_counter() - started,
                 "private_row_count": 0,
+                **model_hashes,
                 **configuration_eligibility(definition, registry_payload),
             }
         )
@@ -280,8 +307,11 @@ def main() -> int:
         + hashlib.sha256(canonical_json(summaries).encode("utf-8")).hexdigest()[:16],
         "split": "dev_select",
         "manifest_sha256": manifest_sha,
+        "detector_sha256": selected["detector_sha256"],
+        "recognizer_sha256": selected["recognizer_sha256"],
         "checkpoint_sha256": checkpoint_sha,
         "calibration_sha256": calibration_sha,
+        "configuration_sha256": selected["configuration_sha256"],
         "source_commit": source_commit,
         "device": args.device,
         "sample_count": sum(int(row.get("sample_count", 0)) for row in successful),
@@ -839,6 +869,7 @@ def _unavailable_row(
     definition: Mapping[str, str],
     exc: Exception,
     *,
+    build_id: str,
     manifest_sha: str,
     checkpoint_sha: str,
     calibration_sha: str | None,
@@ -849,6 +880,7 @@ def _unavailable_row(
 ) -> dict[str, Any]:
     return {
         "configuration": label,
+        "build_id": build_id,
         "description": definition["description"],
         "status": "unavailable",
         "selected": False,
@@ -870,8 +902,124 @@ def _unavailable_row(
         "failure_count": 0,
         "duration_seconds": duration_seconds,
         "private_row_count": 0,
+        "detector_sha256": None,
+        "recognizer_sha256": None,
         "unavailable_reason": f"{type(exc).__name__}: {exc}",
     }
+
+
+def _comparison_build_id(
+    *,
+    manifest_sha: str,
+    checkpoint_sha: str,
+    configurations: list[str],
+) -> str:
+    return "ocr-model-comparison-" + hashlib.sha256(
+        canonical_json(
+            {
+                "manifest_sha256": manifest_sha,
+                "checkpoint_sha256": checkpoint_sha,
+                "configurations": configurations,
+            }
+        ).encode("utf-8")
+    ).hexdigest()[:16]
+
+
+def _pipeline_model_hashes(
+    pipeline: DocumentPipeline,
+) -> dict[str, str]:
+    general = pipeline.ocr.backends["general"]
+    thai = pipeline.ocr.backends["thai"]
+    return {
+        "detector_sha256": general.detector.artifact_hash,
+        "recognizer_sha256": hashlib.sha256(
+            (
+                general.recognizer.artifact_hash
+                + thai.recognizer.artifact_hash
+            ).encode("ascii")
+        ).hexdigest(),
+    }
+
+
+def _configuration_model_hashes(
+    definition: Mapping[str, str],
+    *,
+    model_setup: Path,
+    registry_path: Path,
+) -> dict[str, str]:
+    registry = ModelRegistry.from_setup(
+        model_setup,
+        upgrade_registry=registry_path,
+        detector_choice=definition["detector"],
+        general_choice=definition["general"],
+        thai_choice=definition["thai"],
+    )
+    detector, general = registry.route_models("general")
+    _, thai = registry.route_models("thai")
+    return {
+        "detector_sha256": detector.artifact_hash,
+        "recognizer_sha256": hashlib.sha256(
+            (
+                general.artifact_hash
+                + thai.artifact_hash
+            ).encode("ascii")
+        ).hexdigest(),
+    }
+
+
+def _finalize_existing_reports(
+    *,
+    csv_path: Path,
+    selection_path: Path,
+    model_setup: Path,
+    registry_path: Path,
+    build_id: str,
+) -> None:
+    """Repair provenance-only fields after an expensive completed comparison."""
+    if not selection_path.is_file():
+        raise FileNotFoundError(selection_path)
+    selection = json.loads(selection_path.read_text(encoding="utf-8"))
+    rows = selection.get("configurations")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("existing OCR selection has no configuration rows")
+    for row in rows:
+        label = str(row.get("configuration", ""))
+        definition = CONFIGURATIONS.get(label)
+        if definition is None:
+            raise ValueError(f"unknown OCR comparison configuration: {label!r}")
+        row["build_id"] = build_id
+        if row.get("status") == "passed":
+            row.update(
+                _configuration_model_hashes(
+                    definition,
+                    model_setup=model_setup,
+                    registry_path=registry_path,
+                )
+            )
+        else:
+            row.setdefault("detector_sha256", None)
+            row.setdefault("recognizer_sha256", None)
+    selected_label = str(selection.get("selected_configuration", ""))
+    selected = next(
+        (
+            row
+            for row in rows
+            if str(row.get("configuration", "")) == selected_label
+        ),
+        None,
+    )
+    if selected is None or selected.get("status") != "passed":
+        raise ValueError("selected OCR configuration is missing or unsuccessful")
+    selection.update(
+        {
+            "detector_sha256": selected["detector_sha256"],
+            "recognizer_sha256": selected["recognizer_sha256"],
+            "configuration_sha256": selected["configuration_sha256"],
+            "configurations": rows,
+        }
+    )
+    _write_csv(csv_path, rows)
+    atomic_write_json(selection_path, selection)
 
 
 def _load_rows(path: Path) -> list[dict[str, str]]:

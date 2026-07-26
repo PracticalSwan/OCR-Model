@@ -3,11 +3,32 @@ from __future__ import annotations
 import pytest
 
 from scripts.evaluate_ocr_model_comparison import (
+    _comparison_build_id,
     _error_categories,
     configuration_eligibility,
     ocr_model_selection_score,
     select_simplest_material_configuration,
 )
+
+
+def test_comparison_build_id_is_bound_to_manifest_checkpoint_and_trials() -> None:
+    first = _comparison_build_id(
+        manifest_sha="a" * 64,
+        checkpoint_sha="b" * 64,
+        configurations=["A", "F"],
+    )
+    repeated = _comparison_build_id(
+        manifest_sha="a" * 64,
+        checkpoint_sha="b" * 64,
+        configurations=["A", "F"],
+    )
+    changed = _comparison_build_id(
+        manifest_sha="a" * 64,
+        checkpoint_sha="c" * 64,
+        configurations=["A", "F"],
+    )
+    assert first == repeated
+    assert first != changed
 
 
 def test_ocr_model_selection_score_uses_the_frozen_weights() -> None:
