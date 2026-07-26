@@ -57,6 +57,9 @@ def main() -> int:
         and row.get("is_usable") == "true" and row.get("image_path")
     ]
     documents = _group_private_documents(rows, limit=args.limit)
+    private_output_root = (
+        asset_root / "private-evaluation" / "ocr-upgrade-final"
+    )
     checkpoint = (
         Path(args.layout_checkpoint).resolve()
         if args.layout_checkpoint
@@ -86,6 +89,7 @@ def main() -> int:
         ocr_profile=profile,
     )
     results: list[dict[str, Any]] = []
+    local_records: list[dict[str, Any]] = []
     started = time.perf_counter()
     try:
         for index, document_rows in enumerate(documents, start=1):
@@ -109,8 +113,23 @@ def main() -> int:
                         "private multipage result did not preserve page count"
                     )
                 results.append(result)
-            except Exception:
-                pass
+                local_records.append(
+                    {
+                        "anonymous_document_id": f"private_{index:06d}",
+                        "page_count": len(document_rows),
+                        "status": "passed",
+                        "error_type": None,
+                    }
+                )
+            except Exception as exc:
+                local_records.append(
+                    {
+                        "anonymous_document_id": f"private_{index:06d}",
+                        "page_count": len(document_rows),
+                        "status": "failed",
+                        "error_type": type(exc).__name__,
+                    }
+                )
             finally:
                 for page in pages:
                     page.image.close()
@@ -128,6 +147,24 @@ def main() -> int:
     checkpoint_sha256 = sha256_file(
         checkpoint / "model.safetensors"
     )
+    calibration_sha256 = sha256_file(calibration)
+    atomic_write_json(
+        private_output_root / "operational_status.json",
+        {
+            "schema_version": "1.0",
+            "local_private_detail": True,
+            "contains_source_filenames": False,
+            "contains_ocr_text": False,
+            "contains_images": False,
+            "manifest_sha256": sha256_file(private_manifest),
+            "checkpoint_sha256": checkpoint_sha256,
+            "calibration_sha256": calibration_sha256,
+            "ocr_stack": stack,
+            "attempted_documents": attempted_documents,
+            "attempted_pages": attempted_pages,
+            "records": local_records,
+        },
+    )
     report = {
         "schema_version": "1.0",
         "status": "private_test_aggregate",
@@ -137,7 +174,7 @@ def main() -> int:
                 {
                     "private_manifest_sha256": sha256_file(private_manifest),
                     "checkpoint_sha256": checkpoint_sha256,
-                    "calibration_sha256": sha256_file(calibration),
+                    "calibration_sha256": calibration_sha256,
                     "ocr_stack": stack,
                     "attempted_documents": attempted_documents,
                     "attempted_pages": attempted_pages,
@@ -150,7 +187,7 @@ def main() -> int:
         "recognizer_sha256": stack["recognizer_sha256"],
         "checkpoint_sha256": checkpoint_sha256,
         "checkpoint_model_sha256": checkpoint_sha256,
-        "calibration_sha256": sha256_file(calibration),
+        "calibration_sha256": calibration_sha256,
         "configuration_sha256": stack["preprocessing_sha256"],
         "source_commit": _git_commit(),
         "device": args.device,
