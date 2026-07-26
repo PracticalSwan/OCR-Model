@@ -4,6 +4,10 @@ from pathlib import Path
 
 import pytest
 
+from scripts.evaluate_private_gmail import (
+    _group_private_documents,
+    _private_operation_aggregate,
+)
 from src.inference.private_evaluation import (
     aggregate_private_results,
     anonymous_document_id,
@@ -65,3 +69,57 @@ def test_private_aggregate_contains_no_row_level_payload() -> None:
     assert "secret" not in serialized
     assert report["contains_ocr_text"] is False
     assert report["gmail_fit_rows"] == 0
+
+
+def test_private_gmail_pages_are_grouped_as_documents() -> None:
+    rows = [
+        {"document_id": "doc-b", "page_id": "page-2"},
+        {"document_id": "doc-a", "page_id": "page-1"},
+        {"document_id": "doc-b", "page_id": "page-1"},
+    ]
+
+    grouped = _group_private_documents(rows, limit=2)
+
+    assert sorted(len(document) for document in grouped) == [1, 2]
+    multipage = next(document for document in grouped if len(document) == 2)
+    assert [row["page_id"] for row in multipage] == [
+        "page-1",
+        "page-2",
+    ]
+
+
+def test_private_gmail_public_aggregate_is_minimal() -> None:
+    result = {
+        "pages": [
+            {
+                "full_text": "private text",
+                "ocr": {"words": [{"text": "private text"}]},
+            },
+            {"full_text": "", "ocr": {"words": []}},
+        ],
+        "processing": {"duration_seconds": 3.5},
+        "document_type": {"label": "private_type"},
+    }
+
+    report = _private_operation_aggregate(
+        [result],
+        attempted_documents=2,
+        attempted_pages=3,
+        elapsed_seconds=4.0,
+    )
+    serialized = str(report)
+
+    assert report == {
+        "attempted_documents": 2,
+        "successful_documents": 1,
+        "failed_documents": 1,
+        "attempted_pages": 3,
+        "successful_pages": 2,
+        "failed_pages": 1,
+        "processed_pages": 2,
+        "nonempty_output_count": 1,
+        "aggregate_processing_time_seconds": 3.5,
+        "aggregate_wall_time_seconds": 4.0,
+    }
+    assert "private text" not in serialized
+    assert "private_type" not in serialized

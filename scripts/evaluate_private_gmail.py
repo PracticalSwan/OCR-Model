@@ -8,8 +8,9 @@ import json
 import subprocess
 import sys
 import time
-from collections import Counter
+from collections import defaultdict
 from pathlib import Path
+from typing import Any, Mapping, Sequence
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -28,7 +29,12 @@ from src.rotation_common import atomic_write_json, canonical_json, deterministic
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
-    parser.add_argument("--limit", type=int, default=2)
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=2,
+        help="maximum anonymous source documents, not page rows",
+    )
     parser.add_argument("--device", choices=("cpu", "gpu:0"), default="gpu:0")
     parser.add_argument("--layout-checkpoint")
     parser.add_argument("--model-setup", default=str(PROJECT_ROOT / "reports" / "ocr" / "model_setup.json"))
@@ -50,8 +56,7 @@ def main() -> int:
         if row.get("is_private") == "true" and row.get("project_split") == "private_test"
         and row.get("is_usable") == "true" and row.get("image_path")
     ]
-    rows.sort(key=lambda row: deterministic_rank(row["page_id"], 42))
-    rows = rows[: args.limit]
+    documents = _group_private_documents(rows, limit=args.limit)
     checkpoint = (
         Path(args.layout_checkpoint).resolve()
         if args.layout_checkpoint
@@ -80,39 +85,49 @@ def main() -> int:
         require_layout_model=True,
         ocr_profile=profile,
     )
-    counts: Counter[str] = Counter()
-    confidences: list[float] = []
-    durations: list[float] = []
-    error_types: Counter[str] = Counter()
+    results: list[dict[str, Any]] = []
     started = time.perf_counter()
     try:
-        for row in rows:
+        for index, document_rows in enumerate(documents, start=1):
+            pages: list[DocumentPage] = []
             try:
-                with Image.open(PROJECT_ROOT / row["image_path"]) as source:
-                    image = source.convert("RGB")
+                for page_number, row in enumerate(document_rows, start=1):
+                    with Image.open(
+                        PROJECT_ROOT / row["image_path"]
+                    ) as source:
+                        image = source.convert("RGB")
+                    pages.append(DocumentPage(page_number, image))
                 result = pipeline.extract_pages(
-                    document_id="private_document",
-                    source_type="image",
-                    pages=[DocumentPage(1, image)],
+                    document_id=f"private_{index:06d}",
+                    source_type="pdf" if len(pages) > 1 else "image",
+                    pages=pages,
                     language="auto",
                     private_output=True,
                 )
-                page = result["pages"][0]
-                counts["successful_pages"] += 1
-                counts["ocr_words"] += len(page["ocr"]["words"])
-                counts["entities"] += len(page["entities"])
-                counts["relations"] += len(page["key_value_pairs"])
-                counts["non_null_fields"] += sum(value is not None for value in result["fields"].values())
-                counts[f"route:{page['ocr']['language_route']}"] += 1
-                if page["ocr"]["mean_confidence"] is not None:
-                    confidences.append(float(page["ocr"]["mean_confidence"]))
-                durations.append(float(result["processing"]["duration_seconds"]))
-            except Exception as exc:
-                counts["failed_pages"] += 1
-                error_types[type(exc).__name__] += 1
+                if len(result.get("pages") or []) != len(document_rows):
+                    raise RuntimeError(
+                        "private multipage result did not preserve page count"
+                    )
+                results.append(result)
+            except Exception:
+                pass
+            finally:
+                for page in pages:
+                    page.image.close()
     finally:
         pipeline.close()
-    attempted = len(rows)
+    elapsed = time.perf_counter() - started
+    attempted_documents = len(documents)
+    attempted_pages = sum(len(rows) for rows in documents)
+    aggregate = _private_operation_aggregate(
+        results,
+        attempted_documents=attempted_documents,
+        attempted_pages=attempted_pages,
+        elapsed_seconds=elapsed,
+    )
+    checkpoint_sha256 = sha256_file(
+        checkpoint / "model.safetensors"
+    )
     report = {
         "schema_version": "1.0",
         "status": "private_test_aggregate",
@@ -121,12 +136,11 @@ def main() -> int:
             canonical_json(
                 {
                     "private_manifest_sha256": sha256_file(private_manifest),
-                    "checkpoint_sha256": sha256_file(
-                        checkpoint / "model.safetensors"
-                    ),
+                    "checkpoint_sha256": checkpoint_sha256,
                     "calibration_sha256": sha256_file(calibration),
                     "ocr_stack": stack,
-                    "sample_count": attempted,
+                    "attempted_documents": attempted_documents,
+                    "attempted_pages": attempted_pages,
                 }
             ).encode("utf-8")
         ).hexdigest()[:16],
@@ -134,42 +148,27 @@ def main() -> int:
         "manifest_sha256": sha256_file(private_manifest),
         "detector_sha256": stack["detector_sha256"],
         "recognizer_sha256": stack["recognizer_sha256"],
-        "checkpoint_sha256": sha256_file(
-            checkpoint / "model.safetensors"
-        ),
-        "checkpoint_model_sha256": sha256_file(
-            checkpoint / "model.safetensors"
-        ),
+        "checkpoint_sha256": checkpoint_sha256,
+        "checkpoint_model_sha256": checkpoint_sha256,
         "calibration_sha256": sha256_file(calibration),
         "configuration_sha256": stack["preprocessing_sha256"],
         "source_commit": _git_commit(),
         "device": args.device,
-        "sample_count": attempted,
-        "failure_count": counts["failed_pages"],
-        "duration_seconds": time.perf_counter() - started,
-        "private_row_count": attempted,
-        "attempted_pages": attempted,
-        "successful_pages": counts["successful_pages"],
-        "failed_pages": counts["failed_pages"],
-        "attempted_documents": attempted,
-        "successful_documents": counts["successful_pages"],
-        "failed_documents": counts["failed_pages"],
-        "mean_ocr_words": counts["ocr_words"] / max(1, counts["successful_pages"]),
-        "mean_entities": counts["entities"] / max(1, counts["successful_pages"]),
-        "mean_relations": counts["relations"] / max(1, counts["successful_pages"]),
-        "mean_non_null_fields": counts["non_null_fields"] / max(1, counts["successful_pages"]),
-        "mean_ocr_confidence": sum(confidences) / len(confidences) if confidences else None,
-        "mean_duration_seconds": sum(durations) / len(durations) if durations else None,
-        "route_counts": {key.split(":", 1)[1]: value for key, value in counts.items() if key.startswith("route:")},
-        "error_type_counts": dict(error_types),
+        "sample_count": attempted_pages,
+        "failure_count": aggregate["failed_pages"],
+        "duration_seconds": elapsed,
+        "private_row_count": attempted_pages,
+        **aggregate,
         "gmail_fit_rows": 0,
         "local_processing_only": True,
         "contains_filenames": False,
         "contains_ocr_text": False,
         "contains_images": False,
         "contains_per_document_predictions": False,
-        "elapsed_seconds": time.perf_counter() - started,
-        "limitations": ["No private ground truth is used; this is operational aggregate testing, not accuracy evaluation."],
+        "limitations": [
+            "No private ground truth is used; this is operational aggregate testing, not accuracy evaluation.",
+            "The public report contains only anonymous counts and aggregate processing time.",
+        ],
     }
     atomic_write_json(
         cfgmod.resolve_path(cfg, "reports") / "model_evaluation" / "private_gmail_aggregate.json",
@@ -188,7 +187,72 @@ def main() -> int:
         report,
     )
     print(json.dumps(report, indent=2))
-    return 0 if attempted and counts["successful_pages"] else 1
+    return 0 if attempted_documents and results else 1
+
+
+def _group_private_documents(
+    rows: Sequence[Mapping[str, str]],
+    *,
+    limit: int,
+) -> list[list[dict[str, str]]]:
+    """Group private page rows without exposing source identity in reports."""
+    if limit < 1:
+        raise ValueError("private document limit must be positive")
+    grouped: defaultdict[str, list[dict[str, str]]] = defaultdict(list)
+    for row in rows:
+        document_id = str(row.get("document_id", "")).strip()
+        page_id = str(row.get("page_id", "")).strip()
+        if not document_id or not page_id:
+            raise ValueError("private manifest row lacks document/page identity")
+        grouped[document_id].append(dict(row))
+    ordered_ids = sorted(
+        grouped,
+        key=lambda value: deterministic_rank(value, 42),
+    )[:limit]
+    return [
+        sorted(grouped[document_id], key=lambda row: row["page_id"])
+        for document_id in ordered_ids
+    ]
+
+
+def _private_operation_aggregate(
+    results: Sequence[Mapping[str, Any]],
+    *,
+    attempted_documents: int,
+    attempted_pages: int,
+    elapsed_seconds: float,
+) -> dict[str, Any]:
+    """Return only the private aggregate fields permitted for publication."""
+    successful_documents = len(results)
+    successful_pages = sum(
+        len(result.get("pages") or []) for result in results
+    )
+    nonempty_output_count = sum(
+        bool(
+            str(page.get("full_text", "")).strip()
+            or (page.get("ocr") or {}).get("words")
+        )
+        for result in results
+        for page in (result.get("pages") or [])
+    )
+    aggregate_processing_time = sum(
+        float((result.get("processing") or {}).get("duration_seconds", 0.0))
+        for result in results
+    )
+    return {
+        "attempted_documents": int(attempted_documents),
+        "successful_documents": successful_documents,
+        "failed_documents": max(
+            0, int(attempted_documents) - successful_documents
+        ),
+        "attempted_pages": int(attempted_pages),
+        "successful_pages": successful_pages,
+        "failed_pages": max(0, int(attempted_pages) - successful_pages),
+        "processed_pages": successful_pages,
+        "nonempty_output_count": nonempty_output_count,
+        "aggregate_processing_time_seconds": aggregate_processing_time,
+        "aggregate_wall_time_seconds": float(elapsed_seconds),
+    }
 
 
 def _git_commit() -> str:
