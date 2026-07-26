@@ -77,7 +77,7 @@ Large OCR/layout assets live below `D:\CSX4201\vision-info-extraction-assets` in
 - **No implied work.** Do not claim an edit, validation, sync, or doc update happened unless it actually did.
 
 ## Data and git hygiene
-- The repo is initialized on `main` with an existing private GitHub remote. Before every commit or push:
+- The repo is initialized on `main` with an existing public GitHub remote. Before every commit or push:
   - `.gitignore` already excludes OS junk (`__MACOSX/`, `.DS_Store`), Python build/venv artifacts, and IDE folders — keep it that way.
   - Large binaries are present (`.zip`, `.pdf`, image archives). Before committing, decide policy: **Git LFS**, gitignore + documented download steps, or commit directly. Do not blindly push hundreds of MB.
   - Derived rotations, features, private page renders, private operational manifests, and large operational manifests are local ignored outputs. Classical artifacts under `models/kmeans_rotation/` are legitimate for this stage, but verify their provenance and contents before staging.
@@ -97,7 +97,7 @@ Large OCR/layout assets live below `D:\CSX4201\vision-info-extraction-assets` in
 - [ ] Confirm official quality thresholds and test protocol. Current smoke and natural CORU-holdout results are not final benchmarks.
 - [ ] Is `gmail_private_test` the private leaderboard set? Should derived outputs be derived from it at all?
 - [x] Target deliverable — the final trained model, portable Windows/Docker-macOS package, public demo, and OpenAI Build Week submission were completed by 2026-07-21. Devpost submission `1102544` is `Submitted`.
-- [x] Repo visibility for GitHub — confirmed private before the 2026-07-15 publication pass; recheck before every future upload.
+- [x] Repo visibility for GitHub — confirmed public after the owner-authorized 2026-07-21 transition; recheck before every future upload.
 - [x] README.md — updated for the final working information-extraction and portable-product lifecycle (2026-07-19), while preserving historical metrics, limitations, and open research decisions.
 
 > When the user provides the above, update this section, `AGENT_MEMORY.md`, and then `README.md`.
