@@ -16,6 +16,7 @@ from scripts.verify_information_extraction import (
     _upgrade_report_inventory,
     _valid_locked_unseen_evaluation,
 )
+from scripts.record_ocr_upgrade_verification import _load_ledger, _portable_path
 
 
 def test_integration_provenance_covers_the_learned_worker_call_path() -> None:
@@ -249,3 +250,34 @@ def test_execution_evidence_requires_exact_passing_artifact_backed_matrix(
     assert any("evidence_path_missing" in error for error in errors)
     assert any("duplicate_name" in error for error in errors)
     assert any("missing_checks:compileall" in error for error in errors)
+
+
+def test_verification_recorder_helpers_reject_duplicate_or_unknown_checks(
+    tmp_path: Path,
+) -> None:
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(
+        json.dumps(
+            {
+                "checks": [
+                    {"name": "all_original_tests"},
+                    {"name": "all_original_tests"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="duplicate"):
+        _load_ledger(ledger)
+
+    ledger.write_text(
+        json.dumps({"checks": [{"name": "invented_check"}]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="unknown"):
+        _load_ledger(ledger)
+
+    project_file = Path(__file__).resolve()
+    assert _portable_path(project_file).endswith(
+        "tests/test_information_verifier.py"
+    )
