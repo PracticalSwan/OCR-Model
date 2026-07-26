@@ -90,3 +90,32 @@ def test_stream_trial_refuses_private_rows(tmp_path: Path) -> None:
             device="cpu",
             duration_seconds=0.0,
         )
+
+
+def test_stream_trial_refuses_ocr_variants_outside_train_and_dev_select(
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.csv"
+    _write_manifest(
+        manifest,
+        [
+            _row("ground_truth", split="dev_calibration"),
+            _row("paddleocr", split="dev_calibration"),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="TRAIN and DEV_SELECT"):
+        summarize_stream_manifest(
+            manifest,
+            trial_id="C",
+            ocr_profile="original",
+            selected=False,
+            ocr_stack={
+                "detector_sha256": "a" * 64,
+                "recognizer_sha256": "b" * 64,
+            },
+            checkpoint_sha256="c" * 64,
+            source_commit="d" * 40,
+            device="cpu",
+            duration_seconds=0.0,
+        )

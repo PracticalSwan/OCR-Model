@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from scripts.compile_layout_adaptation_trials import (
+    _evaluation,
     downstream_selection_score,
     regression_gate,
 )
@@ -61,3 +62,23 @@ def test_relation_regression_can_be_accepted_for_material_e2e_gain() -> None:
 
     assert result["eligible"] is True
     assert result["relation_regression_ok_or_benefit"] is True
+
+
+def test_evaluation_binding_refuses_wrong_layout_stream(
+    tmp_path,
+) -> None:
+    report = tmp_path / "evaluation.json"
+    report.write_text(
+        (
+            '{"split":"dev_select","rotation_angle":0.0,'
+            '"token_sources":["ground_truth"]}'
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="token sources"):
+        _evaluation(
+            report,
+            expected_rotation=0.0,
+            expected_token_sources={"paddleocr"},
+        )

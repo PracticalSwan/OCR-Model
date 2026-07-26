@@ -156,6 +156,11 @@ def summarize_stream_manifest(
         if split not in {"train", "dev_select"}
         and stream in {"paddleocr", "hybrid", "ocr_noise"}
     )
+    if forbidden_variant_count:
+        raise ValueError(
+            "OCR-derived variants are allowed only on TRAIN and DEV_SELECT: "
+            f"{path} contains {forbidden_variant_count} forbidden rows"
+        )
     ocr_rows = [
         row
         for row in usable

@@ -94,9 +94,21 @@ def compile_trial(
     ocr_configuration: str,
 ) -> dict[str, Any]:
     training = _json(training_path)
-    reference = _evaluation(reference_path, expected_rotation=0.0)
-    real_ocr = _evaluation(real_ocr_path, expected_rotation=0.0)
-    rotated = _evaluation(rotated_ocr_path, expected_rotation=37.0)
+    reference = _evaluation(
+        reference_path,
+        expected_rotation=0.0,
+        expected_token_sources={"ground_truth"},
+    )
+    real_ocr = _evaluation(
+        real_ocr_path,
+        expected_rotation=0.0,
+        expected_token_sources={"paddleocr"},
+    )
+    rotated = _evaluation(
+        rotated_ocr_path,
+        expected_rotation=37.0,
+        expected_token_sources={"paddleocr"},
+    )
     end_to_end = _csv_row(
         end_to_end_path,
         "configuration",
@@ -115,6 +127,23 @@ def compile_trial(
         raise ValueError(f"evaluation checkpoint mismatch for {trial_id}")
     if str(end_to_end.get("checkpoint_sha256", "")) != checkpoint_sha:
         raise ValueError(f"end-to-end checkpoint mismatch for {trial_id}")
+    for field in ("detector_sha256", "recognizer_sha256"):
+        values = {
+            str(value.get(field, ""))
+            for value in (reference, real_ocr, rotated, end_to_end)
+        }
+        if len(values) != 1 or "" in values:
+            raise ValueError(
+                f"mixed or missing {field} in downstream trial {trial_id}"
+            )
+    preprocessing_hashes = {
+        str(value.get("preprocessing_sha256", ""))
+        for value in (reference, real_ocr, rotated)
+    }
+    if len(preprocessing_hashes) != 1 or "" in preprocessing_hashes:
+        raise ValueError(
+            f"mixed or missing preprocessing hash for {trial_id}"
+        )
     manifest_hashes = {
         str(value.get("manifest_sha256", ""))
         for value in (reference, real_ocr, rotated)
@@ -221,7 +250,7 @@ def compile_trial(
             separators=(",", ":"),
         ),
         "checkpoint_reload_passed": training.get(
-            "checkpoint_reload_passed", True
+            "checkpoint_reload_passed", False
         ),
         **metrics,
         "selection_score": selection_score,
@@ -325,12 +354,25 @@ def _parse_trial(value: str) -> tuple[str, str, Path, Path, Path, Path, Path, st
     return trial_id, strategy, *resolved, configuration
 
 
-def _evaluation(path: Path, *, expected_rotation: float) -> dict[str, Any]:
+def _evaluation(
+    path: Path,
+    *,
+    expected_rotation: float,
+    expected_token_sources: set[str],
+) -> dict[str, Any]:
     value = _json(path)
     if value.get("split") != "dev_select":
         raise ValueError(f"downstream selection must use DEV_SELECT: {path}")
     if float(value.get("rotation_angle", 0.0)) != expected_rotation:
         raise ValueError(f"unexpected rotation angle in {path}")
+    actual_sources = {
+        str(source) for source in (value.get("token_sources") or [])
+    }
+    if actual_sources != expected_token_sources:
+        raise ValueError(
+            f"unexpected token sources in {path}: "
+            f"{sorted(actual_sources)!r} != {sorted(expected_token_sources)!r}"
+        )
     return value
 
 
