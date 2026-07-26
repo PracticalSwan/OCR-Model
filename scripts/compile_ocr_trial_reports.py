@@ -20,6 +20,22 @@ from src.rotation_common import atomic_write_json, atomic_write_text  # noqa: E4
 DETECTOR_EXTERNAL_ROOT = Path(
     "D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade/detector"
 )
+METRIC_PROVENANCE_FIELDS = (
+    "build_id",
+    "split",
+    "manifest_sha256",
+    "detector_sha256",
+    "recognizer_sha256",
+    "checkpoint_sha256",
+    "calibration_sha256",
+    "configuration_sha256",
+    "source_commit",
+    "device",
+    "sample_count",
+    "failure_count",
+    "duration_seconds",
+    "private_row_count",
+)
 
 
 def main() -> int:
@@ -38,6 +54,7 @@ def main() -> int:
     output_root = Path(args.output_root)
     output_root.mkdir(parents=True, exist_ok=True)
     detector_rows = detector_trial_rows()
+    _validate_metric_rows(detector_rows)
     _write_csv(output_root / "detector_trials.csv", detector_rows)
     general_rows, acceptance = recognition_trial_rows(
         custom_report=Path(args.general_custom_report)
@@ -47,15 +64,18 @@ def main() -> int:
         if args.general_custom_metadata
         else None,
     )
+    _validate_metric_rows(general_rows)
     _write_csv(output_root / "recognizer_trials.csv", general_rows)
     atomic_write_json(output_root / "recognizer_acceptance.json", acceptance)
-    _write_csv(output_root / "thai_trials.csv", thai_trial_rows())
+    thai_rows = thai_trial_rows()
+    _validate_metric_rows(thai_rows)
+    _write_csv(output_root / "thai_trials.csv", thai_rows)
     print(
         json.dumps(
             {
                 "detector_trial_count": len(detector_rows),
                 "recognizer_trial_count": len(general_rows),
-                "thai_trial_count": len(thai_trial_rows()),
+                "thai_trial_count": len(thai_rows),
                 "general_custom_accepted": acceptance.get("accepted", False),
             },
             indent=2,
@@ -65,6 +85,12 @@ def main() -> int:
 
 
 def detector_trial_rows() -> list[dict[str, Any]]:
+    training_data = _json(
+        PROJECT_ROOT / "reports/ocr_upgrade/training_data_summary.json"
+    )
+    detector_manifest_sha = str(
+        (training_data.get("detector") or {}).get("manifest_sha256", "")
+    )
     baseline_path = (
         PROJECT_ROOT
         / "reports/ocr_upgrade/detector_trials/det_baseline_official.json"
@@ -74,14 +100,17 @@ def detector_trial_rows() -> list[dict[str, Any]]:
     rows = [
         {
             "trial_id": metrics.get("trial_id", "det_baseline_official"),
+            "build_id": baseline.get("build_id"),
             "status": "passed",
             "selected": True,
             "accepted": True,
             "model_name": baseline.get("model_name"),
             "training_mode": "official_inference_baseline",
             "split": baseline.get("split"),
+            "manifest_sha256": baseline.get("manifest_sha256"),
             "sample_count": baseline.get("sample_count"),
             "failure_count": baseline.get("failure_count"),
+            "duration_seconds": baseline.get("duration_seconds"),
             "precision": metrics.get("precision"),
             "recall": metrics.get("recall"),
             "f1": metrics.get("f1"),
@@ -89,9 +118,12 @@ def detector_trial_rows() -> list[dict[str, Any]]:
             "critical_region_recall": metrics.get("critical_region_recall"),
             "time_per_page_seconds": metrics.get("time_per_page_seconds"),
             "detector_sha256": baseline.get("detector_sha256"),
+            "recognizer_sha256": baseline.get("recognizer_sha256"),
             "checkpoint_sha256": baseline.get("checkpoint_sha256"),
+            "calibration_sha256": baseline.get("calibration_sha256"),
             "configuration_sha256": baseline.get("configuration_sha256"),
             "source_commit": baseline.get("source_commit"),
+            "device": baseline.get("device"),
             "private_row_count": baseline.get("private_row_count"),
             "observed_steps": 0,
             "peak_allocated_mib": None,
@@ -126,24 +158,37 @@ def detector_trial_rows() -> list[dict[str, Any]]:
         rows.append(
             {
                 "trial_id": trial_id,
+                "build_id": (
+                    "ocr-detector-trial-"
+                    + str(metadata["resolved_config_sha256"])[:16]
+                ),
                 "status": "failed_or_bounded_stopped",
                 "selected": False,
                 "accepted": False,
                 "model_name": "PP-OCRv6_medium_det",
                 "training_mode": "public_train_finetune",
                 "split": "train_with_dev_select_gate",
+                "manifest_sha256": detector_manifest_sha,
                 "sample_count": 0,
                 "failure_count": 1,
+                "duration_seconds": metadata.get("duration_seconds"),
                 "precision": None,
                 "recall": None,
                 "f1": None,
                 "small_text_recall": None,
                 "critical_region_recall": None,
                 "time_per_page_seconds": None,
-                "detector_sha256": None,
-                "checkpoint_sha256": None,
+                "detector_sha256": metadata.get(
+                    "source_checkpoint_sha256"
+                ),
+                "recognizer_sha256": None,
+                "checkpoint_sha256": metadata.get(
+                    "source_checkpoint_sha256"
+                ),
+                "calibration_sha256": None,
                 "configuration_sha256": metadata.get("resolved_config_sha256"),
                 "source_commit": metadata.get("source_commit"),
+                "device": "gpu:0",
                 "private_row_count": metadata.get("private_row_count", 0),
                 "observed_steps": _last_integer(log, r"global_step:\s*(\d+)"),
                 "peak_allocated_mib": _last_integer(
@@ -282,14 +327,17 @@ def _recognition_row(
     metrics = dict(report.get("metrics") or {})
     return {
         "trial_id": metrics.get("trial_id"),
+        "build_id": report.get("build_id"),
         "track": metrics.get("track"),
-        "status": "passed",
+        "status": report.get("status", "passed"),
         "selected": selected,
         "accepted": accepted,
         "model_name": report.get("model_name"),
         "split": report.get("split"),
+        "manifest_sha256": report.get("manifest_sha256"),
         "sample_count": report.get("sample_count"),
         "failure_count": report.get("failure_count"),
+        "duration_seconds": report.get("duration_seconds"),
         "cer": metrics.get("cer"),
         "wer": metrics.get("wer"),
         "exact_line_accuracy": metrics.get("exact_line_accuracy"),
@@ -305,16 +353,30 @@ def _recognition_row(
         "confidence_brier": metrics.get("confidence_brier"),
         "time_per_sample_seconds": metrics.get("time_per_sample_seconds"),
         "selection_score": metrics.get("selection_score"),
+        "detector_sha256": report.get("detector_sha256"),
         "recognizer_sha256": report.get("recognizer_sha256"),
         "checkpoint_sha256": report.get("checkpoint_sha256"),
-        "manifest_sha256": report.get("manifest_sha256"),
+        "calibration_sha256": report.get("calibration_sha256"),
         "configuration_sha256": report.get("configuration_sha256"),
         "source_commit": report.get("source_commit"),
+        "device": report.get("device"),
         "private_row_count": report.get("private_row_count"),
         "rejection_reason": rejection_reason,
         "claim_boundary": claim_boundary,
         "evidence_path": path.as_posix(),
     }
+
+
+def _validate_metric_rows(rows: list[Mapping[str, Any]]) -> None:
+    for index, row in enumerate(rows):
+        missing = [
+            field for field in METRIC_PROVENANCE_FIELDS if field not in row
+        ]
+        if missing:
+            raise ValueError(
+                f"metric ledger row {index} is missing provenance: "
+                + ", ".join(missing)
+            )
 
 
 def _last_integer(text: str, pattern: str) -> int | None:

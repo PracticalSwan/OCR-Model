@@ -13,7 +13,7 @@
     "no_private_data": true
   },
   "wer_relative_gain": 0.1146914404323217,
-  "critical_field_exact_gain": 0.3155548852054341,
+  "critical_field_exact_gain": 0.31555488520543407,
   "baseline_selection_score": 0.2948377309605481,
   "candidate_selection_score": 0.425805418476788,
   "baseline_trial_id": "rec_general_baseline_official",
