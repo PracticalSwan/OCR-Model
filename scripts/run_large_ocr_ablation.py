@@ -205,14 +205,16 @@ def main() -> int:
             -float(row["time_per_page_seconds"]),
         ),
     )
+    build_id = "ocr-preprocessing-selection-" + hashlib.sha256(
+        canonical_json(summaries).encode("utf-8")
+    ).hexdigest()[:16]
+    for row in summaries:
+        row["build_id"] = build_id
     _write_csv(Path(args.output_csv), summaries)
     selection = {
         "schema_version": "1.0",
         "status": "passed",
-        "build_id": "ocr-preprocessing-selection-"
-        + hashlib.sha256(
-            canonical_json(summaries).encode("utf-8")
-        ).hexdigest()[:16],
+        "build_id": build_id,
         "split": "dev_select",
         "manifest_sha256": manifest_sha,
         "detector_sha256": detector.artifact_hash,
