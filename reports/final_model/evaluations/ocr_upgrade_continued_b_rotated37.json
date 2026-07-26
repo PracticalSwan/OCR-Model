@@ -1,0 +1,206 @@
+{
+  "schema_version": "2.0",
+  "profile": "final",
+  "build_id": "final-3cbdd0416310fa7b",
+  "split": "dev_select",
+  "token_sources": [
+    "paddleocr"
+  ],
+  "public_only": true,
+  "private_example_count": 0,
+  "checkpoint": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\ocr_upgrade_continued_b",
+  "checkpoint_model_sha256": "d7a9b8760e411af6ab408fe334123d893603bff496ec0566f8cb6be3df000584",
+  "checkpoint_sha256": "d7a9b8760e411af6ab408fe334123d893603bff496ec0566f8cb6be3df000584",
+  "checkpoint_build_id": "final-3cbdd0416310fa7b",
+  "evaluation_build_id": "final-3cbdd0416310fa7b",
+  "cross_build_comparison": false,
+  "manifest_path": "C:\\Assumption University\\CSX4201\\Project\\data\\metadata\\final_model_dataset_manifest_ocr_v2_b.csv",
+  "manifest_sha256": "96656145777de328f0fb290215e508588bed29ebb381468e4e8dd3028a663602",
+  "detector_sha256": "eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d",
+  "recognizer_sha256": "37102c71d75c2adec5fcef4710bfbacc84a4fe0d87d9d1a71a47b910543591e4",
+  "preprocessing_sha256": "bf9ce405a8952228",
+  "calibration_sha256": null,
+  "configuration_sha256": "e2e3a2423d46bc27",
+  "source_commit": "124f6bc508502f01d15e9d8b5d8838b3fec015f4",
+  "example_count": 400,
+  "sample_count": 400,
+  "failure_count": 0,
+  "window_count": 400,
+  "rotation_angle": 37.0,
+  "device": "cuda",
+  "duration_seconds": 29.12644830008503,
+  "private_row_count": 0,
+  "calibration": null,
+  "metrics": {
+    "loss": 0.7139554783143103,
+    "entity_token_f1": 0.8085324582094144,
+    "entity_macro_f1": 0.5172381211656473,
+    "entity_per_class": {
+      "B-HEADER": {
+        "fn": 36,
+        "tp": 14,
+        "fp": 12,
+        "f1": 0.3684210526315789,
+        "support": 50
+      },
+      "I-HEADER": {
+        "fp": 12,
+        "fn": 10,
+        "tp": 2,
+        "f1": 0.15384615384615385,
+        "support": 12
+      },
+      "B-VALUE": {
+        "tp": 1881,
+        "fn": 321,
+        "fp": 345,
+        "f1": 0.8495934959349594,
+        "support": 2202
+      },
+      "I-VALUE": {
+        "fp": 231,
+        "tp": 1443,
+        "fn": 174,
+        "f1": 0.8769371011850501,
+        "support": 1617
+      },
+      "B-QUESTION": {
+        "fp": 73,
+        "tp": 244,
+        "fn": 67,
+        "f1": 0.7770700636942676,
+        "support": 311
+      },
+      "I-QUESTION": {
+        "fp": 17,
+        "fn": 16,
+        "tp": 4,
+        "f1": 0.1951219512195122,
+        "support": 20
+      },
+      "B-ANSWER": {
+        "fp": 138,
+        "tp": 265,
+        "fn": 92,
+        "f1": 0.6973684210526315,
+        "support": 357
+      },
+      "I-ANSWER": {
+        "fp": 45,
+        "fn": 37,
+        "tp": 27,
+        "f1": 0.39705882352941174,
+        "support": 64
+      },
+      "B-TABLE_CELL": {
+        "fp": 161,
+        "tp": 62,
+        "fn": 80,
+        "f1": 0.33972602739726027,
+        "support": 142
+      }
+    },
+    "entity_counts": {
+      "fp": 1034,
+      "tp": 3942,
+      "fn": 833
+    },
+    "canonical_evidence_token_f1": 0.8458149779735683,
+    "canonical_macro_f1": 0.7793856018570826,
+    "canonical_per_class": {
+      "organization_name": {
+        "tp": 133,
+        "fn": 16,
+        "fp": 69,
+        "f1": 0.7578347578347578,
+        "support": 149
+      },
+      "document_title": {
+        "fp": 1,
+        "f1": 0.0,
+        "support": 0
+      },
+      "date": {
+        "tp": 335,
+        "fn": 32,
+        "fp": 80,
+        "f1": 0.8567774936061381,
+        "support": 367
+      },
+      "invoice_number": {
+        "tp": 98,
+        "fn": 43,
+        "fp": 10,
+        "f1": 0.7871485943775101,
+        "support": 141
+      },
+      "subtotal": {
+        "fp": 3,
+        "tp": 117,
+        "fn": 8,
+        "f1": 0.9551020408163265,
+        "support": 125
+      },
+      "tax": {
+        "fp": 106,
+        "fn": 5,
+        "tp": 16,
+        "f1": 0.22377622377622378,
+        "support": 21
+      },
+      "total_amount": {
+        "tp": 370,
+        "fn": 39,
+        "fp": 101,
+        "f1": 0.8409090909090909,
+        "support": 409
+      },
+      "address": {
+        "fn": 194,
+        "tp": 603,
+        "fp": 43,
+        "f1": 0.8357588357588358,
+        "support": 797
+      },
+      "email": {
+        "tp": 440,
+        "fn": 20,
+        "f1": 0.9777777777777777,
+        "support": 460
+      }
+    },
+    "canonical_counts": {
+      "tp": 2112,
+      "fn": 357,
+      "fp": 413
+    },
+    "relation_f1": 0.384765625,
+    "relation_macro_f1": 0.565513897866839,
+    "relation_per_class": {
+      "QUESTION_ANSWER": {
+        "fn": 281,
+        "tp": 140,
+        "fp": 323,
+        "f1": 0.3167420814479638,
+        "support": 421
+      },
+      "OTHER_RELATION": {
+        "fn": 23,
+        "tp": 57,
+        "fp": 3,
+        "f1": 0.8142857142857143,
+        "support": 80
+      }
+    },
+    "relation_counts": {
+      "fn": 304,
+      "tp": 197,
+      "fp": 326
+    },
+    "document_macro_f1": 1.0,
+    "document_accuracy": 1.0,
+    "composite_score": 0.7310581340271578,
+    "evaluated_windows": 400
+  },
+  "grouped_metrics": {}
+}
