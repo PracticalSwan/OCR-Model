@@ -229,6 +229,19 @@ def test_recognizer_score_and_acceptance_require_critical_gain() -> None:
     assert decision["accepted"] is False
     assert decision["criteria"]["numeric_and_amount_no_regression"] is False
 
+    candidate["amount_exact_match"] = 0.55
+    candidate["turkish_character_accuracy"] = 0.10
+    decision = recognizer_acceptance(
+        baseline,
+        candidate,
+        export_reload_passed=True,
+        dictionary_match_passed=True,
+        private_row_count=0,
+        maximum_time_per_sample_seconds=0.1,
+    )
+    assert decision["accepted"] is False
+    assert decision["criteria"]["turkish_valid"] is False
+
 
 def test_sha256_tree_is_path_and_content_bound(tmp_path: Path) -> None:
     (tmp_path / "a").mkdir()

@@ -5,7 +5,7 @@
     "critical_field_exact_gain": true,
     "numeric_and_amount_no_regression": true,
     "english_no_material_regression": true,
-    "turkish_valid": true,
+    "turkish_valid": false,
     "confidence_finite": true,
     "export_reload_passed": true,
     "dictionary_match_passed": true,
@@ -13,7 +13,7 @@
     "no_private_data": true
   },
   "wer_relative_gain": 0.1146914404323217,
-  "critical_field_exact_gain": 0.31555488520543407,
+  "critical_field_exact_gain": 0.3155548852054341,
   "baseline_selection_score": 0.2948377309605481,
   "candidate_selection_score": 0.425805418476788,
   "baseline_trial_id": "rec_general_baseline_official",

@@ -390,6 +390,9 @@ def recognizer_acceptance(
     candidate_turkish = _finite_float(
         candidate.get("turkish_character_accuracy")
     )
+    baseline_turkish = _finite_float(
+        baseline.get("turkish_character_accuracy")
+    )
     criteria = {
         "wer_improvement_or_floor": (
             relative_wer_gain >= 0.15 - 1e-12
@@ -409,7 +412,10 @@ def recognizer_acceptance(
             >= _metric(baseline, "english_exact_match")
         ),
         "turkish_valid": (
-            candidate_turkish is not None and 0.0 <= candidate_turkish <= 1.0
+            candidate_turkish is not None
+            and baseline_turkish is not None
+            and 0.0 <= candidate_turkish <= 1.0
+            and candidate_turkish + 0.02 + 1e-12 >= baseline_turkish
         ),
         "confidence_finite": bool(candidate.get("confidence_all_finite", False)),
         "export_reload_passed": bool(export_reload_passed),
