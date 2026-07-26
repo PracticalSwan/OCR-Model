@@ -195,6 +195,7 @@ def main() -> int:
         "metrics": aggregate,
         "by_angle": by_angle,
         "orientation_tolerance_degrees": 3.0,
+        "candidate_ambiguity_score_gap": 0.02,
         "kmeans_instantiated": False,
         "kmeans_controls_ocr": False,
         "test_private_tuning_rows": 0,
@@ -250,12 +251,26 @@ def _evaluate(
     expected_correction = (-input_angle) % 360.0
     selected_orientation = float(result.get("orientation", 0.0)) % 360.0
     error = circular_error(selected_orientation, expected_correction)
+    expected_cardinal = _nearest_cardinal(expected_correction)
+    selected_cardinal = _nearest_cardinal(selected_orientation)
+    candidate_gap = _top_candidate_gap(result)
     return {
         "dataset": row["dataset"],
         "input_angle": input_angle,
         "selected_orientation": selected_orientation,
         "orientation_error": error,
         "orientation_within_tolerance": error <= 3.0,
+        "wrong_cardinal_orientation": selected_cardinal != expected_cardinal,
+        "wrong_deskew": (
+            selected_cardinal == expected_cardinal and error > 3.0
+        ),
+        "close_candidate_ambiguity": (
+            candidate_gap is not None and candidate_gap <= 0.02
+        ),
+        "candidate_score_gap": candidate_gap,
+        "multi_orientation_signal": _multi_orientation_signal(
+            list(result.get("words") or [])
+        ),
         "detection": detection,
         "text": text,
         "reference_words": len(normalized_text(reference_text).split()),
@@ -302,7 +317,73 @@ def _aggregate(rows: list[dict[str, Any]]) -> dict[str, Any]:
         )
         if rows
         else None,
+        "error_counts": _orientation_error_categories(rows),
     }
+
+
+def _orientation_error_categories(
+    rows: list[Mapping[str, Any]],
+) -> dict[str, int]:
+    return {
+        "wrong_cardinal_orientation": sum(
+            bool(row.get("wrong_cardinal_orientation", False))
+            for row in rows
+        ),
+        "wrong_deskew": sum(
+            bool(row.get("wrong_deskew", False)) for row in rows
+        ),
+        "close_candidate_ambiguity": sum(
+            bool(row.get("close_candidate_ambiguity", False))
+            for row in rows
+        ),
+        "multi_orientation_page": sum(
+            bool(row.get("multi_orientation_signal", False))
+            for row in rows
+        ),
+    }
+
+
+def _top_candidate_gap(result: Mapping[str, Any]) -> float | None:
+    scores = sorted(
+        float(candidate["total"])
+        for candidate in (result.get("all_candidate_scores") or [])
+        if isinstance(candidate, Mapping)
+        and candidate.get("total") is not None
+        and math.isfinite(float(candidate["total"]))
+    )
+    if len(scores) < 2:
+        return None
+    return scores[-1] - scores[-2]
+
+
+def _nearest_cardinal(angle: float) -> int:
+    return min(
+        (0, 90, 180, 270),
+        key=lambda candidate: (circular_error(angle, candidate), candidate),
+    )
+
+
+def _multi_orientation_signal(words: list[Mapping[str, Any]]) -> bool:
+    angles = []
+    for word in words:
+        polygon = word.get("polygon")
+        try:
+            left, right = polygon[0], polygon[1]
+            dx = float(right[0]) - float(left[0])
+            dy = float(right[1]) - float(left[1])
+        except (TypeError, ValueError, IndexError):
+            continue
+        if math.hypot(dx, dy) <= 1e-6:
+            continue
+        angles.append(math.degrees(math.atan2(dy, dx)) % 180.0)
+    if len(angles) < 4:
+        return False
+    maximum_separation = max(
+        min(abs(left - right), 180.0 - abs(left - right))
+        for left in angles
+        for right in angles
+    )
+    return maximum_separation >= 30.0
 
 
 def circular_error(left: float, right: float) -> float:
