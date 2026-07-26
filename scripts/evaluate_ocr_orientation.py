@@ -18,12 +18,14 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from PIL import Image  # noqa: E402
 
+from src import config as cfgmod  # noqa: E402
 from src.evaluation.critical_field_ocr import evaluate_critical_fields  # noqa: E402
 from src.evaluation.metrics import normalized_text, ocr_text_metrics  # noqa: E402
 from src.information_extraction.geometry import rotate_image_and_annotation  # noqa: E402
 from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
 from src.ocr.model_registry import ModelRegistry  # noqa: E402
 from src.ocr.pipeline import MultilingualOCR  # noqa: E402
+from src.ocr.stack_binding import build_ocr_stack_binding  # noqa: E402
 from src.ocr.training_data import convert_detection_annotation, critical_fields_by_token  # noqa: E402
 from src.ocr.trials import aggregate_detector_results, detector_page_result  # noqa: E402
 from src.rotation_common import atomic_write_json, canonical_json, sha256_file  # noqa: E402
@@ -40,6 +42,7 @@ ANGLES = (0, 1, 15, 30, 37, 45, 60, 89, 90, 91, 135, 179, 180, 225, 269, 270, 31
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
     parser.add_argument(
         "--benchmark-manifest",
         default=str(PROJECT_ROOT / "data/metadata/ocr_benchmark_manifest.csv"),
@@ -54,8 +57,14 @@ def main() -> int:
     )
     parser.add_argument("--device", choices=("cpu", "gpu:0"), default="gpu:0")
     parser.add_argument(
+        "--ocr-profile",
+        choices=("auto", "original", "custom", "adaptive"),
+        default="auto",
+    )
+    parser.add_argument(
         "--preprocessing-profile",
         choices=(
+            "auto",
             "original",
             "grayscale_normalized",
             "adaptive_contrast",
@@ -64,7 +73,7 @@ def main() -> int:
             "denoise",
             "quality_auto",
         ),
-        default="grayscale_normalized",
+        default="auto",
     )
     parser.add_argument("--pages", type=int, default=9)
     parser.add_argument(
@@ -75,8 +84,15 @@ def main() -> int:
     if not 3 <= args.pages <= 60:
         parser.error("--pages must be in [3, 60]")
 
-    configure_external_environment()
-    asset_root = Path("D:/CSX4201/vision-info-extraction-assets")
+    cfg = cfgmod.load_config(args.config)
+    selected_profile = _selected_profile(cfg, args.ocr_profile)
+    preprocessing_profile = _selected_preprocessing_profile(
+        cfg,
+        selected_profile=selected_profile,
+        requested=args.preprocessing_profile,
+    )
+    asset_root = cfgmod.resolve_path(cfg, "external_assets")
+    configure_external_environment(asset_root)
     require_storage_gate(
         asset_root,
         operation="public DEV_SELECT OCR orientation evaluation",
@@ -85,9 +101,18 @@ def main() -> int:
     )
     manifest_path = Path(args.benchmark_manifest).resolve()
     rows = _balanced_rows(_load_rows(manifest_path), args.pages)
+    model_choice = "original" if selected_profile == "original" else "auto"
     registry = ModelRegistry.from_setup(
         Path(args.model_setup).resolve(),
         upgrade_registry=Path(args.model_registry).resolve(),
+        detector_choice=model_choice,
+        general_choice=model_choice,
+        thai_choice=model_choice,
+    )
+    stack = build_ocr_stack_binding(
+        cfg,
+        registry,
+        ocr_profile=selected_profile,
     )
     detector, general = registry.route_models("general")
     _, thai = registry.route_models("thai")
@@ -95,8 +120,10 @@ def main() -> int:
         registry,
         device=args.device,
         cardinal_angles=(0, 90, 180, 270),
-        preprocessing_version="3.0-orientation-dev-select",
-        preprocessing_profile=args.preprocessing_profile,
+        preprocessing_version=str(
+            stack["preprocessing_policy"]["preprocessing_version"]
+        ),
+        preprocessing_profile=preprocessing_profile,
         enable_fine_deskew=True,
         maximum_fine_candidates=2,
         enable_tiling=False,
@@ -162,6 +189,8 @@ def main() -> int:
                     "manifest": sha256_file(manifest_path),
                     "pages": [row["page_id"] for row in rows],
                     "angles": ANGLES,
+                    "ocr_stack": stack,
+                    "preprocessing_profile": preprocessing_profile,
                 }
             ).encode("utf-8")
         ).hexdigest()[:16],
@@ -179,7 +208,8 @@ def main() -> int:
                     "cardinal_angles": [0, 90, 180, 270],
                     "fine_deskew": True,
                     "maximum_fine_candidates": 2,
-                    "preprocessing": args.preprocessing_profile,
+                    "ocr_profile": selected_profile,
+                    "preprocessing": preprocessing_profile,
                 }
             ).encode("utf-8")
         ).hexdigest(),
@@ -189,6 +219,8 @@ def main() -> int:
         "failure_count": 0,
         "duration_seconds": time.perf_counter() - started,
         "private_row_count": 0,
+        "ocr_profile": selected_profile,
+        "preprocessing_profile": preprocessing_profile,
         "source_page_count": len(rows),
         "datasets": sorted({row["dataset"] for row in rows}),
         "angles": list(ANGLES),
@@ -397,6 +429,36 @@ def _git_commit() -> str:
         cwd=PROJECT_ROOT,
         text=True,
     ).strip()
+
+
+def _selected_profile(
+    cfg: Mapping[str, Any],
+    requested: str,
+) -> str:
+    profile = (
+        str(cfg.get("ocr", {}).get("default_profile", "original")).casefold()
+        if requested == "auto"
+        else str(requested).casefold()
+    )
+    if profile not in {"original", "custom", "adaptive"}:
+        raise ValueError(f"unsupported selected OCR profile: {profile!r}")
+    return profile
+
+
+def _selected_preprocessing_profile(
+    cfg: Mapping[str, Any],
+    *,
+    selected_profile: str,
+    requested: str,
+) -> str:
+    if requested != "auto":
+        return requested
+    key = (
+        "adaptive_preprocessing_profile"
+        if selected_profile == "adaptive"
+        else "preprocessing_profile"
+    )
+    return str(cfg.get("ocr", {}).get(key, "original"))
 
 
 if __name__ == "__main__":

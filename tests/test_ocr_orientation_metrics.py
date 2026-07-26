@@ -5,6 +5,8 @@ import pytest
 from scripts.evaluate_ocr_orientation import (
     _multi_orientation_signal,
     _orientation_error_categories,
+    _selected_preprocessing_profile,
+    _selected_profile,
     circular_error,
 )
 
@@ -57,3 +59,23 @@ def test_multi_orientation_signal_requires_distinct_text_directions() -> None:
     assert _multi_orientation_signal(
         [horizontal, horizontal, vertical, vertical]
     ) is True
+
+
+def test_orientation_evaluation_uses_frozen_profile_and_preprocessing() -> None:
+    cfg = {
+        "ocr": {
+            "default_profile": "adaptive",
+            "preprocessing_profile": "original",
+            "adaptive_preprocessing_profile": "grayscale_normalized",
+        }
+    }
+    profile = _selected_profile(cfg, "auto")
+    assert profile == "adaptive"
+    assert (
+        _selected_preprocessing_profile(
+            cfg,
+            selected_profile=profile,
+            requested="auto",
+        )
+        == "grayscale_normalized"
+    )

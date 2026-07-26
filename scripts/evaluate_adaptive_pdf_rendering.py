@@ -15,6 +15,7 @@ from typing import Any, Mapping
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from src import config as cfgmod  # noqa: E402
 from src.evaluation.metrics import normalized_text, ocr_text_metrics  # noqa: E402
 from src.ocr.adaptive import (  # noqa: E402
     AdaptiveRenderingConfig,
@@ -26,6 +27,7 @@ from src.ocr.adaptive import (  # noqa: E402
 from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
 from src.ocr.model_registry import ModelRegistry  # noqa: E402
 from src.ocr.pipeline import MultilingualOCR  # noqa: E402
+from src.ocr.stack_binding import build_ocr_stack_binding  # noqa: E402
 from src.ocr.training_data import convert_detection_annotation, critical_fields_by_token  # noqa: E402
 from src.ocr.trials import aggregate_detector_results, detector_page_result  # noqa: E402
 from src.rotation_common import atomic_write_json, canonical_json, sha256_file  # noqa: E402
@@ -41,6 +43,7 @@ from src.evaluation.critical_field_ocr import evaluate_critical_fields  # noqa: 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
     parser.add_argument(
         "--benchmark-manifest",
         default=str(PROJECT_ROOT / "data/metadata/ocr_benchmark_manifest.csv"),
@@ -54,6 +57,11 @@ def main() -> int:
         default=str(PROJECT_ROOT / "reports/ocr_upgrade/model_registry.json"),
     )
     parser.add_argument("--device", choices=("cpu", "gpu:0"), default="gpu:0")
+    parser.add_argument(
+        "--ocr-profile",
+        choices=("auto", "original", "custom", "adaptive"),
+        default="auto",
+    )
     parser.add_argument("--limit", type=int, default=30)
     parser.add_argument("--source-dpi", type=int, default=300)
     parser.add_argument(
@@ -75,8 +83,10 @@ def main() -> int:
     if not 150 <= args.source_dpi <= 600:
         parser.error("--source-dpi must be in [150, 600]")
 
-    configure_external_environment()
-    asset_root = Path("D:/CSX4201/vision-info-extraction-assets")
+    cfg = cfgmod.load_config(args.config)
+    selected_profile = _selected_profile(cfg, args.ocr_profile)
+    asset_root = cfgmod.resolve_path(cfg, "external_assets")
+    configure_external_environment(asset_root)
     require_storage_gate(
         asset_root,
         operation="public adaptive PDF rendering evaluation",
@@ -97,9 +107,18 @@ def main() -> int:
     if len(pages_200) != len(rows) or len(pages_300) != len(rows):
         raise RuntimeError("derived public PDF page count drifted")
 
+    model_choice = "original" if selected_profile == "original" else "auto"
     registry = ModelRegistry.from_setup(
         Path(args.model_setup).resolve(),
         upgrade_registry=Path(args.model_registry).resolve(),
+        detector_choice=model_choice,
+        general_choice=model_choice,
+        thai_choice=model_choice,
+    )
+    stack = build_ocr_stack_binding(
+        cfg,
+        registry,
+        ocr_profile=selected_profile,
     )
     detector, general = registry.route_models("general")
     _, thai = registry.route_models("thai")
@@ -107,8 +126,12 @@ def main() -> int:
         registry,
         device=args.device,
         cardinal_angles=(0,),
-        preprocessing_version="3.0-adaptive-pdf-evaluation",
-        preprocessing_profile="original",
+        preprocessing_version=str(
+            stack["preprocessing_policy"]["preprocessing_version"]
+        ),
+        preprocessing_profile=str(
+            stack["preprocessing_policy"]["preprocessing_profile"]
+        ),
         enable_fine_deskew=False,
         enable_tiling=False,
     )
@@ -211,6 +234,7 @@ def main() -> int:
                     "manifest": sha256_file(manifest_path),
                     "rows": [row["page_id"] for row in rows],
                     "config": config.as_dict(),
+                    "ocr_stack": stack,
                 }
             ).encode("utf-8")
         ).hexdigest()[:16],
@@ -223,7 +247,12 @@ def main() -> int:
         "checkpoint_sha256": None,
         "calibration_sha256": None,
         "configuration_sha256": hashlib.sha256(
-            canonical_json(config.as_dict()).encode("utf-8")
+            canonical_json(
+                {
+                    "rendering": config.as_dict(),
+                    "ocr_stack": stack,
+                }
+            ).encode("utf-8")
         ).hexdigest(),
         "source_commit": _git_commit(),
         "device": args.device,
@@ -235,6 +264,10 @@ def main() -> int:
         ),
         "duration_seconds": time.perf_counter() - started,
         "private_row_count": 0,
+        "ocr_profile": selected_profile,
+        "preprocessing_profile": stack["preprocessing_policy"][
+            "preprocessing_profile"
+        ],
         "source_pdf": {
             "path": derived_pdf.as_posix(),
             "sha256": sha256_file(derived_pdf),
@@ -424,6 +457,20 @@ def _git_commit() -> str:
         cwd=PROJECT_ROOT,
         text=True,
     ).strip()
+
+
+def _selected_profile(
+    cfg: Mapping[str, Any],
+    requested: str,
+) -> str:
+    profile = (
+        str(cfg.get("ocr", {}).get("default_profile", "original")).casefold()
+        if requested == "auto"
+        else str(requested).casefold()
+    )
+    if profile not in {"original", "custom", "adaptive"}:
+        raise ValueError(f"unsupported selected OCR profile: {profile!r}")
+    return profile
 
 
 if __name__ == "__main__":

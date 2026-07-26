@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.evaluate_adaptive_pdf_rendering import _metric_deltas
+from scripts.evaluate_adaptive_pdf_rendering import (
+    _metric_deltas,
+    _selected_profile,
+)
 
 
 def test_adaptive_pdf_metric_deltas_keep_error_direction() -> None:
@@ -21,3 +24,9 @@ def test_adaptive_pdf_metric_deltas_keep_error_direction() -> None:
     deltas = _metric_deltas(baseline, candidate)
     assert deltas["polygon_f1"] == pytest.approx(0.1)
     assert deltas["wer"] == pytest.approx(-0.2)
+
+
+def test_adaptive_pdf_uses_frozen_default_profile() -> None:
+    cfg = {"ocr": {"default_profile": "adaptive"}}
+    assert _selected_profile(cfg, "auto") == "adaptive"
+    assert _selected_profile(cfg, "original") == "original"
