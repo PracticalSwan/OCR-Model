@@ -19,6 +19,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from PIL import Image, ImageDraw, ImageFont  # noqa: E402
 
 from src import config as cfgmod  # noqa: E402
+from src.evaluation.critical_field_ocr import evaluate_critical_fields  # noqa: E402
 from src.evaluation.metrics import extraction_metrics, ocr_text_metrics, text_detection_metrics  # noqa: E402
 from src.information_extraction.geometry import rotate_image_and_annotation  # noqa: E402
 from src.inference.document_io import DocumentPage  # noqa: E402
@@ -88,10 +89,12 @@ def main() -> int:
                 rotated_image, rotated_annotation, _ = rotate_image_and_annotation(
                     image, annotation, float(angle)
                 )
+                page_started = time.perf_counter()
                 result = pipeline.extract_pages(
                     document_id=f"public_angle_{angle}", source_type="image",
                     pages=[DocumentPage(1, rotated_image)], language="auto",
                 )
+                page_duration = time.perf_counter() - page_started
                 page = result["pages"][0]
                 reference_text = " ".join(str(token.get("text", "")) for token in rotated_annotation.get("tokens", []))
                 text = ocr_text_metrics(reference_text, page["full_text"])
@@ -99,6 +102,31 @@ def main() -> int:
                     rotated_annotation.get("tokens", []), page["ocr"].get("words", [])
                 )
                 extraction = extraction_metrics(rotated_annotation, page, result["fields"])
+                reference_fields = {
+                    field: str(
+                        value.get("raw_text") or value.get("value") or ""
+                    )
+                    for field, value in (
+                        rotated_annotation.get("canonical_fields") or {}
+                    ).items()
+                    if isinstance(value, dict)
+                    and str(
+                        value.get("raw_text") or value.get("value") or ""
+                    ).strip()
+                }
+                predicted_fields = {
+                    field: str(value.get("value") or "")
+                    for field, value in (result.get("fields") or {}).items()
+                    if isinstance(value, dict)
+                }
+                selected_orientation = (
+                    float(page["selected_ocr_orientation"]) % 360.0
+                )
+                expected_correction = (-float(angle)) % 360.0
+                orientation_error = _circular_error(
+                    selected_orientation,
+                    expected_correction,
+                )
                 angle_rows.append({
                     "dataset": sample["dataset"],
                     "recognized_text_coverage": text["recognized_text_coverage"],
@@ -114,7 +142,13 @@ def main() -> int:
                     "table_count": len(page.get("tables") or []),
                     "nonempty": bool(page["full_text"].strip()),
                     "route": page["ocr"]["language_route"],
-                    "selected_orientation": page["selected_ocr_orientation"],
+                    "selected_orientation": selected_orientation,
+                    "expected_orientation_correction": expected_correction,
+                    "orientation_error_degrees": orientation_error,
+                    "orientation_within_tolerance": orientation_error <= 3.0,
+                    "reference_fields": reference_fields,
+                    "predicted_fields": predicted_fields,
+                    "duration_seconds": page_duration,
                 })
             public_observations.append(_aggregate_angle(angle, angle_rows))
 
@@ -138,11 +172,7 @@ def main() -> int:
     finally:
         pipeline.close()
 
-    baseline = public_observations[0]
-    for item in public_observations:
-        item["extraction_retention_vs_upright"] = (
-            item["entity_f1"] / baseline["entity_f1"] if baseline["entity_f1"] > 0 else None
-        )
+    public_observations = _with_rotation_retention(public_observations)
     report = {
         "schema_version": "1.0",
         "status": "passed",
@@ -174,7 +204,10 @@ def main() -> int:
         "sample_count": len(samples) * len(ANGLES),
         "failure_count": 0,
         "private_row_count": 0,
-        "public_only_selection": True,
+        "public_only": True,
+        "test_used_for_selection": False,
+        "coru_used_for_selection": False,
+        "gmail_used_for_selection": False,
         "private_document_count": 0,
         "checkpoint": str(checkpoint),
         "checkpoint_model_sha256": sha256_file(checkpoint / "model.safetensors"),
@@ -184,6 +217,7 @@ def main() -> int:
         "public_datasets": sorted({sample["dataset"] for sample in samples}),
         "public_metrics": public_observations,
         "synthetic_thai_metrics": thai_observations,
+        "orientation_tolerance_degrees": 3.0,
         "kmeans_controls_ocr": False,
         "duration_seconds": time.perf_counter() - started,
         "limitations": [
@@ -237,6 +271,15 @@ def _aggregate_angle(angle: int, rows: list[dict[str, Any]]) -> dict[str, Any]:
 def _aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     field_applicable = sum(row["field_applicable"] for row in rows)
     detections = [row["detection_f1"] for row in rows if row["detection_f1"] is not None]
+    canonical_accuracy = (
+        sum(row["field_correct"] for row in rows) / field_applicable
+        if field_applicable
+        else None
+    )
+    critical = evaluate_critical_fields(
+        [row["reference_fields"] for row in rows],
+        [row["predicted_fields"] for row in rows],
+    )
     return {
         "page_count": len(rows),
         "recognized_text_coverage": statistics.fmean(row["recognized_text_coverage"] for row in rows),
@@ -244,7 +287,26 @@ def _aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "detection_f1": statistics.fmean(detections) if detections else None,
         "entity_f1": statistics.fmean(row["entity_f1"] for row in rows),
         "relation_f1": statistics.fmean(row["relation_f1"] for row in rows),
-        "field_accuracy": sum(row["field_correct"] for row in rows) / field_applicable if field_applicable else None,
+        "canonical_field_accuracy": canonical_accuracy,
+        "field_accuracy": canonical_accuracy,
+        "critical_field_exact_match": critical["aggregate"][
+            "critical_exact_match"
+        ],
+        "critical_field_count": critical["evaluated_field_count"],
+        "orientation_selection_accuracy": sum(
+            bool(row["orientation_within_tolerance"]) for row in rows
+        )
+        / max(1, len(rows)),
+        "mean_orientation_error_degrees": statistics.fmean(
+            float(row["orientation_error_degrees"]) for row in rows
+        )
+        if rows
+        else None,
+        "time_per_page_seconds": statistics.fmean(
+            float(row["duration_seconds"]) for row in rows
+        )
+        if rows
+        else None,
         "nonempty_rate": sum(row["nonempty"] for row in rows) / len(rows),
         "route_counts": {
             route: sum(row["route"] == route for row in rows)
@@ -268,6 +330,47 @@ def _aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "empty_ocr": sum(not row["nonempty"] for row in rows),
         },
     }
+
+
+def _with_rotation_retention(
+    rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    baseline = next(
+        (row for row in rows if float(row.get("angle", -1)) == 0.0),
+        None,
+    )
+    if baseline is None:
+        raise ValueError("upright angle metrics are required for retention")
+    metrics = {
+        "coverage": "recognized_text_coverage",
+        "entity_f1": "entity_f1",
+        "canonical_accuracy": "canonical_field_accuracy",
+        "critical_field_exact_match": "critical_field_exact_match",
+    }
+    retained = []
+    for row in rows:
+        updated = dict(row)
+        retention = {
+            label: _retention(
+                row.get(metric),
+                baseline.get(metric),
+            )
+            for label, metric in metrics.items()
+        }
+        updated["rotation_retention_vs_upright"] = retention
+        updated["extraction_retention_vs_upright"] = retention["entity_f1"]
+        retained.append(updated)
+    return retained
+
+
+def _retention(value: Any, baseline: Any) -> float | None:
+    if value is None or baseline is None or float(baseline) <= 0.0:
+        return None
+    return float(value) / float(baseline)
+
+
+def _circular_error(observed: float, expected: float) -> float:
+    return abs((float(observed) - float(expected) + 180.0) % 360.0 - 180.0)
 
 
 def _synthetic_thai_page() -> tuple[Image.Image, str]:
