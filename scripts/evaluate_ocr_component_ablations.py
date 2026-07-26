@@ -241,6 +241,8 @@ def main() -> int:
 
     output_root = Path(args.output_root)
     base = results.get("base")
+    padding_results = _padding_results(results)
+    _annotate_padding_selection_scores(padding_results)
     _write_component_report(
         output_root / "tiling_metrics.json",
         component="tiling",
@@ -257,7 +259,6 @@ def main() -> int:
         provenance=provenance,
         results=results,
     )
-    padding_results = _padding_results(results)
     selected_padding = _select_padding_profile(padding_results)
     crop_report = {
         **retry_report,
@@ -492,6 +493,29 @@ def _padding_selection_score(
         + 0.05 * efficiency
         + 0.05 * (1.0 - clamp(metrics["page_failure_rate"]))
     )
+
+
+def _annotate_padding_selection_scores(
+    results: dict[str, dict[str, Any]],
+) -> None:
+    """Persist the exact DEV_SELECT score used to choose a padding profile."""
+    if not results:
+        return
+    fastest = min(
+        float(result["metrics"]["time_per_page_seconds"])
+        for result in results.values()
+    )
+    for result in results.values():
+        metrics = result["metrics"]
+        metrics["normalized_efficiency_score"] = min(
+            1.0,
+            fastest
+            / max(1e-9, float(metrics["time_per_page_seconds"])),
+        )
+        metrics["selection_score"] = _padding_selection_score(
+            result,
+            fastest_seconds=fastest,
+        )
 
 
 def _select_padding_profile(

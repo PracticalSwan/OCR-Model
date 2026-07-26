@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from scripts.evaluate_ocr_component_ablations import (
+    _annotate_padding_selection_scores,
     _balanced_rows,
     _effective_definition,
     _metric_deltas,
@@ -85,3 +86,36 @@ def test_padding_selection_uses_measured_scores_and_deterministic_ties() -> None
     assert _select_padding_profile(
         {"A": results["A"], "C": results["C"]}
     ) == "A"
+
+
+def test_padding_selection_scores_are_persisted_for_audit() -> None:
+    results = {
+        "A": {
+            "metrics": {
+                "critical_field_exact_match": 0.5,
+                "recognized_text_coverage": 0.6,
+                "wer": 0.4,
+                "end_to_end_entity_f1": 0.3,
+                "end_to_end_canonical_accuracy": 0.4,
+                "page_failure_rate": 0.0,
+                "time_per_page_seconds": 2.0,
+            }
+        },
+        "B": {
+            "metrics": {
+                "critical_field_exact_match": 0.6,
+                "recognized_text_coverage": 0.6,
+                "wer": 0.4,
+                "end_to_end_entity_f1": 0.3,
+                "end_to_end_canonical_accuracy": 0.4,
+                "page_failure_rate": 0.0,
+                "time_per_page_seconds": 1.0,
+            }
+        },
+    }
+    _annotate_padding_selection_scores(results)
+    assert results["A"]["metrics"]["normalized_efficiency_score"] == 0.5
+    assert results["B"]["metrics"]["normalized_efficiency_score"] == 1.0
+    assert results["B"]["metrics"]["selection_score"] > (
+        results["A"]["metrics"]["selection_score"]
+    )

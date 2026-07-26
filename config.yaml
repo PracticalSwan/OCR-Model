@@ -161,7 +161,7 @@ ocr:
     enabled: true
     confidence_threshold: 0.65
     maximum_candidates: 5
-    padding_profile: "B"
+    padding_profile: "C"
 
 layout_model:
   architecture: "MultiTaskTextLayoutModel"
