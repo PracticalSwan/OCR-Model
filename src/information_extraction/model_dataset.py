@@ -13,6 +13,7 @@ from typing import Any
 from src import config as cfgmod
 from src.information_extraction.alignment import align_ocr_to_annotations
 from src.information_extraction.ocr_noise import (
+    OCR_NOISE_AUGMENTATION_VERSION,
     OCRNoiseConfig,
     build_noisy_example,
 )
@@ -839,6 +840,7 @@ def prepare_model_dataset(
         }
     if "ocr_noise" in selected_streams:
         build_provenance["ocr_noise"] = {
+            "implementation_version": OCR_NOISE_AUGMENTATION_VERSION,
             "configuration": {
                 "seed": noise_config.seed,
                 "example_probability": noise_config.example_probability,

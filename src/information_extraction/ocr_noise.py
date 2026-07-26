@@ -9,6 +9,9 @@ from dataclasses import asdict, dataclass
 from typing import Any, Mapping
 
 
+OCR_NOISE_AUGMENTATION_VERSION = "2.0-rotation-safe-jitter"
+
+
 @dataclass(frozen=True)
 class OCRNoiseConfig:
     seed: int = 42
@@ -70,8 +73,8 @@ def build_noisy_example(
         _box_jitter,
     )
     page = output.get("page") if isinstance(output.get("page"), Mapping) else {}
-    width = int(page.get("width", 1000) or 1000)
-    height = int(page.get("height", 1000) or 1000)
+    width = int(output.get("width") or page.get("width") or 1000)
+    height = int(output.get("height") or page.get("height") or 1000)
     for token_index in chosen:
         token = tokens[token_index]
         order = list(methods)
@@ -104,6 +107,7 @@ def build_noisy_example(
     output["training_only"] = True
     output["ocr_noise"] = {
         "schema_version": "1.0",
+        "implementation_version": OCR_NOISE_AUGMENTATION_VERSION,
         "seed": config.seed,
         "example_seed": _seed(identity, config.seed),
         "configuration": asdict(config),
@@ -225,17 +229,32 @@ def _box_jitter(
         return None
     if len(polygon) < 4:
         return None
+    if width <= 0 or height <= 0:
+        return None
+    xs = [point[0] for point in polygon]
+    ys = [point[1] for point in polygon]
+    minimum_x, maximum_polygon_x = min(xs), max(xs)
+    minimum_y, maximum_polygon_y = min(ys), max(ys)
+    if (
+        minimum_x < 0.0
+        or minimum_y < 0.0
+        or maximum_polygon_x > float(width)
+        or maximum_polygon_y > float(height)
+        or maximum_polygon_x <= minimum_x
+        or maximum_polygon_y <= minimum_y
+    ):
+        return None
     maximum_x = max(1.0, width * config.maximum_box_jitter_ratio)
     maximum_y = max(1.0, height * config.maximum_box_jitter_ratio)
-    delta_x = rng.uniform(-maximum_x, maximum_x)
-    delta_y = rng.uniform(-maximum_y, maximum_y)
-    changed = [
-        [
-            max(0.0, min(float(width), x + delta_x)),
-            max(0.0, min(float(height), y + delta_y)),
-        ]
-        for x, y in polygon
-    ]
+    minimum_delta_x = max(-maximum_x, -minimum_x)
+    maximum_delta_x = min(maximum_x, float(width) - maximum_polygon_x)
+    minimum_delta_y = max(-maximum_y, -minimum_y)
+    maximum_delta_y = min(maximum_y, float(height) - maximum_polygon_y)
+    if minimum_delta_x > maximum_delta_x or minimum_delta_y > maximum_delta_y:
+        return None
+    delta_x = rng.uniform(minimum_delta_x, maximum_delta_x)
+    delta_y = rng.uniform(minimum_delta_y, maximum_delta_y)
+    changed = [[x + delta_x, y + delta_y] for x, y in polygon]
     token["polygon"] = changed
     xs = [point[0] for point in changed]
     ys = [point[1] for point in changed]
