@@ -166,7 +166,7 @@ ocr:
 layout_model:
   architecture: "MultiTaskTextLayoutModel"
   checkpoint: "microsoft/layoutxlm-base"
-  inference_checkpoint: "D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/final"
+  inference_checkpoint: "D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise"
   calibration: "models/multitask_calibration.json"
   license: "CC-BY-NC-SA-4.0"
   max_length: 512
