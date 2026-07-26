@@ -78,6 +78,30 @@ The dataset was not downloaded and was not used for training, selection, or
 evaluation. The project instead uses the OFL-font synthetic Thai corpus and
 does not claim real-world Thai benchmark quality.
 
+## Executed recognizer outcomes
+
+The bounded custom general trial trained for one epoch on the 119,772
+dictionary-compatible real public TRAIN crops. It was evaluated against all
+22,356 usable mixed DEV_SELECT crops. Relative to the original recognizer,
+WER improved from 0.755776 to 0.669095 and exact-line accuracy improved from
+0.327339 to 0.568393. The WER gain was 11.47%, below the required 15%, and
+Turkish-character accuracy collapsed from 0.803351 to 0.000882. The candidate
+was therefore rejected despite stronger critical-field metrics. Its
+experimental checkpoint SHA-256 is
+`f9db02444cf46e7ddf9d0da048ec7efc14fd3736d9ed6e033c58652de54881c5`;
+the original general recognizer remains selected.
+
+The custom Thai trial trained on 12,000 synthetic lines and used the separate
+2,000-line synthetic development split. WER improved from 0.234690 to
+0.071324, CER from 0.035907 to 0.011100, and exact-line accuracy from 0.5445
+to 0.8660. Export and reload passed, so this artifact is accepted for explicit
+custom/adaptive routing. Its checkpoint SHA-256 is
+`96bbda4bd94ebeee676e07a3f7c11339b707a506433bbb24f63b54f5459f26e9`
+and inference-tree SHA-256 is
+`0876e624221bf0ff2d888506c7b9fa84eacc99f98394b424e81c098769d91e73`.
+These are synthetic development results, not evidence of real-document Thai
+accuracy.
+
 ## Rebuild
 
 ```powershell
