@@ -106,17 +106,16 @@ def main() -> int:
 
     reference_layout = _json(reference_report_path)
     checkpoint_sha = sha256_file(checkpoint_model)
-    if (
-        reference_layout.get("split") != "test_in_domain"
-        or reference_layout.get("checkpoint_sha256")
-        != checkpoint_sha
-        or int(reference_layout.get("private_row_count", -1)) != 0
-    ):
-        raise SystemExit(
-            "reference-token locked-test report is not bound to this public checkpoint"
-        )
 
     model_rows = read_csv_rows(model_manifest)
+    model_build_ids = {
+        row.get("build_id", "")
+        for row in model_rows
+        if row.get("is_usable") == "true"
+    }
+    if len(model_build_ids) != 1 or "" in model_build_ids:
+        raise SystemExit("selected OCR-v2 manifest has mixed or missing build IDs")
+    model_build_id = next(iter(model_build_ids))
     model_test_ids = {
         row["page_id"]
         for row in model_rows
@@ -163,6 +162,20 @@ def main() -> int:
         thai_choice=choice,
     )
     stack = build_ocr_stack_binding(cfg, registry, ocr_profile=profile)
+    reference_errors = _locked_reference_binding_errors(
+        reference_layout,
+        expected_checkpoint_sha256=checkpoint_sha,
+        expected_manifest_sha256=sha256_file(model_manifest),
+        expected_calibration_sha256=sha256_file(calibration),
+        expected_build_id=model_build_id,
+        expected_stack=stack,
+        expected_sample_count=len(model_test_ids),
+    )
+    if reference_errors:
+        raise SystemExit(
+            "reference-token locked-test report binding failed: "
+            + "; ".join(reference_errors)
+        )
     pipeline = DocumentPipeline.from_config(
         cfg,
         device=args.device,
@@ -409,6 +422,58 @@ def _critical_metrics(
         [row["reference_fields"] for row in observations],
         [row["predicted_fields"] for row in observations],
     )
+
+
+def _locked_reference_binding_errors(
+    report: Mapping[str, Any],
+    *,
+    expected_checkpoint_sha256: str,
+    expected_manifest_sha256: str,
+    expected_calibration_sha256: str,
+    expected_build_id: str,
+    expected_stack: Mapping[str, Any],
+    expected_sample_count: int,
+) -> list[str]:
+    """Return explicit reasons a reference-token TEST report is stale."""
+    def integer(value: Any) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return -1
+
+    checks = {
+        "split": report.get("split") == "test_in_domain",
+        "public_only": report.get("public_only") is True,
+        "private_row_count": integer(report.get("private_row_count")) == 0,
+        "failure_count": integer(report.get("failure_count")) == 0,
+        "token_sources": {
+            str(value) for value in (report.get("token_sources") or [])
+        }
+        == {"ground_truth"},
+        "checkpoint_sha256": str(report.get("checkpoint_sha256", ""))
+        == expected_checkpoint_sha256,
+        "manifest_sha256": str(report.get("manifest_sha256", ""))
+        == expected_manifest_sha256,
+        "calibration_sha256": str(report.get("calibration_sha256", ""))
+        == expected_calibration_sha256,
+        "build_id": str(
+            report.get("evaluation_build_id") or report.get("build_id") or ""
+        )
+        == expected_build_id,
+        "sample_count": integer(
+            report.get("sample_count", report.get("example_count", -1))
+        )
+        == expected_sample_count,
+        "detector_sha256": str(report.get("detector_sha256", ""))
+        == str(expected_stack.get("detector_sha256", "")),
+        "recognizer_sha256": str(report.get("recognizer_sha256", ""))
+        == str(expected_stack.get("recognizer_sha256", "")),
+        "preprocessing_sha256": str(
+            report.get("preprocessing_sha256", "")
+        )
+        == str(expected_stack.get("preprocessing_sha256", "")),
+    }
+    return [name for name, passed in checks.items() if not passed]
 
 
 def _json(path: Path) -> dict[str, Any]:
