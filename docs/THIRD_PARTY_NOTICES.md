@@ -41,8 +41,9 @@ SDK, and the remaining packages are not relicensed by this project.
 
 ## Original project code
 
-No blanket open-source license has been granted for the original project code.
-Recipients may run this package only within the permission given by its owner
-and the upstream model licenses. Before broader publication, the owner should
-choose and add an explicit code license compatible with the model's
-noncommercial/share-alike obligations.
+Original source code and documentation authored for this project are licensed
+under the MIT License in the repository's `LICENSE` file. Trained weights,
+datasets, and third-party components remain governed by their respective
+upstream terms. In particular, the LayoutXLM-derived checkpoint's
+CC BY-NC-SA 4.0 terms still restrict the complete weights-included package to
+noncommercial use and require attribution and share-alike compliance.

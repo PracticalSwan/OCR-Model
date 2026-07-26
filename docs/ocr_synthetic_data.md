@@ -7,12 +7,21 @@ evidence.
 
 ## Corpus composition
 
-The general recognizer mixture uses 20% synthetic samples after combining real
-and synthetic data. From the verified real corpus this produced:
+The general recognizer generator targets a 20% synthetic share before the
+pinned-model dictionary compatibility gate. From the verified real corpus this
+produced:
 
 - 119,773 real and 29,943 synthetic general training crops;
 - 18,113 real and 4,528 synthetic general validation crops;
-- an actual synthetic fraction of 19.9999% in both splits.
+- a raw synthetic fraction of 19.9999% in both splits.
+
+The training lists exclude targets that the pinned official dictionary cannot
+represent. The usable general lists therefore contain 119,772 real plus 28,072
+synthetic training crops and 18,111 real plus 4,245 synthetic DEV_SELECT crops,
+for synthetic shares of 18.9876% and 18.9882%, respectively. The gate excludes
+2,157 samples rather than silently rewriting their labels: 2,154 synthetic
+samples containing U+0E3F and three public real samples containing private-use
+code points.
 
 The separate Thai track contains 12,000 synthetic training lines and 2,000
 synthetic validation lines. Thai claims must remain limited to this synthetic
