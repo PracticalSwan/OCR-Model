@@ -6,6 +6,7 @@ from scripts.compile_layout_adaptation_trials import (
     _evaluation,
     downstream_selection_score,
     regression_gate,
+    select_downstream_trial,
 )
 
 
@@ -81,4 +82,56 @@ def test_evaluation_binding_refuses_wrong_layout_stream(
             report,
             expected_rotation=0.0,
             expected_token_sources={"paddleocr"},
+        )
+
+
+def _selection_row(
+    trial_id: str,
+    *,
+    score: float,
+    cross_build: bool,
+) -> dict:
+    return {
+        "trial_id": trial_id,
+        "selection_score": score,
+        "cross_build_comparison": cross_build,
+        "reference_entity_f1": 0.90,
+        "canonical_evidence_f1": 0.80,
+        "document_accuracy": 0.95,
+        "relation_f1": 0.50,
+        "end_to_end_entity_f1": 0.30,
+        "checkpoint_reload_passed": True,
+    }
+
+
+def test_cross_build_baseline_is_comparison_only() -> None:
+    rows = [
+        _selection_row("old_baseline", score=0.90, cross_build=True),
+        _selection_row("continued_a", score=0.85, cross_build=False),
+    ]
+
+    selected = select_downstream_trial(
+        rows,
+        baseline_trial="old_baseline",
+        selected_trial="continued_a",
+        comparison_only_trials={"old_baseline"},
+    )
+
+    assert selected["selected"] is True
+    assert selected["selection_candidate"] is True
+    assert rows[0]["selected"] is False
+    assert rows[0]["selection_candidate"] is False
+
+
+def test_cross_build_trial_cannot_be_final_candidate() -> None:
+    rows = [
+        _selection_row("old_baseline", score=0.90, cross_build=True),
+        _selection_row("continued_a", score=0.85, cross_build=False),
+    ]
+
+    with pytest.raises(ValueError, match="must be comparison-only"):
+        select_downstream_trial(
+            rows,
+            baseline_trial="old_baseline",
+            selected_trial="continued_a",
         )

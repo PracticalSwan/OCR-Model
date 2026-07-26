@@ -30,6 +30,15 @@ def main() -> int:
     parser.add_argument("--baseline-trial", required=True)
     parser.add_argument("--selected-trial", required=True)
     parser.add_argument(
+        "--comparison-only-trial",
+        action="append",
+        default=[],
+        help=(
+            "Trial retained as a regression baseline but ineligible for final "
+            "selection, such as the old checkpoint evaluated cross-build."
+        ),
+    )
+    parser.add_argument(
         "--output",
         default=str(
             PROJECT_ROOT
@@ -44,29 +53,22 @@ def main() -> int:
     trial_ids = [definition[0] for definition in definitions]
     if len(trial_ids) != len(set(trial_ids)):
         parser.error("trial IDs must be unique")
-    for selected in (args.baseline_trial, args.selected_trial):
-        if selected not in set(trial_ids):
+    known_trial_ids = set(trial_ids)
+    for selected in (
+        args.baseline_trial,
+        args.selected_trial,
+        *args.comparison_only_trial,
+    ):
+        if selected not in known_trial_ids:
             parser.error(f"unknown trial ID: {selected}")
 
     rows = [compile_trial(*definition) for definition in definitions]
-    baseline = next(
-        row for row in rows if row["trial_id"] == args.baseline_trial
+    selected = select_downstream_trial(
+        rows,
+        baseline_trial=args.baseline_trial,
+        selected_trial=args.selected_trial,
+        comparison_only_trials=set(args.comparison_only_trial),
     )
-    for row in rows:
-        row.update(regression_gate(row, baseline))
-    eligible = [row for row in rows if row["eligible"]]
-    if not eligible:
-        raise ValueError("no downstream adaptation trial passes regression gates")
-    best_score = max(float(row["selection_score"]) for row in eligible)
-    selected = next(
-        row for row in rows if row["trial_id"] == args.selected_trial
-    )
-    if not selected["eligible"]:
-        raise ValueError("selected downstream trial fails regression gates")
-    if float(selected["selection_score"]) + 1e-12 < best_score:
-        raise ValueError("selected downstream trial is not the best eligible score")
-    for row in rows:
-        row["selected"] = row is selected
     _write_csv(Path(args.output), rows)
     print(
         json.dumps(
@@ -76,6 +78,9 @@ def main() -> int:
                 "baseline_trial": args.baseline_trial,
                 "selected_trial": args.selected_trial,
                 "selected_score": selected["selection_score"],
+                "comparison_only_trials": sorted(
+                    args.comparison_only_trial
+                ),
             },
             indent=2,
         )
@@ -127,6 +132,14 @@ def compile_trial(
         raise ValueError(f"evaluation checkpoint mismatch for {trial_id}")
     if str(end_to_end.get("checkpoint_sha256", "")) != checkpoint_sha:
         raise ValueError(f"end-to-end checkpoint mismatch for {trial_id}")
+    cross_build_values = {
+        bool(value.get("cross_build_comparison", False))
+        for value in (reference, real_ocr, rotated)
+    }
+    if len(cross_build_values) != 1:
+        raise ValueError(
+            f"mixed cross-build evaluation status for {trial_id}"
+        )
     for field in ("detector_sha256", "recognizer_sha256"):
         values = {
             str(value.get(field, ""))
@@ -210,7 +223,9 @@ def compile_trial(
         "strategy": strategy,
         "status": "passed",
         "selected": False,
+        "selection_candidate": False,
         "eligible": False,
+        "cross_build_comparison": next(iter(cross_build_values)),
         "build_id": reference.get("build_id")
         or reference.get("evaluation_build_id"),
         "split": "dev_select",
@@ -266,6 +281,62 @@ def compile_trial(
         "end_to_end_evaluation": str(end_to_end_path),
         "ocr_configuration": ocr_configuration,
     }
+
+
+def select_downstream_trial(
+    rows: list[dict[str, Any]],
+    *,
+    baseline_trial: str,
+    selected_trial: str,
+    comparison_only_trials: set[str] | None = None,
+) -> dict[str, Any]:
+    """Apply regression gates and select only build-bound final candidates."""
+    comparison_only = set(comparison_only_trials or ())
+    trial_ids = {str(row.get("trial_id", "")) for row in rows}
+    for trial_id in (baseline_trial, selected_trial, *comparison_only):
+        if trial_id not in trial_ids:
+            raise ValueError(f"unknown downstream trial ID: {trial_id}")
+    if selected_trial in comparison_only:
+        raise ValueError("selected downstream trial is comparison-only")
+
+    baseline = next(
+        row for row in rows if row["trial_id"] == baseline_trial
+    )
+    for row in rows:
+        trial_id = str(row["trial_id"])
+        row["selection_candidate"] = trial_id not in comparison_only
+        row.update(regression_gate(row, baseline))
+        if (
+            bool(row.get("cross_build_comparison", False))
+            and row["selection_candidate"]
+        ):
+            raise ValueError(
+                f"cross-build trial must be comparison-only: {trial_id}"
+            )
+
+    eligible = [
+        row
+        for row in rows
+        if row["eligible"] and row["selection_candidate"]
+    ]
+    if not eligible:
+        raise ValueError(
+            "no build-bound downstream adaptation trial passes regression gates"
+        )
+    best_score = max(float(row["selection_score"]) for row in eligible)
+    selected = next(
+        row for row in rows if row["trial_id"] == selected_trial
+    )
+    if not selected["eligible"]:
+        raise ValueError("selected downstream trial fails regression gates")
+    if float(selected["selection_score"]) + 1e-12 < best_score:
+        raise ValueError(
+            "selected downstream trial is not the best eligible "
+            "build-bound score"
+        )
+    for row in rows:
+        row["selected"] = row is selected
+    return selected
 
 
 def downstream_selection_score(
