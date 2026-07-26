@@ -1,32 +1,40 @@
 # OCR and Layout Environment Setup
 
-## Why there are two environments
+## Why there are three environments
 
 PaddlePaddle GPU and CUDA PyTorch load incompatible cuDNN DLLs in one Windows
-process. `scripts/setup_ie_environment.ps1` therefore creates two Python 3.10
-virtual environments on D::
+process. `scripts/setup_ie_environment.ps1` therefore creates separate
+Python 3.10 inference environments on D:, and OCR fine-tuning uses a third,
+source-bound environment:
 
 ```text
 D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr
 D:\CSX4201\vision-info-extraction-assets\environments\ie-layout
+D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr-train
 ```
 
 The OCR environment contains PaddlePaddle GPU 3.3.0, PaddleOCR 3.7.0, PaddleX
 3.7.2, and CPU-only PyTorch 2.8.0 required by PaddleX/ModelScope. The layout
 environment contains PyTorch 2.8.0+cu128, Transformers 4.57.6, SentencePiece,
-and Accelerate.
+and Accelerate. The training environment contains PaddlePaddle GPU 3.3.0,
+PaddleOCR 3.7.0, PaddleX 3.7.2, CUDA 13 NVRTC, and a clean PaddleOCR v3.7.0
+source checkout pinned to commit
+`b03f46425e8ff4442b268ce449e3eef758146cd4`.
 
 ## Setup
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/setup_ie_environment.ps1
+powershell -ExecutionPolicy Bypass -File scripts/setup_ocr_training_environment.ps1
 ```
 
-The script verifies Python 3.10, C:/D: capacity, packages, independent GPU
-runtimes, and D:-backed cache variables. Use limits sparingly: run a bounded
-profile before a large download, alignment job, or training run.
-It discovers Python through `py -3.10`; pass `-Python310 <path>` only when the
-Windows launcher is unavailable.
+The setup scripts verify Python 3.10, C:/D: capacity, packages, independent GPU
+runtimes, D:-backed cache variables, the clean source revision, model
+initialization, a forward/backward/optimizer step, O2 AMP, checkpoint reload,
+and dependency integrity. Use limits sparingly: run a bounded profile before a
+large download, alignment job, or training run. The scripts discover Python
+through `py -3.10`; pass `-Python310 <path>` only when the Windows launcher is
+unavailable.
 
 The configured external root is:
 
@@ -64,12 +72,28 @@ must return nonempty OCR, select a nonzero cardinal correction, and recover
 same phrase through automatic fine deskew with reliable line evidence. An
 empty engine call cannot pass either check.
 
-The final public dev-only preprocessing ablation selected the `original`
-profile. Grayscale normalization and optional Paddle orientation modules tied
-its alignment score but did not improve it; denoising reduced coverage.
-Raster-to-PDF tests tied across 200/250/300 DPI, so 200 DPI remains the lower
-cost default. The locked test and private documents were never used for this
-selection.
+The 400-page public DEV_SELECT preprocessing ablation selected
+`grayscale_normalized` for the optional adaptive stack: its composite score was
+0.521288 versus 0.517138 for original preprocessing. The subsequent full
+400-page A-F model comparison still retained configuration A as the global
+default: original detector, original general recognizer, original Thai
+recognizer, and original preprocessing scored 0.368311 at 2.573 seconds/page.
+Registry-selected configuration E produced the same OCR and downstream
+metrics and scored only 0.000588 higher, below the material-gain threshold.
+The adaptive F pipeline scored 0.339679 at 6.158 seconds/page. The higher
+scoring C experiment was ineligible because its custom general recognizer
+failed the acceptance gate. The locked test and private documents were never
+used for either selection.
+
+The selected default artifacts remain the original detector and general
+recognizer. Their inference-tree SHA-256 values are
+`eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d`
+and `6c46447e05189eb3f863dc75855f0cfccf16a4af188a249861377c69216f40b1`.
+The custom Thai recognizer passed its synthetic-only acceptance boundary and
+remains available to explicit custom/adaptive profiles, with inference-tree
+SHA-256
+`0876e624221bf0ff2d888506c7b9fa84eacc99f98394b424e81c098769d91e73`.
+It is not a claim of real-world Thai benchmark quality.
 
 ## CPU mode
 
