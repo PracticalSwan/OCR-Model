@@ -4,6 +4,7 @@ import pytest
 
 from scripts.compile_ocr_upgrade_reports import (
     ERROR_CATEGORIES,
+    _calibration_ece_after,
     _selected_ocr_profile,
     error_category_rows,
     render_error_analysis,
@@ -77,4 +78,22 @@ def test_selected_ocr_profile_uses_actual_selection_schema() -> None:
     assert (
         _selected_ocr_profile({"selected_ocr_profile": "adaptive"})
         == "adaptive"
+    )
+
+
+def test_calibration_summary_reads_per_task_metrics() -> None:
+    report = {
+        "metrics": {
+            task: {"ece_after": value}
+            for task, value in (
+                ("entity", 0.01),
+                ("canonical", 0.02),
+                ("relation", 0.03),
+                ("document", 0.04),
+            )
+        }
+    }
+
+    assert _calibration_ece_after(report) == (
+        "0.0100 / 0.0200 / 0.0300 / 0.0400"
     )

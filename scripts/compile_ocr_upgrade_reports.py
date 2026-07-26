@@ -558,7 +558,8 @@ def render_model_card(evidence: Mapping[str, Any]) -> str:
         f"{_number(_metric(locked_e2e, 'relation_f1'))} |",
         f"| End-to-end canonical-field accuracy | "
         f"{_number(_metric(locked_e2e, 'canonical_field_accuracy'))} |",
-        f"| Calibration ECE | {_number(_metric(calibration, 'ece'))} |",
+        f"| Calibration ECE after (entity / canonical / relation / document) | "
+        f"{_calibration_ece_after(calibration)} |",
         "",
         "## Fallback, cache, and portability",
         "",
@@ -749,6 +750,22 @@ def _selected_ocr_profile(selection: Mapping[str, Any]) -> Any:
     return selection.get("selected_ocr_profile") or selection.get(
         "selected_profile"
     )
+
+
+def _calibration_ece_after(calibration: Mapping[str, Any]) -> str:
+    metrics = calibration.get("metrics")
+    if not isinstance(metrics, Mapping):
+        return "not available"
+    values = []
+    for task in ("entity", "canonical", "relation", "document"):
+        task_metrics = metrics.get(task)
+        value = (
+            task_metrics.get("ece_after")
+            if isinstance(task_metrics, Mapping)
+            else None
+        )
+        values.append(_number(value))
+    return " / ".join(values)
 
 
 def _number(value: Any) -> str:
