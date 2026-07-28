@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "checks": [
+    {
+      "name": "benchmark_verification",
+      "command": "python scripts/verify_ocr_benchmark.py",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/benchmark_summary.json",
+      "timestamp": "2026-07-26T15:16:31.741604+00:00",
+      "relevant_hashes": {
+        "source_commit": "107cf5f49f6dc8bfcaf3c2fec0d169cf9faacc26",
+        "evidence_sha256": "536db7f7af86e133d909200e235bacc0d83f91281735f794a38ee32c6c914532",
+        "manifest_sha256": "1786af155d1c2c3e69224c87f1885da3a62ef59617d7d57ff4d7d4bea661e3ec"
+      },
+      "detail": {}
+    }
+  ],
+  "generated_at_utc": "2026-07-26T15:16:31.741619+00:00"
+}

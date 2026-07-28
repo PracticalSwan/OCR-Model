@@ -267,6 +267,7 @@ def _model_card(
 ) -> str:
     training = artifacts["training"]
     dataset = artifacts["dataset"]
+    model_dataset = artifacts["model_dataset"]
     unseen = artifacts["unseen"]
     checkpoint = Path(str(training.get("checkpoint", "")))
     model_path = checkpoint / "model.safetensors"
@@ -285,7 +286,7 @@ def _model_card(
         "",
         "## Training data and privacy",
         "",
-        f"Public fit pages: {dataset.get('usable_public_fit_pages')}; examples: {dataset.get('usable_examples')}; Gmail/private fit rows: {dataset.get('gmail_fit_rows')}.",
+        f"Public fit pages: {dataset.get('usable_public_fit_pages')}; examples: {model_dataset.get('usable_example_count')}; Gmail/private fit rows: {model_dataset.get('gmail_fit_rows')}.",
         "Private Gmail documents are operational test only and never train, calibrate, or select the model.",
         "",
         "## Measured quality",

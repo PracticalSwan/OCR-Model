@@ -11,7 +11,7 @@ License inherited from the base checkpoint: `CC-BY-NC-SA-4.0`.
 
 ## Training data and privacy
 
-Public fit pages: 11172; examples: 11684; Gmail/private fit rows: 0.
+Public fit pages: 11172; examples: 16781; Gmail/private fit rows: 0.
 Private Gmail documents are operational test only and never train, calibrate, or select the model.
 
 ## Measured quality

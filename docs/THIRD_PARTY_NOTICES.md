@@ -32,6 +32,41 @@ declare the **Apache License 2.0**:
 Their original `README.md` model cards are retained inside each bundled model
 directory.
 
+## Synthetic OCR fonts
+
+The bounded general and Thai synthetic OCR corpora were rendered with Noto
+Sans and Noto Sans Thai from the official Google Fonts repository at pinned
+commit `9fab8b6cc7b2f20376914fd765d918c698c66d75`. Both fonts are licensed
+under the SIL Open Font License 1.1:
+
+<https://openfontlicense.org/>
+
+The exact font and license hashes are recorded in
+`reports/ocr_upgrade/synthetic_data_manifest.json`. Font binaries and
+synthetic training images remain on the local D: asset volume and are not
+committed to this repository. The selected custom Thai OCR artifact was
+trained only on this deterministic OFL-font corpus; that evidence does not
+establish accuracy on real Thai documents.
+
+The candidate `openthaigpt/thai-ocr-evaluation` dataset declares CC BY-SA 4.0,
+but its card did not provide per-sample source and license mapping for the
+underlying images. It was not downloaded, trained on, evaluated on, or
+redistributed by this project.
+
+## Public OCR training datasets
+
+- FATURA is sourced from Zenodo record 8261508, which declares CC BY 4.0.
+- FUNSD's official terms restrict use to noncommercial research and
+  education.
+- The corrected public SROIE source repository declares MIT; underlying
+  challenge and document-image rights may impose additional conditions.
+- CORU is held out for unseen evaluation and contributes no fit or selection
+  row.
+
+Dataset source URLs, declared terms, and caveats are recorded in
+`reports/ocr_upgrade/benchmark_summary.json`. No raw dataset is redistributed
+inside the portable package.
+
 ## Runtime dependencies
 
 The setup scripts install pinned or bounded Python dependencies from their

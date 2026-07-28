@@ -96,10 +96,11 @@ canonical fields, document type, language, split, and privacy status.
 The authoritative normalized public population is 12,433 pages. Leakage-safe
 identity grouping assigns FATURA/SROIE/FUNSD to train, `dev_select`,
 `dev_calibration`, and `test_in_domain`; all 1,261 CORU pages remain
-`unseen_domain_test`. The final model build contains 11,684 examples: 11,172
-ground-truth examples plus 256 PaddleOCR and 256 hybrid variants. Gmail rows
-are structurally ineligible for model data, training, calibration, selection,
-or public evaluation.
+`unseen_domain_test`. OCR-upgrade build `final-8bfcf79fed04e375`
+contains 16,781 examples: 11,172 ground-truth, 2,038 PaddleOCR, 2,038 hybrid,
+and 1,533 train-only OCR-noise examples. Gmail rows are structurally
+ineligible for model data, training, calibration, selection, or public
+evaluation.
 
 ## Final multi-task model
 
@@ -119,11 +120,11 @@ resolves conflicting evidence by abstaining, then combines learned output with
 deterministic evidence-backed field validation, arithmetic checks, generic
 key/value fallback, and structured table output.
 
-The final public run trained four epochs using mixed precision, batch size 1,
-gradient accumulation 4, gradient clipping, and a 0.7 upright/0.3 fixed-37°
-checkpoint-selection score. It completed 7,812 optimizer steps over 7,782
-training examples. The checkpoint and tokenizer reload exactly (maximum logit
-difference 0.0). The source and derived checkpoint are
+The selected fresh public run trained four epochs using mixed precision, batch
+size 1, gradient accumulation 4, gradient clipping, and a 0.7 upright/0.3
+fixed-37° checkpoint-selection score. It completed 12,556 optimizer steps over
+12,455 training examples. The checkpoint and tokenizer reload exactly
+(maximum logit difference 0.0). The source and derived checkpoint are
 CC-BY-NC-SA-4.0 and are not committed to Git.
 
 Calibration uses only `dev_calibration`. Temperature scaling and abstention

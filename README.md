@@ -12,6 +12,24 @@ GUI. Extraction uses no OpenAI API key and does not upload the document.
 
 ![OCR Model showing extracted fields, OCR text, and a document preview](docs/devpost/assets/ocr-model-complete.png)
 
+## Current OCR-upgrade branch
+
+The public `v1.0.0-build-week` Release linked above remains the historical
+July 21 package. The current `feat/domain-adapted-ocr` branch contains a newer,
+locally verified OCR-selection and LayoutXLM-adaptation lifecycle. Its selected
+checkpoint is
+`D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`,
+with `model.safetensors` SHA-256
+`f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`.
+
+The upgrade does not claim that OCR is solved. The one-time 1,760-page locked
+image-to-JSON test measured polygon F1 0.3815, text coverage 0.1663, WER
+0.9692, entity F1 0.0944, relation F1 0.0111, and canonical-field accuracy
+0.2534. These results missed the requested accuracy targets and remain
+documented without post-test tuning. See the
+[OCR upgrade release notes](docs/OCR_UPGRADE_RELEASE_NOTES.md) and
+[current OCR model card](reports/ocr_upgrade/final_ocr_model_card.md).
+
 ## What it does
 
 For an uploaded image or PDF, the local pipeline:
@@ -141,31 +159,35 @@ avoid conflicting cuDNN libraries. The LayoutXLM encoder starts from
 `microsoft/layoutxlm-base`; the incompatible Detectron2 visual backbone is not
 used.
 
-## Verified results
+## Verified OCR-upgrade results
 
 These measurements describe different stages and should not be substituted for
 one another:
 
 | Evaluation | Result |
 |---|---:|
-| Public reference-token entity F1 | 0.9813 |
-| Public reference-token canonical-evidence F1 | 0.9814 |
-| Public reference-token relation F1 | 0.4632 |
-| 18-angle layout grid minimum entity F1 | 0.7491 |
-| Bounded end-to-end entity F1 with real OCR | 0.1314–0.1830 |
+| Locked public reference-token entity F1, calibrated | 0.9835 |
+| Locked public reference-token canonical-evidence F1, calibrated | 0.9860 |
+| Locked public reference-token relation F1, calibrated | 0.5603 |
+| Locked 1,760-page OCR polygon F1 | 0.3815 |
+| Locked 1,760-page OCR text coverage / WER | 0.1663 / 0.9692 |
+| Locked image-to-JSON entity / relation F1 | 0.0944 / 0.0111 |
+| 18-angle layout minimum calibrated entity F1 | 0.7683 |
+| 18-angle end-to-end entity F1 | 0.1326–0.1807 |
 | Fixed unseen CORU OCR answer-string recall | 78.53% |
-| Private local operational run | 26/26 documents, 203/203 pages completed |
+| Private local operational run | 2/2 anonymous documents and pages completed |
 
-The final four-epoch model used 7,782 public training examples. The exact
-`model.safetensors` SHA-256 is
-`34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189`.
-The IE verifier completed 46/46 checks. The host suite completed 244 tests
-with two environment-dependent skips, and Windows GPU and Docker CPU
-extractions matched on the safe validation document.
+The selected fresh four-epoch model used 12,455 public training examples:
+7,646 ground-truth, 1,638 PaddleOCR, 1,638 hybrid, and 1,533 train-only
+OCR-noise examples. Calibration used 653 public `DEV_CALIBRATION` examples.
+`TEST_IN_DOMAIN`, CORU, and Gmail contributed zero fit, selection, or
+calibration rows.
 
-Full evidence is under [`reports/final_model`](reports/final_model), including
-the [error analysis](reports/final_model/error_analysis.md). Reference-token
-scores isolate the layout model; end-to-end scores include OCR errors.
+Full evidence is under [`reports/ocr_upgrade`](reports/ocr_upgrade) and
+[`reports/final_model`](reports/final_model), including the
+[quantified error analysis](reports/ocr_upgrade/error_analysis.md).
+Reference-token scores isolate the layout model; image-to-JSON scores include
+OCR errors.
 
 ## OpenAI Build Week extension
 
@@ -194,7 +216,8 @@ See the [Build Week changelog](docs/devpost/BUILD_WEEK_CHANGELOG.md) and
   portable package.
 - Private operational evaluation is reported only in aggregate; public reports
   contain no filenames, document text, images, or per-document predictions.
-- End-to-end OCR is the main accuracy bottleneck.
+- End-to-end OCR is the main accuracy bottleneck; the full locked evaluation
+  missed the requested quality targets.
 - Relation learning is limited by FUNSD-only supervision.
 - No compatible labeled public Thai benchmark was available; Thai validation
   is synthetic and integration-focused.

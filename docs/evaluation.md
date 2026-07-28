@@ -20,27 +20,36 @@ rejects private/unmarked examples.
 ```powershell
 $ocr = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr\Scripts\python.exe'
 $layout = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-layout\Scripts\python.exe'
-$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final'
+$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 
 & $layout scripts/evaluate_multitask_model.py `
   --profile final --checkpoint $checkpoint --split test_in_domain `
   --streams ground_truth --device cuda --group-by dataset language `
   --calibration models\multitask_calibration.json `
-  --report-name final_test_in_domain_ground_truth.json
+  --report-name ocr_upgrade_locked_test_ground_truth.json
+& $ocr scripts/evaluate_locked_ocr_upgrade.py `
+  --checkpoint $checkpoint --device gpu:0
 & $layout scripts/evaluate_layout_angles.py `
   --checkpoint $checkpoint --device cuda --pages-per-dataset 10
-& $ocr scripts/run_ocr_preprocessing_ablation.py --device gpu:0 --limit-per-dataset 1
 & $ocr scripts/evaluate_end_to_end_angles.py `
   --checkpoint $checkpoint --device gpu:0 --pages-per-dataset 1
 & $ocr scripts/evaluate_unseen_coru.py `
   --checkpoint $checkpoint --device gpu:0 --limit 100
+& $ocr scripts/evaluate_private_gmail.py `
+  --layout-checkpoint $checkpoint --device gpu:0 --limit 2
 & $ocr scripts/run_integration_smoke.py --device gpu:0
-python scripts/compile_final_reports.py
-python scripts/verify_information_extraction.py --complete
+python scripts/compile_ocr_upgrade_reports.py
+& $layout scripts/compile_final_reports.py `
+  --heldout-report ocr_upgrade_locked_test_ground_truth.json
 ```
 
 Private testing has a separate command and output boundary in
 [private_testing.md](private_testing.md).
+
+The reference-token and image-to-JSON `TEST_IN_DOMAIN` commands above are
+audit records of one-time executions. The locked set has already been
+consumed; do not rerun it to choose a checkpoint, OCR profile, calibration, or
+threshold.
 
 ## Locked in-domain layout results
 
@@ -49,26 +58,47 @@ FUNSD 30) and 1,761 windows.
 
 | Metric | Raw | Calibrated/abstained |
 |---|---:|---:|
-| Entity micro-F1 | 0.9807 | 0.9813 |
-| Entity macro-F1 | 0.7290 | 0.6940 |
-| Canonical-evidence micro-F1 | 0.9792 | 0.9814 |
-| Canonical-evidence macro-F1 | 0.9749 | 0.9759 |
-| Relation micro-F1 | 0.4668 | 0.4632 |
-| Relation macro-F1 | 0.5620 | 0.5741 |
-| Composite score | 0.8538 | 0.8537 |
+| Entity micro-F1 | 0.9827 | 0.9835 |
+| Entity macro-F1 | 0.7718 | 0.7512 |
+| Canonical-evidence micro-F1 | 0.9795 | 0.9860 |
+| Relation micro-F1 | 0.5726 | 0.5603 |
 
-Document accuracy is 1.0; calibrated document coverage is 0.9756 with 1.0
-selective accuracy. Calibration improves canonical precision and overall
-entity micro-F1 but abstains on rare entity classes, reducing entity macro-F1.
-The final report therefore retains both raw and abstained values.
+Document accuracy is 1.0. Calibration improves entity and canonical-evidence
+micro-F1 while slightly lowering relation micro-F1 under abstention. The final
+report retains both raw and calibrated values.
 
 Dataset interpretation:
 
-- FATURA dominates the test and has strong entity/canonical evidence but no
+- FATURA dominates the test and has entity F1 1.0 and canonical evidence
+  0.9835 but no
   relation supervision;
-- SROIE has entity F1 0.8681 and canonical-evidence F1 0.8254;
-- FUNSD has entity F1 0.7454 and supplies the relation score (0.4668);
-- B-HEADER F1 is 0.1277 and QUESTION_ANSWER relation F1 is 0.3874.
+- SROIE has entity F1 0.8969 and canonical-evidence F1 0.8538;
+- FUNSD has entity F1 0.7559 and supplies the relation score (0.5726);
+- B-HEADER F1 is 0.4088 and QUESTION_ANSWER relation F1 is 0.4776.
+
+## Locked image-to-JSON results
+
+The selected original OCR profile and fresh LayoutXLM checkpoint processed all
+1,760 `TEST_IN_DOMAIN` pages once, with zero failures and nonempty output rate
+1.0.
+
+| Metric | Result |
+|---|---:|
+| Polygon precision / recall / F1 | 0.2780 / 0.6076 / 0.3815 |
+| Recognized-text coverage | 0.1663 |
+| CER / WER | 0.8337 / 0.9692 |
+| Critical-field exact match | 0.3496 over 11,275 fields |
+| Entity F1 | 0.0944 |
+| Relation F1 | 0.0111 |
+| Canonical-field accuracy | 0.2534 |
+| Document-type accuracy | 0.9977 |
+| Table availability | 0.9307 |
+| Mean processing time | 2.0821 seconds/page |
+
+The full locked run missed the requested OCR and end-to-end quality targets.
+No post-test component, threshold, or checkpoint change was made. The earlier
+three-page baseline is retained for provenance, but it is not a controlled
+paired comparison with this 1,760-page result.
 
 ## Layout-only angle robustness
 
@@ -79,10 +109,11 @@ Thirty balanced public test pages are evaluated at:
 ```
 
 The page and all target geometry rotate together, isolating the learned layout
-heads from OCR. Across all angles, minimum calibrated entity F1 is 0.7491,
-canonical F1 0.9360, relation F1 0.3434, and composite 0.7227. The weakest
-composite slice is 225°. Entity/canonical retention never falls below
-95.30%/98.66% of upright.
+heads from OCR. All 540 cases completed without failure. Across angles,
+calibrated entity F1 is 0.7683–0.7973, canonical F1 0.9640–0.9748, relation
+F1 0.3358–0.5553, and composite 0.7324–0.8005. Minimum retention versus
+upright is 0.9669 entity, 0.9926 canonical, 0.6144 relation, and 0.9186
+composite.
 
 ## End-to-end angle results
 
@@ -93,13 +124,13 @@ is disabled for this test and never controls OCR.
 | Metric across the 18 public angle aggregates | Range |
 |---|---:|
 | Nonempty output rate | 1.0–1.0 |
-| Recognized-text coverage | 0.4026–0.4368 |
-| WER | 0.6553–0.7790 |
-| Polygon detection F1 | 0.3330–0.3592 |
-| Entity F1 | 0.1314–0.1830 |
-| Relation F1 | 0–0.0205 |
-| Canonical-field accuracy | 0.2222–0.5556 |
-| Entity retention versus upright | 0.7413–1.0328 |
+| Recognized-text coverage | 0.3068–0.3839 |
+| WER | 0.7386–0.8540 |
+| Polygon detection F1 | 0.1707–0.1941 |
+| Entity F1 | 0.1326–0.1807 |
+| Relation F1 | 0–0.0342 |
+| Canonical-field accuracy | 0.4444–0.5556 |
+| Orientation-selection accuracy | 0.3333–1.0000 |
 
 Synthetic Thai text has 1.0 recognized-text coverage, 0 WER, a nonempty
 result, and the Thai route at all 18 angles. It proves routing/rotation
@@ -146,18 +177,19 @@ deterministic 100-page sample from its 1,261-page unseen population:
 | Nonempty OCR rate | 1.0 |
 | QA answers found in OCR | 78.53% of 4,001 |
 | Canonical exact-match accuracy | 15.68% of 523 applicable fields |
-| Mean entities / relations / non-null fields | 13.26 / 3.47 / 6.71 |
-| Mean processing time | 31.04 seconds/page |
+| Mean entities / relations / non-null fields | 13.35 / 3.28 / 6.46 |
+| Mean processing time | 25.96 seconds/page |
 
 CORU QA has answer strings but no compatible token polygons. Entity and
 relation F1 are therefore undefined rather than fabricated.
 
 ## Private and integration evidence
 
-The fixed checkpoint completed 2/2 anonymous local Gmail documents and 2 pages
-with zero failures. The public artifact contains aggregates only and explicitly
-declares no filename, OCR text, image, or per-document prediction. There is no
-private ground truth and no accuracy claim.
+The fixed checkpoint completed 2/2 anonymous local Gmail documents and pages
+with zero failures and nonempty output in 126.586 wall seconds. The public
+artifact contains aggregates only and explicitly declares no filename, path,
+OCR text, image, or per-document prediction. There is no private ground truth
+and no accuracy claim.
 
 The synthetic integration runner covers upright image, 45° image,
 general-to-Thai two-page PDF, and Thai metadata routing. Its report hashes the
@@ -168,11 +200,17 @@ schema, and independently checks semantics.
 
 ## Authoritative artifacts
 
-- `reports/final_model/final_model_card.md`
-- `reports/final_model/error_analysis.md`
+- `reports/ocr_upgrade/final_ocr_model_card.md`
+- `reports/ocr_upgrade/error_analysis.md`
+- `reports/ocr_upgrade/final_upgrade_summary.md`
+- `reports/ocr_upgrade/locked_test_{ocr,end_to_end}_metrics.json`
 - `reports/final_model/{ocr,entity,relation,field,angle,language,dataset}_metrics.json`
 - `reports/final_model/verification.json`
-- `reports/final_model/evaluations/final_test_in_domain_ground_truth.json`
+- `reports/final_model/evaluations/ocr_upgrade_locked_test_ground_truth.json`
 
 These reports are bounded academic evidence. They do not establish safety for
 automated financial, legal, identity, or other high-stakes decisions.
+
+The complete data, detector, recognizer, adaptive-component, LayoutXLM trial,
+calibration, cache, and reproduction record is
+[`OCR_UPGRADE_RELEASE_NOTES.md`](OCR_UPGRADE_RELEASE_NOTES.md).

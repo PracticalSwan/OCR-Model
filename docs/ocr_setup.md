@@ -36,6 +36,19 @@ large download, alignment job, or training run. The scripts discover Python
 through `py -3.10`; pass `-Python310 <path>` only when the Windows launcher is
 unavailable.
 
+Run the training environment verifier directly after setup:
+
+```powershell
+$train = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr-train\Scripts\python.exe'
+& $train scripts\verify_ocr_training_environment.py --device gpu:0 --write-report
+```
+
+The verifier registers the environment-local CUDA 13 and cuDNN DLL
+directories before importing Paddle. It does not depend on a setup shell's
+inherited `PATH`. The executed report passes GPU model initialization,
+FP32/O2 forward-backward-optimizer steps, save/reload, and `pip check` in
+5.141 seconds.
+
 The configured external root is:
 
 ```text
@@ -95,6 +108,18 @@ SHA-256
 `0876e624221bf0ff2d888506c7b9fa84eacc99f98394b424e81c098769d91e73`.
 It is not a claim of real-world Thai benchmark quality.
 
+The selected fresh LayoutXLM checkpoint is
+`D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`
+with `model.safetensors` SHA-256
+`f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`.
+The bound calibration SHA-256 is
+`81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`.
+
+Training-data counts, rejected trials, adaptive DPI, tiling, padding,
+recognition retries, orientation selection, and exact reproduction commands
+are recorded in
+[`OCR_UPGRADE_RELEASE_NOTES.md`](OCR_UPGRADE_RELEASE_NOTES.md).
+
 ## CPU mode
 
 Pass `--device cpu` to OCR verification/inference and `--device cpu` to the
@@ -110,6 +135,10 @@ collision.
   and that the layout worker is a subprocess.
 - Missing model/hash mismatch: rerun `download_ocr_models.py`; do not copy an
   unverified partial cache into place.
+- Direct training verifier cannot find `cublasLt64_13.dll`: confirm the command
+  uses `ie-ocr-train\Scripts\python.exe`. The verifier should record both
+  environment-local NVIDIA DLL directories; do not repair this by copying DLLs
+  into the repository.
 - CUDA unavailable: rerun the environment report and inspect driver/runtime
   probes before falling back to CPU.
 - K-Means maintenance artifacts remain in their original scikit-learn 1.8

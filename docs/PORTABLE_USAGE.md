@@ -127,6 +127,10 @@ Get-Content .\OCR_Model.zip.sha256
 
 Users and judges can download the archive and checksum from the public
 [`v1.0.0-build-week` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week).
+That Release is the historical July 21 package. The current
+`feat/domain-adapted-ocr` branch rebuilds `D:\OCR_Model` and
+`D:\OCR_Model.zip` from the selected OCR-upgrade checkpoint; it is not
+silently substituted for the published asset.
 
 The package includes the project's MIT `LICENSE` and `CONTRIBUTING.md`.
 LayoutXLM-derived weights and other third-party components retain the upstream
@@ -135,8 +139,20 @@ licenses documented in `docs/THIRD_PARTY_NOTICES.md`.
 The final layout checkpoint must have this SHA-256:
 
 ```text
-34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189
+f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180
 ```
+
+The current source checkpoint is:
+
+```text
+D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
+```
+
+The portable registry keeps the selected original detector and general
+recognizer, the accepted synthetic-only custom Thai recognizer, and explicit
+original/custom/adaptive profile metadata. The original detector and
+recognizers remain available as fallbacks. Every result records the resolved
+profile and model identities.
 
 The package keeps the original scikit-learn joblib files for provenance, but
 the display-only rotation branch loads `models/kmeans_rotation/inference_params.npz`.
@@ -160,9 +176,9 @@ schema.
   review payload.
 - The K-Means rotation zone is display-only and never controls OCR/extraction.
 - The failed exact-angle estimator remains disabled.
-- Reference-token entity F1 is 0.9813, while bounded end-to-end entity F1 is
-  0.1314–0.1830 because OCR remains the main bottleneck. Relation learning is
-  limited by FUNSD-only supervision.
+- Locked reference-token calibrated entity F1 is 0.9835, while the full
+  1,760-page locked image-to-JSON entity F1 is 0.0944 because OCR remains the
+  main bottleneck. Relation learning is limited by FUNSD-only supervision.
 - This is an academic/noncommercial model package, not a production system.
   Human review is required for financial, legal, or other consequential use.
 
