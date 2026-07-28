@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from scripts.verify_ocr_training_environment import (
+    configure_training_runtime,
     prepare_architecture_for_training,
     resolve_vendor_config_paths,
 )
@@ -65,3 +66,23 @@ def test_vendor_dictionary_path_is_resolved(tmp_path) -> None:
     assert config["Global"]["character_dict_path"] == str(
         (tmp_path / "ppocr/utils/dict/ppocrv6_dict.txt").resolve()
     )
+
+
+def test_training_runtime_registers_the_selected_environment(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    expected = [str(tmp_path / "cuda"), str(tmp_path / "cudnn")]
+    seen = []
+
+    def register(root):
+        seen.append(root)
+        return expected
+
+    monkeypatch.setattr(
+        "scripts.verify_ocr_training_environment.configure_windows_nvidia_dlls",
+        register,
+    )
+
+    assert configure_training_runtime(tmp_path) == expected
+    assert seen == [tmp_path]

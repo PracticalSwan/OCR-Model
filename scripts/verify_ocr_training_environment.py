@@ -16,6 +16,7 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.ocr.environment import configure_windows_nvidia_dlls  # noqa: E402
 from src.rotation_common import atomic_write_json, sha256_file  # noqa: E402
 
 
@@ -56,6 +57,7 @@ def main() -> int:
     vendor_root = Path(args.vendor_root).resolve()
     _require_expected_leaf(environment_root, "ie-ocr-train")
     _require_expected_leaf(vendor_root, "PaddleOCR")
+    runtime_dll_directories = configure_training_runtime(environment_root)
     vendor_commit = _git(vendor_root, "rev-parse", "HEAD")
     if vendor_commit != EXPECTED_VENDOR_COMMIT:
         raise RuntimeError(f"unexpected PaddleOCR commit: {vendor_commit}")
@@ -181,6 +183,7 @@ def main() -> int:
             "version": sys.version,
             "executable": sys.executable,
             "environment_root": environment_root.as_posix(),
+            "runtime_dll_directories": runtime_dll_directories,
         },
         "packages": package_versions,
         "paddle": {
@@ -368,6 +371,16 @@ def _require_expected_leaf(path: Path, expected: str) -> None:
         raise ValueError(f"unexpected path {path}; expected leaf {expected}")
     if not path.is_dir():
         raise FileNotFoundError(path)
+
+
+def configure_training_runtime(environment_root: Path) -> list[str]:
+    """Register the training environment's bundled CUDA DLL directories."""
+    directories = configure_windows_nvidia_dlls(environment_root)
+    if os.name == "nt" and not directories:
+        raise RuntimeError(
+            "training environment has no bundled CUDA/cuDNN DLL directories"
+        )
+    return directories
 
 
 def _git(root: Path, *args: str) -> str:
