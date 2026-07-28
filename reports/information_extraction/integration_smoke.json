@@ -2,14 +2,14 @@
   "schema_version": "1.0",
   "status": "passed",
   "generated_by": "scripts/run_integration_smoke.py",
-  "generated_at_utc": "2026-07-24T06:16:45.442025+00:00",
+  "generated_at_utc": "2026-07-28T08:50:11.871629+00:00",
   "command": [
     "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe",
     "scripts/run_integration_smoke.py",
     "--device",
     "gpu:0"
   ],
-  "source_revision": "af0816b83fde1b3fb8a25802a1967350de654812",
+  "source_revision": "e0c16bb1d4ffef15e3533a32a09fd37226da4093",
   "device": "gpu:0",
   "private_inputs_used": false,
   "source_hashes": {
@@ -19,15 +19,15 @@
     },
     "integration_verifier": {
       "path": "scripts/verify_information_extraction.py",
-      "sha256": "92ecef73a3756a6611964c4b46197889bd5cc7cdcd766055e114fc54664b2fad"
+      "sha256": "87c67c0eca0c416fd91a0d6329b345efd798eaf6d0a765c6493c73b2c95a53be"
     },
     "config": {
       "path": "config.yaml",
-      "sha256": "b03d0ae5c8ef56ccf01051f9b0e8dd8a59fd3391235db9b9de16126d61312acd"
+      "sha256": "12f857b2466342bc111b644030d66c2f6c077b8df5f4cb7b999b596d1b556543"
     },
     "output_schema": {
       "path": "schemas/inference_output.schema.json",
-      "sha256": "1781659edabd7e542605bab41832a60a51ab9ee7a8ba1dd05c3c137166792ab9"
+      "sha256": "788720d6f50bf4ca204ae8b846bf2c2b5cb40730782f78e3e67c7390d1fdb396"
     },
     "model_setup": {
       "path": "reports/ocr/model_setup.json",
@@ -35,31 +35,31 @@
     },
     "layout_training_report": {
       "path": "reports/final_model/training_summary.json",
-      "sha256": "907af7be28ef4e691811ed4363a10c1e5c2d5526979f656718121109770c9e45"
+      "sha256": "720ca6cd88290d881bbb38c2f6dada7640fee499d12f1e15956516ad4594e169"
     },
     "calibration": {
       "path": "models/multitask_calibration.json",
-      "sha256": "b1c683d3f1e1cfc4b9515bb83cf64ce455343445a553ab7525f845272b902087"
+      "sha256": "81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44"
     },
     "document_pipeline": {
       "path": "src/inference/document_pipeline.py",
-      "sha256": "300a41ec2382e741738bd360f181c4bb600ed889ca82ea99e4348a995818c4bb"
+      "sha256": "9ed3caf559a1ead3d6ab9f8cb72283b78796a88d40b90054c9b4077968e18929"
     },
     "document_io": {
       "path": "src/inference/document_io.py",
-      "sha256": "28852b82e18dd581f84f526b283da0fa7663b6713abd5192244730c7e08bcbc3"
+      "sha256": "9f3268532208e31cc3f458a8d8d1d8ac551aaabf3adbaa71481c2a6aa218a458"
     },
     "entity_worker_client": {
       "path": "src/information_extraction/entity_worker_client.py",
-      "sha256": "0097f8307e7069a839801a67588c48047fe14da8a2ca7c782dc0b8655cc30fde"
+      "sha256": "38650dd0d85e1aa1985d5ae1e9195b58622b9119046450e6ce519b635e6b7ea6"
     },
     "layout_entity_worker": {
       "path": "scripts/layout_entity_worker.py",
-      "sha256": "dd35cb43d9df0a34b902cdbce6c60fd0a99584b49c05151047c7afbf00b5f283"
+      "sha256": "99747ec9f5d2ac50e8520222da65e5dc032ff90c38d3a4db914cdf0734bcc78b"
     },
     "multitask_inference": {
       "path": "src/information_extraction/multitask_inference.py",
-      "sha256": "3385fbb3f4d017bb86dcb57bb245b3a294b2bd2994d736f255b9103b13e8686c"
+      "sha256": "adadd871ad257542ca6171203662f7a17f22dc936c81f1122cd1e577b37dd8a4"
     },
     "layoutxlm_model": {
       "path": "src/information_extraction/layoutxlm_model.py",
@@ -67,11 +67,11 @@
     },
     "ocr_pipeline": {
       "path": "src/ocr/pipeline.py",
-      "sha256": "b818a067832322098cf059e88982e2da40b73d722d4f26c42c5f556991c06e42"
+      "sha256": "5679974592679210aff50a7c3c20b668b65ee8341cf6d633fd530423847f9796"
     },
     "ocr_adapter": {
       "path": "src/ocr/paddleocr_adapter.py",
-      "sha256": "f8ab1fbe29ed44c1c8a6e74f9b30f712ad493daa14379082c714640005ed7815"
+      "sha256": "4fd78dd9a0be271d4b2ab535a27afde1c3cf27246da91d279032dfaa8f53d585"
     },
     "language_router": {
       "path": "src/ocr/language_router.py",
@@ -84,19 +84,19 @@
   },
   "checkpoint_artifacts": [
     {
-      "path": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\final\\model.safetensors",
+      "path": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\ocr_upgrade_fresh_b_noise\\model.safetensors",
       "size_bytes": 1113657488,
-      "sha256": "34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189"
+      "sha256": "f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180"
     },
     {
-      "path": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\final\\config.json",
-      "size_bytes": 5416,
-      "sha256": "68046da6e64032264df40c8110b3b6eeb06fb769f761ad8e02c2bc2627841766"
+      "path": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\ocr_upgrade_fresh_b_noise\\config.json",
+      "size_bytes": 5413,
+      "sha256": "9f1519706643ad4434a3923db1a9b13b5a50e6d798c5e500cddaf311936a915e"
     },
     {
-      "path": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\final\\training_state.json",
-      "size_bytes": 894,
-      "sha256": "57011964b71a49c11bb1ad796f651cb4c737d28e0410a79ee1c75f14aae2ad0f"
+      "path": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\ocr_upgrade_fresh_b_noise\\training_state.json",
+      "size_bytes": 1126,
+      "sha256": "a5c6ac04ae95295038b033c56dc13d04439c81138445c7038464990fee5394f3"
     }
   ],
   "fixture_artifacts": {
@@ -113,7 +113,7 @@
     "mixed_language_multipage_pdf": {
       "path": "D:\\CSX4201\\vision-info-extraction-assets\\generated\\integration_smoke\\fixtures\\mixed_language_two_page.pdf",
       "size_bytes": 98605,
-      "sha256": "2a59fa27778a4b5b96be55a8f1abda5323c3117b9397b99fdd32686224c1d51f"
+      "sha256": "30c94c2348fd9a88fef7991b9d05f2947c44e3ed687a66e3ea62c74d7f0c8fc9"
     },
     "thai_auto_with_metadata_hint": {
       "path": "D:\\CSX4201\\vision-info-extraction-assets\\generated\\integration_smoke\\fixtures\\thai_receipt.png",
@@ -124,23 +124,23 @@
   "output_artifacts": {
     "unknown_upright_image": {
       "path": "D:\\CSX4201\\vision-info-extraction-assets\\generated\\integration_smoke\\outputs\\unknown_upright_image.json",
-      "size_bytes": 24568,
-      "sha256": "5a0ba0d527d7cde0a147250e5a42daf8122fbccad51204a79e35102e995a81a7"
+      "size_bytes": 24354,
+      "sha256": "5320fd217aa63a9aeef247b58bc186c87c87eb4cdcfa4e31aa44b8579fbc1d30"
     },
     "unknown_45_degree_image": {
       "path": "D:\\CSX4201\\vision-info-extraction-assets\\generated\\integration_smoke\\outputs\\unknown_45_degree_image.json",
-      "size_bytes": 23198,
-      "sha256": "d2c94498ab7486fe2a7965b6fc3b337b04ed3ca84bce6b13d67e167992626ce5"
+      "size_bytes": 25625,
+      "sha256": "f04a0851f540d21e7d4edb69d5730ddff480fc9ebe7e861d7c9e3468acdc9bd2"
     },
     "mixed_language_multipage_pdf": {
       "path": "D:\\CSX4201\\vision-info-extraction-assets\\generated\\integration_smoke\\outputs\\mixed_language_multipage_pdf.json",
-      "size_bytes": 40527,
-      "sha256": "5a207b28ca88a874986cf46672cdce99f3b6b8e99b762c233c87760bc4d2b2bf"
+      "size_bytes": 42698,
+      "sha256": "ba9e46c179f564283f294beaa75ff094fd6fd93b9ed804d4f7715b7b0a2ca10a"
     },
     "thai_auto_with_metadata_hint": {
       "path": "D:\\CSX4201\\vision-info-extraction-assets\\generated\\integration_smoke\\outputs\\thai_auto_with_metadata_hint.json",
-      "size_bytes": 20437,
-      "sha256": "44bf82292e18a93d37d4db83f3b51c1b75cebd3b48f25ff9b9d2095df5f27e1e"
+      "size_bytes": 21961,
+      "sha256": "48ccf2a626d0cc1044e67dc4b18ff58c10dfadeb92951b4a278a29fa59a59430"
     }
   },
   "cases": [
@@ -162,7 +162,7 @@
         4
       ],
       "entities": [
-        8
+        6
       ],
       "key_value_pairs": [
         3
@@ -196,7 +196,7 @@
         4
       ],
       "entities": [
-        6
+        7
       ],
       "key_value_pairs": [
         3
@@ -234,7 +234,7 @@
         2
       ],
       "entities": [
-        8,
+        6,
         2
       ],
       "key_value_pairs": [
@@ -269,7 +269,7 @@
         2
       ],
       "entities": [
-        3
+        2
       ],
       "key_value_pairs": [
         1
