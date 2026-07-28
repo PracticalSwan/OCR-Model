@@ -4,9 +4,9 @@
 
 The checkpoint is a LayoutXLM-initialized multilingual text-plus-normalized-2D-layout encoder with trained entity, document-type, canonical-evidence, and real relation heads. PaddleOCR runs in an isolated process path with exact general and Thai recognizers. The K-Means model is display-only.
 
-Checkpoint: `D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final`.
-Checkpoint model SHA-256: `34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189`.
-Training: 4 completed epochs, 7812 optimizer steps; best epoch 4 with selection score 0.8241600322529928.
+Checkpoint: `D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`.
+Checkpoint model SHA-256: `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`.
+Training: 4 completed epochs, 12556 optimizer steps; best epoch 4 with selection score 0.8433429260632851.
 License inherited from the base checkpoint: `CC-BY-NC-SA-4.0`.
 
 ## Training data and privacy
@@ -16,10 +16,10 @@ Private Gmail documents are operational test only and never train, calibrate, or
 
 ## Measured quality
 
-Held-out entity micro-F1: raw 0.9806603808577088; calibrated/abstained 0.9812706023374288; raw macro-F1 0.7290191953730021.
-Held-out relation F1: raw 0.4667681380010147; calibrated/abstained 0.46324007807417045.
-Held-out canonical evidence F1: raw 0.9792278412180533; calibrated/abstained 0.9814241915569551.
-Bounded upright end-to-end OCR text coverage: 0.4027889972234873; WER: 0.6998877146245568.
+Held-out entity micro-F1: raw 0.9826732121770259; calibrated/abstained 0.983477623768298; raw macro-F1 0.7718406421253087.
+Held-out relation F1: raw 0.5725853094274147; calibrated/abstained 0.5602787456445993.
+Held-out canonical evidence F1: raw 0.9795157780195866; calibrated/abstained 0.9860346782445176.
+Bounded upright end-to-end OCR text coverage: 0.31315974665728363; WER: 0.8191721132897604.
 CORU unseen-domain answer-text recall: 0.7853036740814796 on 100 sampled pages.
 
 ## Intended use

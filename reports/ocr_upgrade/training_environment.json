@@ -10,16 +10,20 @@
   "checkpoint_sha256": "7eb0878c392e410fb3ad181c131fbf4469821b6ca6130cb5d522bc92b0c1a06e",
   "calibration_sha256": null,
   "configuration_hash": "452fe7e39f2624465b2753d42808b7abd5a5aa3490c62e9cb90eb8206a489860",
-  "source_commit": "9ffe65a9927861cd01663ae51264e54dcc4b42e7",
+  "source_commit": "a2e03b1df95366b88561148debd419c7218afdef",
   "device": "gpu:0",
   "sample_count": 1,
   "failure_count": 0,
-  "duration_seconds": 5.969000000040978,
+  "duration_seconds": 5.141000000061467,
   "private_row_count": 0,
   "python": {
     "version": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
     "executable": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr-train\\Scripts\\python.exe",
-    "environment_root": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr-train"
+    "environment_root": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr-train",
+    "runtime_dll_directories": [
+      "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr-train\\Lib\\site-packages\\nvidia\\cu13\\bin\\x86_64",
+      "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr-train\\Lib\\site-packages\\nvidia\\cudnn\\bin"
+    ]
   },
   "packages": {
     "paddlepaddle-gpu": "3.3.0",

@@ -1,110 +1,111 @@
 {
   "schema_version": "1.0",
   "split": "test_in_domain",
-  "canonical_evidence_token_f1": 0.9792278412180533,
-  "canonical_macro_f1": 0.9749224666154489,
+  "canonical_evidence_token_f1": 0.9795157780195866,
+  "canonical_macro_f1": 0.9736160296075934,
   "canonical_counts": {
-    "tp": 36016,
-    "fp": 958,
-    "fn": 570
+    "tp": 36007,
+    "fp": 927,
+    "fn": 579
   },
   "canonical_per_class": {
     "organization_name": {
-      "tp": 3797,
-      "fp": 180,
-      "fn": 105,
-      "f1": 0.9638278969412362,
+      "tp": 3804,
+      "fp": 217,
+      "fn": 98,
+      "f1": 0.9602423324498296,
       "support": 3902
     },
     "document_title": {
-      "tp": 729,
-      "fp": 96,
-      "fn": 1,
-      "f1": 0.9376205787781351,
+      "tp": 728,
+      "fp": 127,
+      "fn": 2,
+      "f1": 0.9186119873817035,
       "support": 730
     },
     "date": {
-      "tp": 4299,
-      "fp": 69,
-      "fn": 51,
-      "f1": 0.9862353750860289,
+      "tp": 4271,
+      "fp": 54,
+      "fn": 79,
+      "f1": 0.9846685878962536,
       "support": 4350
     },
     "invoice_number": {
-      "tp": 3059,
-      "fn": 39,
-      "fp": 60,
-      "f1": 0.9840759208621521,
+      "tp": 3027,
+      "fn": 71,
+      "fp": 67,
+      "f1": 0.9777131782945736,
       "support": 3098
     },
     "subtotal": {
       "tp": 2571,
+      "fp": 23,
       "fn": 10,
-      "fp": 15,
-      "f1": 0.9951616024772595,
+      "f1": 0.9936231884057971,
       "support": 2581
     },
     "tax": {
       "tp": 2187,
-      "fp": 18,
+      "fp": 17,
       "fn": 5,
-      "f1": 0.9947691607914487,
+      "f1": 0.9949954504094631,
       "support": 2192
     },
     "total_amount": {
-      "tp": 2953,
-      "fp": 188,
-      "fn": 85,
-      "f1": 0.9558180935426445,
+      "tp": 2954,
+      "fn": 84,
+      "fp": 140,
+      "f1": 0.9634703196347032,
       "support": 3038
     },
     "address": {
-      "fp": 297,
-      "fn": 213,
-      "tp": 14628,
-      "f1": 0.9828663575891957,
+      "fp": 268,
+      "fn": 187,
+      "tp": 14654,
+      "f1": 0.9847125625776971,
       "support": 14841
     },
     "email": {
-      "tp": 1793,
-      "fp": 35,
-      "fn": 61,
-      "f1": 0.9739272134709397,
+      "tp": 1811,
+      "fp": 14,
+      "fn": 43,
+      "f1": 0.9845066594183202,
       "support": 1854
     }
   },
-  "canonical_calibrated_f1": 0.9814241915569551,
-  "canonical_calibrated_macro_f1": 0.9759047129630157,
+  "canonical_calibrated_f1": 0.9860346782445176,
+  "canonical_calibrated_macro_f1": 0.9850703511885217,
   "canonical_calibrated_counts": {
-    "tp": 35372,
-    "fp": 125,
-    "fn": 1214
+    "tp": 35656,
+    "fp": 80,
+    "fn": 930
   },
   "canonical_calibrated_per_class": {
     "organization_name": {
-      "tp": 3729,
-      "fn": 173,
-      "fp": 14,
-      "f1": 0.9755395683453237,
+      "tp": 3767,
+      "fp": 17,
+      "fn": 135,
+      "f1": 0.9802237835024721,
       "support": 3902
     },
     "document_title": {
-      "tp": 717,
-      "fn": 13,
-      "f1": 0.9910158949550795,
+      "tp": 708,
+      "fn": 22,
+      "fp": 4,
+      "f1": 0.9819694868238558,
       "support": 730
     },
     "date": {
-      "tp": 4168,
-      "fn": 182,
-      "f1": 0.9786334820380371,
+      "tp": 4190,
+      "fn": 160,
+      "f1": 0.9812646370023419,
       "support": 4350
     },
     "invoice_number": {
-      "tp": 3037,
-      "fn": 61,
-      "fp": 4,
-      "f1": 0.9894119563446816,
+      "tp": 2995,
+      "fn": 103,
+      "fp": 14,
+      "f1": 0.9808416571147863,
       "support": 3098
     },
     "subtotal": {
@@ -120,23 +121,24 @@
       "support": 2192
     },
     "total_amount": {
-      "tp": 2902,
-      "fn": 136,
-      "fp": 55,
-      "f1": 0.9681401167639699,
+      "tp": 2879,
+      "fn": 159,
+      "fp": 23,
+      "f1": 0.9693602693602693,
       "support": 3038
     },
     "address": {
-      "fp": 52,
-      "fn": 280,
-      "tp": 14561,
-      "f1": 0.9887281863244382,
+      "fp": 19,
+      "fn": 285,
+      "tp": 14556,
+      "f1": 0.9896654881697036,
       "support": 14841
     },
     "email": {
-      "tp": 1503,
-      "fn": 351,
-      "f1": 0.8954423592493298,
+      "tp": 1806,
+      "fn": 48,
+      "fp": 3,
+      "f1": 0.9860769860769861,
       "support": 1854
     }
   },
@@ -144,65 +146,65 @@
   "unseen_coru_canonical_field_accuracy": 0.15678776290630975,
   "calibration": {
     "thresholds": {
-      "entity": 0.5211008191108704,
-      "canonical": 0.9263173937797546,
-      "relation": 0.5719664692878723,
-      "document": 0.9999979734420776
+      "entity": 0.548886239528656,
+      "canonical": 0.9187789559364319,
+      "relation": 0.5998664498329163,
+      "document": 1.0
     },
     "canonical_field_thresholds": {
-      "organization_name": 0.9454855918884277,
-      "document_title": 0.8902900218963623,
-      "date": 0.9396809339523315,
-      "invoice_number": 0.6942762732505798,
-      "subtotal": 0.9603718519210815,
-      "tax": 0.8013505339622498,
-      "total_amount": 0.6891745924949646,
-      "address": 0.713550865650177,
-      "email": 0.9435495138168335
+      "organization_name": 0.924386203289032,
+      "document_title": 0.8911586999893188,
+      "date": 0.924077033996582,
+      "invoice_number": 0.7078353762626648,
+      "subtotal": 0.9982343912124634,
+      "tax": 0.7952104806900024,
+      "total_amount": 0.8476752042770386,
+      "address": 0.851096510887146,
+      "email": 0.49863362312316895
     },
     "metrics": {
       "entity": {
-        "support": 56141,
-        "temperature": 1.2236554622650146,
-        "threshold": 0.5211008191108704,
-        "nll_before": 0.05977180600166321,
-        "nll_after": 0.05827336013317108,
-        "ece_before": 0.0031689788697419202,
-        "ece_after": 0.003323545283470802,
-        "positive_f1_without_abstention": 0.9741422756348129,
-        "positive_f1_with_abstention": 0.9776827737684343
+        "support": 54049,
+        "temperature": 1.095852255821228,
+        "threshold": 0.548886239528656,
+        "nll_before": 0.03225197643041611,
+        "nll_after": 0.032024916261434555,
+        "ece_before": 0.0017888051458030854,
+        "ece_after": 0.0012927199509955769,
+        "positive_f1_without_abstention": 0.9853074551061128,
+        "positive_f1_with_abstention": 0.987830108312036
       },
       "canonical": {
-        "support": 50365,
-        "temperature": 1.368909239768982,
-        "threshold": 0.9263173937797546,
-        "nll_before": 0.0890633761882782,
-        "nll_after": 0.08041293174028397,
-        "ece_before": 0.010628900016820469,
-        "ece_after": 0.007311418179152962,
-        "positive_f1_without_abstention": 0.9640441438234247,
-        "positive_f1_with_abstention": 0.9766237216097755
+        "support": 48430,
+        "temperature": 1.2955056428909302,
+        "threshold": 0.9187789559364319,
+        "nll_before": 0.07055006921291351,
+        "nll_after": 0.06514939665794373,
+        "ece_before": 0.010240105136647434,
+        "ece_after": 0.006644305884653564,
+        "positive_f1_without_abstention": 0.9670518322878838,
+        "positive_f1_with_abstention": 0.9823921051742202
       },
       "relation": {
-        "support": 4395,
-        "temperature": 0.7229929566383362,
-        "threshold": 0.5719664692878723,
-        "nll_before": 0.33560431003570557,
-        "nll_after": 0.3299521803855896,
-        "ece_before": 0.030985322774338117,
-        "ece_after": 0.01450558405144901,
-        "positive_f1_without_abstention": 0.47455386649041637,
-        "positive_f1_with_abstention": 0.5029436501261564
+        "support": 3157,
+        "temperature": 0.666103720664978,
+        "threshold": 0.5998664498329163,
+        "nll_before": 0.19786271452903748,
+        "nll_after": 0.19173815846443176,
+        "ece_before": 0.025906198474852583,
+        "ece_after": 0.005919840702498531,
+        "positive_f1_without_abstention": 0.5923836389280677,
+        "positive_f1_with_abstention": 0.605475040257649
       },
       "document": {
-        "support": 708,
-        "temperature": 0.5326269865036011,
-        "threshold": 0.9999979734420776,
-        "nll_before": 0.005357906688004732,
-        "nll_after": 0.0037586467806249857,
-        "ece_before": 0.004220776470367569,
-        "ece_after": 0.00235864823147399,
-        "coverage": 0.901129961013794,
+        "support": 653,
+        "temperature": 0.2499999850988388,
+        "threshold": 1.0,
+        "nll_before": 1.89106631296454e-05,
+        "nll_after": 0.0,
+        "ece_before": 1.890690366856962e-05,
+        "ece_after": 0.0,
+        "coverage": 1.0,
         "selective_accuracy": 1.0,
         "class_count": 4
       }
