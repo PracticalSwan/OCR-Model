@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
-  "generated_at_utc": "2026-07-24T10:56:53.262175+00:00",
-  "source_commit": "f5a39ca638712ef907c6d20dda0b0ce35f5e52ae",
+  "generated_at_utc": "2026-07-28T10:58:19.352734+00:00",
+  "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
   "defaults": {
     "detector": "original",
     "general_recognizer": "original",
@@ -528,7 +528,10 @@
       "source_commit": "45b6bac5615e053fdb179d5c780fafb504abf1fb",
       "vendor_commit": "b03f46425e8ff4442b268ce449e3eef758146cd4",
       "private_row_count": 0,
-      "claim_boundary": null
+      "claim_boundary": null,
+      "acceptance_report": "reports/ocr_upgrade/recognizer_acceptance.json",
+      "acceptance_evidence_sha256": "c72aaee81fa26ad3a5068a8a24f6f8be43e71db1822e7d1ea1a82808ad475cb9",
+      "acceptance_candidate_report_sha256": "2dba4cdad09164212c20f86cbce4120adf2c16a0986934e6a2a5a2e28e1f1673"
     },
     "th_PP-OCRv5_mobile_rec_csx4201_v1": {
       "available": true,
@@ -619,5 +622,5 @@
     }
   },
   "private_row_count": 0,
-  "configuration_sha256": "47cb73949742c99587574ae30bf67ec91f276ca3907d6c2d6ebeb8b626bce365"
+  "configuration_sha256": "bbe3a234e478cd9574a73d8ff25ba2bdde860f0acdd0d554b1bd753f211305c1"
 }

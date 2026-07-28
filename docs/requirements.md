@@ -51,7 +51,7 @@ cannot control or block OCR/extraction.
 
 | ID | Requirement | Final validated state |
 |---|---|---|
-| SF-001 | Preserve at least 15 GiB free on C: and D: at materialization/training gates. | Pass; final complete verifier records more than 43/362 GiB free. |
+| SF-001 | Preserve at least 15 GiB free on C: and D: at materialization/training gates. | Pass; after fresh portable setup C: had 23.71 GiB and D: 391.685 GiB free. |
 | SF-002 | Keep large assets below the configured D: root. | Pass for environments, caches, examples, checkpoint, generated and private output. |
 | SF-003 | Detect incomplete/hash-mismatched OCR artifacts. | Pass in registry, downloader, verifier, and tests. |
 | SF-004 | Isolate Paddle CUDA from CUDA PyTorch on Windows. | Pass with persistent subprocess inference and separate environment partitions. |

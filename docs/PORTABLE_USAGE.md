@@ -132,6 +132,24 @@ That Release is the historical July 21 package. The current
 `D:\OCR_Model.zip` from the selected OCR-upgrade checkpoint; it is not
 silently substituted for the published asset.
 
+The locally verified branch archive was built from clean commit
+`fcae32edc193ff6574bf99362da0e2368d5ef464`. It is 1,159,061,897 bytes
+with SHA-256:
+
+```text
+d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746
+```
+
+Its sidecar matches, its 181 ZIP entries contain no duplicate or traversal
+path, and its package privacy audit passes. A fresh package-local CPU setup
+passed the doctor probe and real image, rotated-image, two-page PDF, custom
+Thai, adaptive-profile, JSON Schema, and visualization checks. The package
+also passed a GPU image run using the existing verified environments, with
+stable semantic parity against CPU. The GUI returned HTTP 200 from its
+loopback-only launch. Machine-local `.runtime`, `runtime.local.json`, and
+outputs are not part of the clean ZIP. Executed evidence is
+`reports/ocr_upgrade/portable_verification.json` in the source repository.
+
 The package includes the project's MIT `LICENSE` and `CONTRIBUTING.md`.
 LayoutXLM-derived weights and other third-party components retain the upstream
 licenses documented in `docs/THIRD_PARTY_NOTICES.md`.

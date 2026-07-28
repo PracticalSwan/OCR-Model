@@ -162,6 +162,11 @@ class ModelRegistry:
                     raise OCRModelMismatch(
                         f"OCR registry entry {model_id} has invalid role/variant"
                     )
+                if (
+                    variant == "custom"
+                    and raw.get("accepted") is not True
+                ):
+                    continue
                 upstream = str(raw.get("upstream_base", ""))
                 if upstream not in REQUIRED_MODEL_NAMES:
                     raise OCRModelMismatch(
@@ -322,6 +327,7 @@ def _select_model(
             artifact.variant == "custom"
             and artifact.role == role
             and (language is None or artifact.language.casefold().startswith(language))
+            and artifact.registry_metadata.get("accepted") is True
         ):
             candidates[artifact.name] = artifact
     if not candidates:

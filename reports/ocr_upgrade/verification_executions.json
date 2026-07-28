@@ -2,18 +2,365 @@
   "schema_version": "1.0",
   "checks": [
     {
+      "name": "all_original_tests",
+      "command": "python -m pytest -q",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
+      "timestamp": "2026-07-28T11:13:55.971256+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "af05b39d7d8ce88cb3f68fc86163b0bdac7944719d2966fa550b014d106db6b2"
+      },
+      "detail": {}
+    },
+    {
+      "name": "all_new_ocr_tests",
+      "command": "$changedTests = git diff --name-only af0816b -- tests; python -m pytest -q @changedTests",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
+      "timestamp": "2026-07-28T11:13:56.372514+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "af05b39d7d8ce88cb3f68fc86163b0bdac7944719d2966fa550b014d106db6b2"
+      },
+      "detail": {}
+    },
+    {
+      "name": "python_compilation",
+      "command": "python -m compileall -q src scripts tests",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
+      "timestamp": "2026-07-28T11:13:56.845514+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "af05b39d7d8ce88cb3f68fc86163b0bdac7944719d2966fa550b014d106db6b2"
+      },
+      "detail": {}
+    },
+    {
+      "name": "ocr_training_environment_verification",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr-train/Scripts/python.exe scripts/verify_ocr_training_environment.py --device gpu:0 --write-report",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/training_environment.json",
+      "timestamp": "2026-07-28T10:39:44.455696+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "b388a78e56c76edfea500e5b39eeb02bdc3618255b0ef60bc6798dcd696329e5"
+      },
+      "detail": {}
+    },
+    {
+      "name": "model_download_verification",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/download_ocr_models.py",
+      "status": "passed",
+      "evidence_path": "reports/ocr/model_setup.json",
+      "timestamp": "2026-07-28T10:39:44.982373+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "1c5d0bea59b95a799a95a1c27bd7a1504c55777645200a09344fceecb13ac2cf"
+      },
+      "detail": {}
+    },
+    {
+      "name": "detector_export_reload_verification",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/verify_ocr_models.py --device gpu:0",
+      "status": "passed",
+      "evidence_path": "reports/ocr/model_verification.json",
+      "timestamp": "2026-07-28T10:39:45.606464+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "53a2e70962f675d9f7e333905b90ae707f891b03e8e459209542d2ceb906e1c0"
+      },
+      "detail": {}
+    },
+    {
+      "name": "recognizer_export_reload_verification",
+      "command": "python scripts/compile_ocr_trial_reports.py --general-custom-report reports/ocr_upgrade/recognizer_trials/rec_general_real.json --general-custom-metadata D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade/general_recognizer/rec_general_real/run_metadata.json",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/recognizer_acceptance.json",
+      "timestamp": "2026-07-28T11:13:57.221027+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "c72aaee81fa26ad3a5068a8a24f6f8be43e71db1822e7d1ea1a82808ad475cb9"
+      },
+      "detail": {}
+    },
+    {
+      "name": "thai_model_verification",
+      "command": "D:/OCR_Model/run.cmd --input <safe-thai-image> --output <output> --device cpu --ocr-profile custom",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:46.709341+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
       "name": "benchmark_verification",
       "command": "python scripts/verify_ocr_benchmark.py",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/benchmark_summary.json",
-      "timestamp": "2026-07-26T15:16:31.741604+00:00",
+      "timestamp": "2026-07-28T10:39:47.338645+00:00",
       "relevant_hashes": {
-        "source_commit": "107cf5f49f6dc8bfcaf3c2fec0d169cf9faacc26",
-        "evidence_sha256": "536db7f7af86e133d909200e235bacc0d83f91281735f794a38ee32c6c914532",
-        "manifest_sha256": "1786af155d1c2c3e69224c87f1885da3a62ef59617d7d57ff4d7d4bea661e3ec"
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "536db7f7af86e133d909200e235bacc0d83f91281735f794a38ee32c6c914532"
+      },
+      "detail": {}
+    },
+    {
+      "name": "split_leakage_verification",
+      "command": "python scripts/verify_rotation_data.py --profile full --complete --portable; D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/verify_ie_annotations.py",
+      "status": "passed",
+      "evidence_path": "reports/verification/rotation_verification.json",
+      "timestamp": "2026-07-28T10:39:47.825099+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "ba03b8681ebc417eed42a3a5a44697f904a66d1d42db93e22e90b87d41631096"
+      },
+      "detail": {}
+    },
+    {
+      "name": "storage_verification",
+      "command": "verify_information_extraction.py storage reserve; portable post-setup storage check",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T11:17:37.935282+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "cache_provenance_verification",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/verify_information_extraction.py",
+      "status": "passed",
+      "evidence_path": "reports/final_model/model_dataset_final_summary.json",
+      "timestamp": "2026-07-28T10:39:49.578733+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "7a2d6b0c5dacbab1f4c6d2b38caad5ab7ef2a442da66545909cedfd98c1c5dfb"
+      },
+      "detail": {}
+    },
+    {
+      "name": "original_profile_inference",
+      "command": "D:/OCR_Model/run.cmd --input <safe-image> --output <output> --device cpu --ocr-profile original",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:50.212336+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "custom_profile_inference",
+      "command": "D:/OCR_Model/run.cmd --input <safe-thai-image> --output <output> --device cpu --ocr-profile custom",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:50.778151+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "adaptive_profile_inference",
+      "command": "D:/OCR_Model/run.cmd --input <safe-image> --output <output> --device cpu --ocr-profile adaptive",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:51.364556+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "image_inference",
+      "command": "D:/OCR_Model/run.cmd --input <safe-image> --output <output> --device cpu --ocr-profile original --save-visualization",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:51.878223+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "pdf_inference",
+      "command": "D:/OCR_Model/run.cmd --input <safe-pdf> --output <output> --device cpu --ocr-profile original --save-visualization",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:52.379650+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "multipage_inference",
+      "command": "D:/OCR_Model/run.cmd --input <safe-two-page-pdf> --output <output> --device cpu --ocr-profile original --save-visualization",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:52.980267+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "rotated_inference",
+      "command": "D:/OCR_Model/run.cmd --input <safe-45-degree-image> --output <output> --device cpu --ocr-profile original --save-visualization",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:53.710419+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "thai_integration_inference",
+      "command": "D:/OCR_Model/run.cmd --input <safe-thai-image> --output <output> --device cpu --ocr-profile custom --save-visualization",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:39:54.530713+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+      },
+      "detail": {}
+    },
+    {
+      "name": "unknown_document_inference",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/run_integration_smoke.py --device gpu:0 --model-checkpoint D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise",
+      "status": "passed",
+      "evidence_path": "reports/information_extraction/integration_smoke.json",
+      "timestamp": "2026-07-28T11:13:57.716911+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "8d3e3c80190e0cc023d819326958141bda74f2fec8a81e48383c0c7f6897b262"
+      },
+      "detail": {}
+    },
+    {
+      "name": "layoutxlm_checkpoint_reload",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-layout/Scripts/python.exe -m pytest -q tests/test_layoutxlm_model.py tests/test_multitask_layoutxlm_model.py",
+      "status": "passed",
+      "evidence_path": "reports/final_model/verification.json",
+      "timestamp": "2026-07-28T10:39:56.638233+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "fd1bc3aa767fc49c4ac628e5eedb48a2a892ae4a81672021eda4d8e3c2ed9228"
+      },
+      "detail": {}
+    },
+    {
+      "name": "calibration_verification",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-layout/Scripts/python.exe scripts/calibrate_multitask_model.py --profile final --checkpoint D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise --manifest data/metadata/final_model_dataset_manifest_ocr_v2.csv --device cuda --ocr-profile original --streams ground_truth paddleocr --output models/multitask_calibration.json",
+      "status": "passed",
+      "evidence_path": "reports/final_model/calibration_final.json",
+      "timestamp": "2026-07-28T10:39:57.426779+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44"
+      },
+      "detail": {}
+    },
+    {
+      "name": "locked_evaluation",
+      "command": "ONE-TIME LOCKED: evaluate_multitask_model.py test_in_domain ground_truth; evaluate_locked_ocr_upgrade.py",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/locked_test_run.json",
+      "timestamp": "2026-07-28T10:39:58.151641+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "4b9322a7324153d5cec41cfc6122fc2bd80cabd75e3a79e4fdd37095b0519be3"
+      },
+      "detail": {}
+    },
+    {
+      "name": "coru_evaluation",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/evaluate_unseen_coru.py --checkpoint D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise --device gpu:0 --limit 100",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/unseen_coru_metrics.json",
+      "timestamp": "2026-07-28T10:39:58.861968+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "6cd7402ffc5c2cdfcb9429edd122f8ae4d8e07fe845a8ae1dd0ff56bd9aa0adf"
+      },
+      "detail": {}
+    },
+    {
+      "name": "private_aggregate_operational_test",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/evaluate_private_gmail.py --layout-checkpoint D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise --device gpu:0 --limit 2",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/private_aggregate.json",
+      "timestamp": "2026-07-28T10:39:59.602429+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "9f908dde6e8a84c291939bf4565571fc976be0e63967f810a20382b0d2ef248e"
+      },
+      "detail": {}
+    },
+    {
+      "name": "schema_verification",
+      "command": "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/run_integration_smoke.py --device gpu:0 --model-checkpoint D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise",
+      "status": "passed",
+      "evidence_path": "reports/information_extraction/integration_smoke.json",
+      "timestamp": "2026-07-28T11:13:58.075706+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "8d3e3c80190e0cc023d819326958141bda74f2fec8a81e48383c0c7f6897b262"
+      },
+      "detail": {}
+    },
+    {
+      "name": "privacy_scan",
+      "command": "verify_information_extraction.py publication scan; inspect all staged files and ignored private boundaries",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/git_staged_file_scan.json",
+      "timestamp": "2026-07-28T11:17:38.284390+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "be44f09c72b5622595f1e368f6e244a4fd64c6b4c9dc0750bd814973cd94fed1"
+      },
+      "detail": {}
+    },
+    {
+      "name": "git_staged_file_scan",
+      "command": "git status --short --ignored; git diff --cached --name-status; git diff --cached --check; inspect all 28 staged files, sizes, secrets, and private boundaries",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/git_staged_file_scan.json",
+      "timestamp": "2026-07-28T11:16:42.853540+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "be44f09c72b5622595f1e368f6e244a4fd64c6b4c9dc0750bd814973cd94fed1"
+      },
+      "detail": {}
+    },
+    {
+      "name": "portable_package_verification",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File D:/OCR_Model/setup_windows.ps1 -Device cpu; D:/OCR_Model/run.cmd <safe fixtures>",
+      "status": "passed",
+      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "timestamp": "2026-07-28T10:40:02.173925+00:00",
+      "relevant_hashes": {
+        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
       },
       "detail": {}
     }
   ],
-  "generated_at_utc": "2026-07-26T15:16:31.741619+00:00"
+  "generated_at_utc": "2026-07-28T11:17:38.284411+00:00"
 }

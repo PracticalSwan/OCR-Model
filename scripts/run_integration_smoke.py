@@ -30,6 +30,33 @@ RUNNER_PATH = PROJECT_ROOT / "scripts" / "run_integration_smoke.py"
 DEFAULT_REPORT = PROJECT_ROOT / "reports" / "information_extraction" / "integration_smoke.json"
 
 
+def _command_record(
+    *,
+    config_path: Path,
+    device: str,
+    model_setup_path: Path,
+    checkpoint: Path,
+    artifact_root: Path,
+    output_path: Path,
+) -> list[str]:
+    return [
+        str(Path(sys.executable).resolve()),
+        "scripts/run_integration_smoke.py",
+        "--config",
+        str(config_path),
+        "--device",
+        device,
+        "--model-setup",
+        str(model_setup_path),
+        "--model-checkpoint",
+        str(checkpoint),
+        "--artifact-root",
+        str(artifact_root),
+        "--output",
+        str(output_path),
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
@@ -141,17 +168,20 @@ def main() -> int:
         raise FileNotFoundError(f"integration provenance inputs are missing: {missing}")
 
     passed = all(all(case["assertions"].values()) for case in cases)
+    output_path = Path(args.output).resolve()
     report = {
         "schema_version": "1.0",
         "status": "passed" if passed else "failed",
         "generated_by": "scripts/run_integration_smoke.py",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "command": [
-            str(Path(sys.executable).resolve()),
-            "scripts/run_integration_smoke.py",
-            "--device",
-            args.device,
-        ],
+        "command": _command_record(
+            config_path=config_path,
+            device=args.device,
+            model_setup_path=model_setup_path,
+            checkpoint=checkpoint,
+            artifact_root=artifact_root,
+            output_path=output_path,
+        ),
         "source_revision": _git_revision(),
         "device": args.device,
         "private_inputs_used": False,
@@ -173,7 +203,7 @@ def main() -> int:
             "The 45-degree case requires useful output; exact correction-angle quality is evaluated separately.",
         ],
     }
-    atomic_write_json(Path(args.output).resolve(), report)
+    atomic_write_json(output_path, report)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if passed else 1
 

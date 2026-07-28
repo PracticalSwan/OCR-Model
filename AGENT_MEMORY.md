@@ -343,4 +343,14 @@
   0.9692, entity F1 0.0944). CORU completed 100/100 unseen pages and the
   bounded two-document private aggregate remained content-free. Documentation
   now separates this branch evidence from the historical July 21 public
-  Release.
+  Release. The locally verified branch archive was built from clean commit
+  `fcae32edc193ff6574bf99362da0e2368d5ef464`; it is 1,159,061,897 bytes with
+  SHA-256
+  `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
+  Fresh CPU setup plus CPU/GPU image, rotated-image, PDF, custom Thai,
+  adaptive, schema, visualization, fallback, privacy, archive, and GUI probes
+  pass. The archive is local and has not replaced the historical public
+  Release. The late independent review found no blocker and one medium
+  acceptance-control defect; registry construction and runtime selection now
+  refuse the rejected custom general recognizer before path/hash loading using
+  hash-bound acceptance evidence and focused regression tests.

@@ -1,0 +1,166 @@
+{
+  "schema_version": "1.0",
+  "status": "passed",
+  "generated_at_utc": "2026-07-28T10:20:54.6760452Z",
+  "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+  "source_tree_dirty_at_build": false,
+  "package": {
+    "directory": "D:/OCR_Model",
+    "archive": "D:/OCR_Model.zip",
+    "archive_size_bytes": 1159061897,
+    "archive_sha256": "d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746",
+    "sidecar_matches": true,
+    "entry_count": 181,
+    "duplicate_entry_count": 0,
+    "path_traversal_entry_count": 0,
+    "model_file_count": 62,
+    "model_size_bytes": 1293341575,
+    "layout_checkpoint_sha256": "f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180",
+    "privacy_audit": "pass",
+    "raw_data_included": false,
+    "private_gmail_data_included": false,
+    "private_outputs_included": false,
+    "credentials_included": false,
+    "safe_sample_count": 1
+  },
+  "selected_models": {
+    "detector": "PP-OCRv6_medium_det",
+    "general_recognizer": "PP-OCRv6_medium_rec",
+    "thai_custom_recognizer": "th_PP-OCRv5_mobile_rec_csx4201_v1",
+    "original_thai_fallback": "th_PP-OCRv5_mobile_rec",
+    "rejected_general_custom_weights_included": false,
+    "custom_detector_weights_included": false
+  },
+  "clean_cpu_setup": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File D:\\OCR_Model\\setup_windows.ps1 -Device cpu",
+    "fresh_runtime_created": true,
+    "exact_command_rerun_exit_code": 0,
+    "doctor_probe": "passed",
+    "ocr_runtime": "paddle 3.3.0 paddleocr 3.7.0 sklearn 1.7.2",
+    "layout_runtime": "torch 2.8.0+cpu transformers 4.57.6 cuda False",
+    "note": "The initial dependency installation exceeded the 30-minute command window after writing runtime.local.json. No package-local process remained; a direct doctor probe and an exact setup-command rerun both passed."
+  },
+  "gpu_setup": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File D:\\OCR_Model\\setup_windows.ps1 -Device gpu -ReuseExisting",
+    "status": "passed",
+    "ocr_runtime": "existing verified Paddle GPU environment",
+    "layout_runtime": "torch 2.8.0+cu128 transformers 4.57.6 cuda True",
+    "package_local_runtime_pointer_only": true
+  },
+  "inference_cases": [
+    {
+      "name": "cpu_original_upright_image",
+      "device": "cpu",
+      "profile": "original",
+      "page_count": 1,
+      "schema_valid": true,
+      "nonempty": true,
+      "visualization_count": 1,
+      "detector": "PP-OCRv6_medium_det",
+      "recognizers": [
+        "PP-OCRv6_medium_rec"
+      ],
+      "routes": [
+        "general"
+      ]
+    },
+    {
+      "name": "cpu_original_rotated_image",
+      "device": "cpu",
+      "profile": "original",
+      "page_count": 1,
+      "schema_valid": true,
+      "nonempty": true,
+      "visualization_count": 1,
+      "selected_orientation_degrees": 315.0
+    },
+    {
+      "name": "cpu_original_multipage_pdf",
+      "device": "cpu",
+      "profile": "original",
+      "page_count": 2,
+      "schema_valid": true,
+      "nonempty": true,
+      "visualization_count": 2,
+      "routes": [
+        "general",
+        "thai"
+      ],
+      "recognizers": [
+        "PP-OCRv6_medium_rec",
+        "th_PP-OCRv5_mobile_rec"
+      ]
+    },
+    {
+      "name": "cpu_custom_thai_image",
+      "device": "cpu",
+      "profile": "custom",
+      "page_count": 1,
+      "schema_valid": true,
+      "nonempty": true,
+      "visualization_count": 1,
+      "route": "thai",
+      "recognizer": "th_PP-OCRv5_mobile_rec_csx4201_v1"
+    },
+    {
+      "name": "cpu_adaptive_upright_image",
+      "device": "cpu",
+      "profile": "adaptive",
+      "page_count": 1,
+      "schema_valid": true,
+      "nonempty": true,
+      "visualization_count": 1,
+      "selected_preprocessing": "grayscale_normalized"
+    },
+    {
+      "name": "gpu_original_upright_image",
+      "device": "gpu:0",
+      "profile": "original",
+      "page_count": 1,
+      "schema_valid": true,
+      "nonempty": true,
+      "visualization_count": 1,
+      "semantic_parity_with_cpu": true,
+      "cpu_processing_seconds": 109.12841859995387,
+      "gpu_processing_seconds": 73.00234950007871
+    },
+    {
+      "name": "gpu_custom_english_fallback",
+      "device": "gpu:0",
+      "profile": "custom",
+      "page_count": 1,
+      "schema_valid": true,
+      "nonempty": true,
+      "visualization_count": 1,
+      "detector": "PP-OCRv6_medium_det",
+      "recognizer": "PP-OCRv6_medium_rec",
+      "fallback_verified": true
+    }
+  ],
+  "gui_launch": {
+    "command": "D:\\OCR_Model\\.runtime\\app\\Scripts\\python.exe D:\\OCR_Model\\app.py --host 127.0.0.1 --port 7864",
+    "http_status": 200,
+    "content_contains_title": true,
+    "process_stopped_after_probe": true
+  },
+  "relocatability": {
+    "runtime_json_uses_relative_paths": true,
+    "model_setup_uses_relative_paths": true,
+    "selected_registry_local_paths_are_relative": true,
+    "calibration_checkpoint_path_is_relative": true,
+    "runtime_local_json_excluded_from_clean_archive": true,
+    "machine_local_runtime_and_outputs_excluded_from_clean_archive": true,
+    "absolute_development_paths_retained_only_as_non_executing_provenance_or_documented_examples": true
+  },
+  "storage_after_setup": {
+    "c_free_gib": 23.71,
+    "d_free_gib": 391.685,
+    "minimum_free_gib": 15.0,
+    "passed": true
+  },
+  "limitations": [
+    "Physical Apple hardware remains untested; macOS support remains the Docker Linux/AMD64 CPU route.",
+    "The clean archive is immutable evidence; .runtime, runtime.local.json, outputs, and GUI probe state exist only in the owner's extracted D:/OCR_Model working copy.",
+    "The current branch package has not replaced the historical public v1.0.0-build-week Release."
+  ]
+}

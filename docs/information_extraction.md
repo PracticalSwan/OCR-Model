@@ -148,7 +148,8 @@ remain under the ignored D: root.
 & $ocr scripts/evaluate_private_gmail.py `
   --layout-checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --device gpu:0 --limit 2
-& $ocr scripts/run_integration_smoke.py --device gpu:0
+& $ocr scripts/run_integration_smoke.py --device gpu:0 `
+  --model-checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 python scripts/compile_ocr_upgrade_reports.py
 & $layout scripts/compile_final_reports.py `
   --heldout-report ocr_upgrade_locked_test_ground_truth.json

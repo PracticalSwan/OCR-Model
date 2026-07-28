@@ -30,6 +30,14 @@ documented without post-test tuning. See the
 [OCR upgrade release notes](docs/OCR_UPGRADE_RELEASE_NOTES.md) and
 [current OCR model card](reports/ocr_upgrade/final_ocr_model_card.md).
 
+The locally verified branch package is `D:\OCR_Model.zip`, built from clean
+commit `fcae32edc193ff6574bf99362da0e2368d5ef464`. It is 1,159,061,897 bytes
+with SHA-256
+`d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
+Fresh CPU setup, CPU/GPU inference, image/PDF/rotation/Thai profiles, schema,
+visualization, fallback, privacy, archive-integrity, and loopback GUI checks
+pass. This local artifact has not replaced the historical public Release.
+
 ## What it does
 
 For an uploaded image or PDF, the local pipeline:

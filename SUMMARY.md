@@ -70,9 +70,15 @@ submission docs, the empty legacy directory tree, and staging copies. Raw
 data, final model assets, the local runtime, runtime configuration, canonical
 ZIP, and demo MP4 were preserved.
 
-The current OCR-upgrade branch is rebuilding and verifying a new local
-portable package before it is considered branch-complete. It is not silently
-substituted for the published Release.
+The current OCR-upgrade branch also has a new locally verified portable
+archive. It was built from clean commit
+`fcae32edc193ff6574bf99362da0e2368d5ef464`, is 1,159,061,897 bytes, and has
+SHA-256
+`d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
+Fresh CPU setup and real CPU/GPU image, rotated-image, two-page PDF, custom
+Thai, adaptive, schema, visualization, fallback, archive-integrity, privacy,
+and loopback GUI checks pass. It is not silently substituted for the
+historical published Release.
 
 ## Current model and runtime
 

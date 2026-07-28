@@ -37,7 +37,8 @@ $checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_mu
   --checkpoint $checkpoint --device gpu:0 --limit 100
 & $ocr scripts/evaluate_private_gmail.py `
   --layout-checkpoint $checkpoint --device gpu:0 --limit 2
-& $ocr scripts/run_integration_smoke.py --device gpu:0
+& $ocr scripts/run_integration_smoke.py --device gpu:0 `
+  --model-checkpoint $checkpoint
 python scripts/compile_ocr_upgrade_reports.py
 & $layout scripts/compile_final_reports.py `
   --heldout-report ocr_upgrade_locked_test_ground_truth.json

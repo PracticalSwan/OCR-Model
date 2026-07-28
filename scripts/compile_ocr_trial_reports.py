@@ -14,7 +14,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.ocr.trials import recognizer_acceptance  # noqa: E402
-from src.rotation_common import atomic_write_json, atomic_write_text  # noqa: E402
+from src.rotation_common import (  # noqa: E402
+    atomic_write_json,
+    atomic_write_text,
+    sha256_file,
+)
 
 
 DETECTOR_EXTERNAL_ROOT = Path(
@@ -259,7 +263,15 @@ def recognition_trial_rows(
                     else baseline_metrics.get("trial_id")
                 ),
                 "baseline_report": baseline_path.as_posix(),
+                "baseline_report_sha256": sha256_file(baseline_path),
                 "candidate_report": custom_report.as_posix(),
+                "candidate_report_sha256": sha256_file(custom_report),
+                "candidate_checkpoint_sha256": candidate.get(
+                    "checkpoint_sha256"
+                ),
+                "candidate_recognizer_sha256": candidate.get(
+                    "recognizer_sha256"
+                ),
             }
         )
         rows[0]["selected"] = not acceptance["accepted"]

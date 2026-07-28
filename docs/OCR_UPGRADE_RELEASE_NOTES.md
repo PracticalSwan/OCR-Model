@@ -1,7 +1,9 @@
 # Domain-adapted OCR upgrade release notes
 
-**Branch:** `feat/domain-adapted-ocr`  
-**Evidence window:** 2026-07-24 through 2026-07-28  
+**Branch:** `feat/domain-adapted-ocr`
+
+**Evidence window:** 2026-07-24 through 2026-07-28
+
 **Status:** implemented and evaluated; not production-ready
 
 This upgrade replaces the three-page OCR selection evidence with a
@@ -384,6 +386,18 @@ $output = 'D:\CSX4201\vision-info-extraction-assets\generated\example'
   --model-checkpoint $checkpoint --save-visualization
 ```
 
+## Independent review closure
+
+The late evidence-based review found no blocker and one medium defect: an
+explicit custom-general selection could load the rejected general recognizer
+even though the default and portable package remained on the original. The
+fix binds registry promotion to the SHA-256 of the executed acceptance report
+and candidate report, requires every acceptance criterion to pass, and filters
+`accepted: false` custom artifacts before any runtime path or hash loading.
+The permitted follow-up caught and closed that early-loading edge with a
+missing rejected-model fixture. Focused regression tests cover both
+registry-construction refusal and runtime refusal/fallback.
+
 ## Remaining limitations
 
 - The full locked OCR and end-to-end metrics missed the requested accuracy
@@ -403,6 +417,32 @@ $output = 'D:\CSX4201\vision-info-extraction-assets\generated\example'
   Docker Linux/AMD64 CPU path.
 - Human review is required for financial, legal, identity, medical, or other
   consequential use.
+
+## Portable branch package
+
+The clean package was built from commit
+`fcae32edc193ff6574bf99362da0e2368d5ef464`:
+
+```text
+D:\OCR_Model.zip
+size: 1,159,061,897 bytes
+SHA-256: d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746
+```
+
+Its sidecar matches, its 181 ZIP entries have no duplicate or traversal path,
+and its privacy audit finds no raw/private data, outputs, or credentials. A
+fresh package-local CPU setup passed the doctor probe and real upright,
+rotated, two-page PDF, custom Thai, and adaptive inference. Every result was
+nonempty, schema-valid, and had one visualization per page. An additional GPU
+run had stable semantic parity with CPU, custom English correctly fell back to
+the selected original general recognizer, and the loopback GUI returned HTTP
+200. The clean archive excludes `.runtime`, `runtime.local.json`, and outputs.
+It has not replaced the historical public `v1.0.0-build-week` Release.
+
+After fresh setup, C: had 23.71 GiB free and D: had 391.685 GiB free, both
+above the 15 GiB reserve. The first clean dependency installation exceeded the
+30-minute command window after writing its runtime config; a direct doctor
+probe and exact setup-command rerun both passed.
 
 Authoritative machine-readable evidence is under `reports/ocr_upgrade/`,
 `reports/final_model/`, and `reports/information_extraction/`.

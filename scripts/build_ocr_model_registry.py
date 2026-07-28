@@ -42,6 +42,12 @@ def main() -> int:
     parser.add_argument("--general-trial-root")
     parser.add_argument("--general-report")
     parser.add_argument(
+        "--general-acceptance",
+        default=str(
+            PROJECT_ROOT / "reports/ocr_upgrade/recognizer_acceptance.json"
+        ),
+    )
+    parser.add_argument(
         "--general-selected",
         choices=("original", "custom"),
         default="original",
@@ -74,6 +80,9 @@ def main() -> int:
         if args.general_trial_root
         else None,
         general_report=Path(args.general_report) if args.general_report else None,
+        general_acceptance=(
+            Path(args.general_acceptance) if args.general_acceptance else None
+        ),
         general_selected=args.general_selected,
         thai_trial_root=Path(args.thai_trial_root),
         thai_report=Path(args.thai_report),
@@ -90,6 +99,7 @@ def build_registry(
     detector_trials: Path,
     general_trial_root: Path | None,
     general_report: Path | None,
+    general_acceptance: Path | None,
     general_selected: str,
     thai_trial_root: Path,
     thai_report: Path,
@@ -184,17 +194,43 @@ def build_registry(
             raise ValueError(
                 "general trial root and general report must be provided together"
             )
-        entries[CUSTOM_IDS["general"]] = _custom_entry(
+        if general_acceptance is None:
+            raise ValueError(
+                "general acceptance evidence is required with a custom general recognizer"
+            )
+        acceptance = _validated_general_acceptance(
+            general_acceptance,
+            candidate_report=general_report,
+        )
+        general_accepted = acceptance.get("accepted") is True
+        if general_selected == "custom" and not general_accepted:
+            raise ValueError(
+                "custom general recognizer was not accepted by the bound "
+                f"acceptance evidence: {general_acceptance}"
+            )
+        general_entry = _custom_entry(
             model_id=CUSTOM_IDS["general"],
             upstream="PP-OCRv6_medium_rec",
             language="general",
             domain="public English/Turkish financial document recognition",
             trial_root=general_trial_root,
             report_path=general_report,
-            selected=general_selected == "custom",
-            accepted=general_selected == "custom",
+            selected=general_selected == "custom" and general_accepted,
+            accepted=general_accepted,
             license_id="Apache-2.0",
         )
+        general_entry.update(
+            {
+                "acceptance_report": general_acceptance.as_posix(),
+                "acceptance_evidence_sha256": sha256_file(
+                    general_acceptance
+                ),
+                "acceptance_candidate_report_sha256": acceptance[
+                    "candidate_report_sha256"
+                ],
+            }
+        )
+        entries[CUSTOM_IDS["general"]] = general_entry
 
     entries[CUSTOM_IDS["thai"]] = _custom_entry(
         model_id=CUSTOM_IDS["thai"],
@@ -231,6 +267,80 @@ def build_registry(
         ).encode("utf-8")
     ).hexdigest()
     return registry_material
+
+
+def _validated_general_acceptance(
+    acceptance_path: Path,
+    *,
+    candidate_report: Path,
+) -> dict[str, Any]:
+    acceptance = _json(acceptance_path)
+    candidate = _json(candidate_report)
+    expected_report_sha = sha256_file(candidate_report)
+    if acceptance.get("candidate_report_sha256") != expected_report_sha:
+        raise ValueError(
+            "general recognizer acceptance candidate-report hash mismatch"
+        )
+
+    evidence_report = _resolve_evidence_reference(
+        acceptance.get("candidate_report"),
+        acceptance_path=acceptance_path,
+    )
+    if evidence_report != candidate_report.resolve():
+        raise ValueError(
+            "general recognizer acceptance references a different candidate report"
+        )
+
+    metrics = candidate.get("metrics")
+    if not isinstance(metrics, Mapping):
+        raise ValueError("general recognizer report has no metrics mapping")
+    candidate_trial_id = str(metrics.get("trial_id", "")).strip()
+    if (
+        not candidate_trial_id
+        or acceptance.get("candidate_trial_id") != candidate_trial_id
+    ):
+        raise ValueError(
+            "general recognizer acceptance candidate trial does not match the report"
+        )
+
+    accepted = acceptance.get("accepted") is True
+    selected_trial_id = acceptance.get("selected_trial_id")
+    criteria = acceptance.get("criteria")
+    if accepted:
+        if (
+            not isinstance(criteria, Mapping)
+            or not criteria
+            or any(value is not True for value in criteria.values())
+        ):
+            raise ValueError(
+                "accepted general recognizer evidence has an unpassed criterion"
+            )
+        if selected_trial_id != candidate_trial_id:
+            raise ValueError(
+                "accepted general recognizer is not the selected trial"
+            )
+    elif selected_trial_id == candidate_trial_id:
+        raise ValueError(
+            "rejected general recognizer cannot be the selected trial"
+        )
+    return acceptance
+
+
+def _resolve_evidence_reference(
+    value: Any,
+    *,
+    acceptance_path: Path,
+) -> Path:
+    raw_reference = str(value or "").strip()
+    if not raw_reference:
+        raise ValueError("general recognizer acceptance has no candidate report")
+    reference = Path(raw_reference).expanduser()
+    if reference.is_absolute():
+        return reference.resolve()
+    project_relative = (PROJECT_ROOT / reference).resolve()
+    if project_relative.is_file():
+        return project_relative
+    return (acceptance_path.parent / reference).resolve()
 
 
 def _custom_entry(

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from scripts.run_integration_smoke import _command_record
 from scripts.verify_information_extraction import (
     _integration_semantic_errors,
     _load_execution_evidence,
@@ -17,6 +18,25 @@ from scripts.verify_information_extraction import (
     _valid_locked_unseen_evaluation,
 )
 from scripts.record_ocr_upgrade_verification import _load_ledger, _portable_path
+
+
+def test_integration_command_records_effective_checkpoint_and_paths(
+    tmp_path: Path,
+) -> None:
+    checkpoint = tmp_path / "selected-checkpoint"
+    command = _command_record(
+        config_path=tmp_path / "config.yaml",
+        device="gpu:0",
+        model_setup_path=tmp_path / "model_setup.json",
+        checkpoint=checkpoint,
+        artifact_root=tmp_path / "artifacts",
+        output_path=tmp_path / "integration.json",
+    )
+
+    assert command[command.index("--model-checkpoint") + 1] == str(checkpoint)
+    assert "--model-setup" in command
+    assert "--artifact-root" in command
+    assert "--output" in command
 
 
 def test_integration_provenance_covers_the_learned_worker_call_path() -> None:
