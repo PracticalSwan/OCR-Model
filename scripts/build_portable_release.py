@@ -19,9 +19,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TARGET = Path("D:/OCR_Model")
 DEFAULT_ASSET_ROOT = Path("D:/CSX4201/vision-info-extraction-assets")
-EXPECTED_LAYOUT_SHA256 = (
-    "34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189"
-)
+PORTABLE_LAYOUT_CHECKPOINT = "assets/checkpoints/layoutxlm_multitask/final"
 OCR_MODEL_NAMES = (
     "PP-OCRv6_medium_det",
     "PP-OCRv6_medium_rec",
@@ -61,6 +59,39 @@ def copy_tree(source: Path, target: Path) -> None:
         dirs_exist_ok=True,
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache"),
     )
+
+
+def selected_layout_checkpoint(
+    asset_root: Path,
+) -> tuple[Path, str, dict[str, Any]]:
+    """Resolve and hash the frozen checkpoint bound to the project calibration."""
+    cfg = yaml.safe_load(
+        (PROJECT_ROOT / "config.yaml").read_text(encoding="utf-8")
+    )
+    configured = str(
+        cfg.get("layout_model", {}).get("inference_checkpoint", "")
+    ).strip()
+    if configured:
+        checkpoint = Path(configured).expanduser()
+        if not checkpoint.is_absolute():
+            checkpoint = PROJECT_ROOT / checkpoint
+    else:
+        checkpoint = asset_root / "checkpoints" / "layoutxlm_multitask" / "final"
+    checkpoint = checkpoint.resolve()
+    model_path = checkpoint / "model.safetensors"
+    if not model_path.is_file():
+        raise FileNotFoundError(model_path)
+    actual_hash = sha256_file(model_path)
+
+    calibration_path = PROJECT_ROOT / "models" / "multitask_calibration.json"
+    calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
+    expected_hash = str(calibration.get("checkpoint_model_sha256", "")).strip()
+    if expected_hash != actual_hash:
+        raise ValueError(
+            "selected checkpoint is not bound to the current calibration: "
+            f"{actual_hash} != {expected_hash or '<missing>'}"
+        )
+    return checkpoint, actual_hash, calibration
 
 
 def prepare_target(target: Path, *, force: bool) -> None:
@@ -184,7 +215,7 @@ def portable_config(target: Path) -> None:
     cfg["ocr"]["general_recognizer"]["path"] = "assets/ocr_models/PP-OCRv6_medium_rec"
     cfg["ocr"]["thai_recognizer"]["path"] = "assets/ocr_models/th_PP-OCRv5_mobile_rec"
     cfg["layout_model"]["inference_checkpoint"] = (
-        "assets/checkpoints/layoutxlm_multitask/final"
+        PORTABLE_LAYOUT_CHECKPOINT
     )
     (target / "config.yaml").write_text(
         yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True),
@@ -198,7 +229,7 @@ def portable_config(target: Path) -> None:
             "ocr_python": ".runtime/ocr/Scripts/python.exe",
             "layout_python": ".runtime/layout/Scripts/python.exe",
             "model_setup": "reports/ocr/model_setup.json",
-            "layout_checkpoint": "assets/checkpoints/layoutxlm_multitask/final",
+            "layout_checkpoint": PORTABLE_LAYOUT_CHECKPOINT,
             "asset_root": "assets",
             "output_root": "outputs",
             "device": "cpu",
@@ -208,13 +239,10 @@ def portable_config(target: Path) -> None:
 
 
 def copy_models(target: Path, asset_root: Path) -> list[dict[str, Any]]:
-    checkpoint_source = asset_root / "checkpoints" / "layoutxlm_multitask" / "final"
+    checkpoint_source, actual_hash, calibration = selected_layout_checkpoint(
+        asset_root
+    )
     model_source = checkpoint_source / "model.safetensors"
-    actual_hash = sha256_file(model_source)
-    if actual_hash != EXPECTED_LAYOUT_SHA256:
-        raise ValueError(
-            f"final checkpoint hash mismatch: {actual_hash} != {EXPECTED_LAYOUT_SHA256}"
-        )
     checkpoint_target = target / "assets" / "checkpoints" / "layoutxlm_multitask" / "final"
     checkpoint_target.mkdir(parents=True, exist_ok=True)
     for source in sorted(checkpoint_source.iterdir()):
@@ -255,13 +283,9 @@ def copy_models(target: Path, asset_root: Path) -> list[dict[str, Any]]:
         )
         setup_source["models"][name]["device"] = "cpu"
     write_json(target / "reports" / "ocr" / "model_setup.json", setup_source)
+    _copy_upgrade_registry(target)
 
-    calibration = json.loads(
-        (PROJECT_ROOT / "models" / "multitask_calibration.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    calibration["checkpoint"] = "assets/checkpoints/layoutxlm_multitask/final"
+    calibration["checkpoint"] = PORTABLE_LAYOUT_CHECKPOINT
     calibration["manifest_path"] = "not included; public training manifest"
     write_json(target / "models" / "multitask_calibration.json", calibration)
 
@@ -306,11 +330,60 @@ def copy_models(target: Path, asset_root: Path) -> list[dict[str, Any]]:
         {
             "schema_version": "1.0",
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "final_layout_model_sha256": EXPECTED_LAYOUT_SHA256,
+            "final_layout_model_sha256": actual_hash,
             "files": records,
         },
     )
     return records
+
+
+def _copy_upgrade_registry(target: Path) -> None:
+    source_path = PROJECT_ROOT / "reports" / "ocr_upgrade" / "model_registry.json"
+    registry = json.loads(source_path.read_text(encoding="utf-8"))
+    models = registry.get("models")
+    if not isinstance(models, dict):
+        raise ValueError("OCR upgrade registry has no models mapping")
+    included: list[str] = []
+    for model_id, raw in models.items():
+        if not isinstance(raw, dict):
+            raise ValueError(f"invalid OCR registry entry: {model_id}")
+        upstream = str(raw.get("upstream_base", ""))
+        variant = str(raw.get("variant", "")).casefold()
+        available = bool(raw.get("available", False))
+        selected = bool(raw.get("selected", False))
+        accepted = bool(raw.get("accepted", False))
+        if variant == "original" and available:
+            destination_name = upstream
+        elif variant == "custom" and available and selected and accepted:
+            source = Path(str(raw.get("local_path", "")))
+            if not source.is_dir():
+                raise FileNotFoundError(source)
+            destination_name = str(model_id)
+            copy_tree(
+                source,
+                target / "assets" / "ocr_models" / destination_name,
+            )
+        else:
+            raw["available"] = False
+            raw["selected"] = False
+            raw["local_path"] = ""
+            raw["portable_included"] = False
+            raw["portable_exclusion_reason"] = (
+                "not selected and accepted for final portable inference"
+            )
+            continue
+        raw["local_path"] = f"../../assets/ocr_models/{destination_name}"
+        raw["portable_included"] = True
+        included.append(str(model_id))
+    registry["portable"] = True
+    registry["portable_included_model_ids"] = sorted(included)
+    registry["portable_policy"] = (
+        "all original fallbacks plus selected accepted custom inference models"
+    )
+    write_json(
+        target / "reports" / "ocr_upgrade" / "model_registry.json",
+        registry,
+    )
 
 
 def copy_samples(target: Path, asset_root: Path) -> None:

@@ -430,6 +430,11 @@ def _check_forbidden(root: Path) -> tuple[bool, str]:
         retained_dirs: list[str] = []
         for dirname in dirnames:
             child = current / dirname
+            # Repository metadata is not publication content. Codex records
+            # recoverable turn diffs below ``.git/refs/.../checkpoints``;
+            # inspecting that internal path creates a false checkpoint hit.
+            if dirname.casefold() == ".git":
+                continue
             # Windows directory junctions are traversed by ``os.walk`` even
             # when ``followlinks`` is false. Approved model data lives behind
             # ignored D:-backed junctions, so restrict this publication check

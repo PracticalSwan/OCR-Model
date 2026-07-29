@@ -1,0 +1,211 @@
+{
+  "schema_version": "1.0",
+  "build_id": "ocr-upgrade-baseline-af0816b",
+  "generated_at_utc": "2026-07-24T06:24:40.4368071Z",
+  "source_commit": "af0816b83fde1b3fb8a25802a1967350de654812",
+  "branch": "feat/domain-adapted-ocr",
+  "recovery_tag": "pre-ocr-upgrade-baseline",
+  "repository": {
+    "remote": "https://github.com/PracticalSwan/csx4201-vision-info-extraction.git",
+    "visibility": "PUBLIC",
+    "default_branch": "main"
+  },
+  "privacy": {
+    "public_only_baseline": true,
+    "private_training_rows": 0,
+    "gmail_fit_rows": 0,
+    "private_content_recorded": false
+  },
+  "storage": {
+    "c_free_gib": 41.083,
+    "d_free_gib": 367.21,
+    "minimum_c_free_gib": 15.0,
+    "d_safety_margin_fraction": 0.35,
+    "asset_root": "D:\\CSX4201\\vision-info-extraction-assets"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU",
+    "gpu_memory_mib": 8151,
+    "gpu_driver": "610.47"
+  },
+  "environments": {
+    "host_python": "3.14.2",
+    "ocr": {
+      "python": "3.10.11",
+      "paddlepaddle_gpu": "3.3.0",
+      "paddleocr": "3.7.0",
+      "paddlex": "3.7.2"
+    },
+    "layout": {
+      "python": "3.10.11",
+      "torch": "2.8.0+cu128",
+      "transformers": "4.57.6"
+    }
+  },
+  "artifact_hashes": {
+    "PP-OCRv6_medium_det": "393f629d341e6388ca72d19b25983b96cae36dfdf1f7146adf42d6ab68789388",
+    "PP-OCRv6_medium_rec": "666f7c4d6d5c846c7e202f63356b3fc4a7a3d4ff7040e763b93c5771608c7ae0",
+    "th_PP-OCRv5_mobile_rec": "507c659e3abb6c2c7262a07965ec880119751a29e3c8ed7437b337f74b36608d",
+    "layoutxlm_model": "34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189",
+    "layoutxlm_config": "68046da6e64032264df40c8110b3b6eeb06fb769f761ad8e02c2bc2627841766",
+    "calibration": "b1c683d3f1e1cfc4b9515bb83cf64ce455343445a553ab7525f845272b902087",
+    "project_config": "b03d0ae5c8ef56ccf01051f9b0e8dd8a59fd3391235db9b9de16126d61312acd",
+    "portable_zip": "c6c874f5b0879478497c9a33529f6416d48be60d586197fb625540d795f9ec6b"
+  },
+  "dataset": {
+    "normalized_public_rows": 12433,
+    "split_counts": {
+      "train": 7646,
+      "dev_select": 1113,
+      "dev_calibration": 653,
+      "test_in_domain": 1760,
+      "unseen_coru": 1261
+    },
+    "dev_select_dataset_counts": {
+      "fatura": 996,
+      "funsd": 20,
+      "sroie": 97
+    },
+    "dev_select_exact_sha_duplicate_groups": 4,
+    "final_model_build_id": "final-6be3e0b46b0a4e4c",
+    "final_model_manifest_sha256": "448582175cc832f336ee5e2654b7f1f1d417f8d47d8c6a08b2a91cd03334d200",
+    "final_model_examples": 11684,
+    "final_model_stream_counts": {
+      "ground_truth": 11172,
+      "paddleocr": 256,
+      "hybrid": 256
+    }
+  },
+  "baseline_ocr": {
+    "report": "reports/final_model/ocr_metrics.json",
+    "sample_count": 3,
+    "polygon_f1": 0.3395106950662506,
+    "recognized_text_coverage": 0.4027889972234873,
+    "wer": 0.6998877146245568,
+    "nonempty_rate": 1.0
+  },
+  "baseline_end_to_end": {
+    "report": "reports/final_model/end_to_end_angle_metrics.json",
+    "sample_count": 3,
+    "angle_degrees": 0,
+    "entity_f1": 0.17720042680959824,
+    "relation_f1": 0.00749063670411985,
+    "canonical_field_accuracy": 0.4444444444444444,
+    "duration_for_18_angle_grid_seconds": 335.74877849999757
+  },
+  "reference_token_locked_test": {
+    "report": "reports/final_model/evaluations/final_test_in_domain_ground_truth.json",
+    "example_count": 1760,
+    "checkpoint_sha256": "34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189",
+    "entity_calibrated_f1": 0.9812706023374288,
+    "canonical_calibrated_f1": 0.9814241915569551,
+    "relation_calibrated_f1": 0.46324007807417045,
+    "document_accuracy": 1.0,
+    "document_macro_f1": 1.0
+  },
+  "unseen_coru": {
+    "report": "reports/final_model/unseen_domain_metrics.json",
+    "population_pages": 1261,
+    "sample_pages": 100,
+    "successful_pages": 100,
+    "failed_pages": 0,
+    "nonempty_rate": 1.0,
+    "qa_answer_text_recall": 0.7853036740814796,
+    "canonical_field_accuracy": 0.15678776290630975,
+    "mean_duration_seconds": 31.041742668999067
+  },
+  "private_operational": {
+    "report": "reports/final_model/private_test_aggregate.json",
+    "attempted_documents": 26,
+    "successful_documents": 26,
+    "failed_documents": 0,
+    "processed_pages": 203,
+    "gmail_fit_rows": 0,
+    "contains_filenames": false,
+    "contains_ocr_text": false,
+    "contains_images": false,
+    "contains_per_document_predictions": false
+  },
+  "verification": [
+    {
+      "name": "host_tests_before_changes",
+      "command": "python -m pytest -q",
+      "status": "passed",
+      "passed": 244,
+      "skipped": 2,
+      "duration_seconds": 32.11
+    },
+    {
+      "name": "compileall",
+      "command": "python -m compileall -q src scripts tests",
+      "status": "passed"
+    },
+    {
+      "name": "ocr_environment_tests",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe -m pytest -q <OCR test partition>",
+      "status": "passed",
+      "passed": 123,
+      "duration_seconds": 2.86
+    },
+    {
+      "name": "layout_environment_tests",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-layout\\Scripts\\python.exe -m pytest -q tests/test_layoutxlm_model.py tests/test_multitask_layoutxlm_model.py",
+      "status": "passed",
+      "passed": 2,
+      "duration_seconds": 34.97
+    },
+    {
+      "name": "data_verifier",
+      "command": "python scripts/verify_data.py",
+      "status": "passed_after_regression_fix",
+      "checks_passed": 20,
+      "checks_total": 20
+    },
+    {
+      "name": "host_tests_after_verifier_fix",
+      "command": "python -m pytest -q",
+      "status": "passed",
+      "passed": 245,
+      "skipped": 2,
+      "duration_seconds": 15.81
+    },
+    {
+      "name": "rotation_verifier",
+      "command": "python scripts/verify_rotation_data.py --profile full --complete --portable",
+      "status": "passed",
+      "checks_passed": 20,
+      "checks_total": 20
+    },
+    {
+      "name": "annotation_verifier",
+      "command": "python scripts/verify_ie_annotations.py",
+      "status": "passed",
+      "normalized_annotations": 12433,
+      "gmail_fit_rows": 0
+    },
+    {
+      "name": "exact_ocr_models",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts/verify_ocr_models.py --device gpu:0",
+      "status": "passed"
+    },
+    {
+      "name": "information_extraction_verifier",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts/verify_information_extraction.py --complete",
+      "status": "passed",
+      "checks_passed": 46,
+      "checks_total": 46
+    },
+    {
+      "name": "integration_smoke",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts/run_integration_smoke.py --device gpu:0",
+      "status": "passed",
+      "private_inputs_used": false,
+      "duration_seconds": 29.5
+    }
+  ],
+  "known_compatibility_issues": [
+    "Paddle GPU and CUDA PyTorch remain process-isolated on Windows.",
+    "A direct unconfigured paddleocr import can traverse PaddleX/ModelScope into a failing torch DLL load; the configured verifier and inference paths pass.",
+    "The current upright OCR selection evidence contains only three pages and cannot support a new default."
+  ]
+}

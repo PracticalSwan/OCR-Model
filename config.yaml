@@ -116,8 +116,11 @@ augmentation:
 ocr:
   device: "gpu:0"
   cache_enabled: true
-  preprocessing_version: "2.0-cardinal-polygon-fine"
+  default_profile: "original"
+  model_registry: "reports/ocr_upgrade/model_registry.json"
+  preprocessing_version: "3.0-domain-adapted-adaptive"
   preprocessing_profile: "original"
+  adaptive_preprocessing_profile: "grayscale_normalized"
   paddle_cache_home: "D:/CSX4201/vision-info-extraction-assets/cache/paddlex"
   detector:
     name: "PP-OCRv6_medium_det"
@@ -134,11 +137,36 @@ ocr:
   enable_document_orientation_classifier: false
   enable_document_unwarping: false
   enable_textline_orientation: false
+  adaptive_rendering:
+    enabled: true
+    base_dpi: 200
+    rerender_dpi: 300
+    minimum_box_count: 3
+    minimum_median_text_height_ratio: 0.007
+    minimum_text_coverage: 0.0015
+    minimum_mean_confidence: 0.55
+    minimum_median_confidence: 0.55
+    minimum_text_characters: 16
+    sparse_table_box_count: 8
+    minimum_score_gain: 0.0
+    max_render_pixels: 60000000
+  tiling:
+    enabled: true
+    grid: [2, 2]
+    overlap: 0.15
+    upscale: 1.0
+    polygon_iou_threshold: 0.50
+    minimum_score_gain: 0.0
+  recognition_retries:
+    enabled: true
+    confidence_threshold: 0.65
+    maximum_candidates: 5
+    padding_profile: "C"
 
 layout_model:
   architecture: "MultiTaskTextLayoutModel"
   checkpoint: "microsoft/layoutxlm-base"
-  inference_checkpoint: "D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/final"
+  inference_checkpoint: "D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise"
   calibration: "models/multitask_calibration.json"
   license: "CC-BY-NC-SA-4.0"
   max_length: 512

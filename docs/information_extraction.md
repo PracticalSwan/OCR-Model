@@ -19,7 +19,11 @@ records do not create orphan outputs.
 ```powershell
 & $ocr scripts/prepare_model_dataset.py `
   --profile final --device gpu:0 --force `
-  --streams ground_truth paddleocr hybrid --ocr-variant-limit 256
+  --streams ground_truth paddleocr hybrid ocr_noise `
+  --ocr-variant-train-limit 1638 `
+  --ocr-variant-dev-select-limit 400 `
+  --manifest-output data\metadata\final_model_dataset_manifest_ocr_v2.csv `
+  --ocr-profile original
 & $ocr scripts/report_final_dataset.py
 ```
 
@@ -28,47 +32,56 @@ train, `dev_select`, `dev_calibration`, and `test_in_domain`. CORU is reserved
 as `unseen_domain_test`. The final manifest is profile/build-bound and records
 source, stream, OCR model hashes, labels, split, and privacy status.
 
-Executed final build `final-6be3e0b46b0a4e4c` contains 11,684 examples:
+Executed build `final-8bfcf79fed04e375` contains 16,781 examples:
 
 | Split | Examples |
 |---|---:|
-| train | 7,782 |
-| dev_select | 1,243 |
-| dev_calibration | 763 |
-| test_in_domain | 1,896 |
+| train | 12,455 |
+| dev_select | 1,913 |
+| dev_calibration | 653 |
+| test_in_domain | 1,760 |
 
-The streams are 11,172 ground-truth, 256 PaddleOCR, and 256 hybrid examples.
-Training targets include 514,220 entity tokens, 152,875 canonical-evidence
-tokens, 40,954 relation pairs, and 4,545 positive relations. Gmail fit rows
-are zero.
+The streams are 11,172 ground-truth, 2,038 PaddleOCR, 2,038 hybrid, and 1,533
+train-only OCR-noise examples. TRAIN contains 7,646 ground-truth, 1,638
+PaddleOCR, 1,638 hybrid, and 1,533 noise examples. Training targets include
+783,680 entity tokens, 216,063 canonical-evidence tokens, 78,095 relation
+pairs, and 10,535 positive relations. Gmail fit rows are zero. The manifest
+SHA-256 is
+`02d173cfcadeb6e7f0c061cba099568949423243c0b9f29a6628ce7750554133`.
 
 ## 3. Train the final multi-task checkpoint
 
 ```powershell
 $layout = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-layout\Scripts\python.exe'
-$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final'
+$manifest = 'data\metadata\final_model_dataset_manifest_ocr_v2_b_noise.csv'
+$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 & $layout scripts/train_multitask_model.py `
-  --profile final --checkpoint $checkpoint --device cuda `
-  --streams ground_truth paddleocr hybrid `
-  --upright-probability 0.6
+  --profile final --manifest $manifest --checkpoint $checkpoint `
+  --device cuda --epochs 4 --trial-id fresh_b_noise `
+  --publish-canonical-report --encoder-learning-rate 0.00002 `
+  --head-learning-rate 0.0001 --upright-probability 0.6 `
+  --streams ground_truth paddleocr hybrid ocr_noise
 & $layout scripts/report_multitask_training.py
 ```
 
-The executed run completed four epochs, 31,240 microsteps, and 7,812 optimizer
-steps. Checkpoint selection combines upright dev-select quality (0.7) with a
-fixed 37° robustness slice (0.3); epoch 4 scored 0.824160 and was selected.
-Reloaded logits match exactly.
+The selected fresh run completed four epochs, 50,212 microsteps, and 12,556
+optimizer steps. Checkpoint selection combines upright dev-select quality
+(0.7) with a fixed 37° robustness slice (0.3); epoch 4 scored 0.843343 and was
+selected. Reloaded logits match exactly. Continued A, continued B, continued
+B-plus-noise, and fresh B-plus-noise were all evaluated against explicit
+reference, canonical, document, and relation regression gates; the fresh run
+had the highest downstream selection score, 0.800401.
 
 Current local checkpoint:
 
 ```text
-D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final
+D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
 ```
 
 `model.safetensors` SHA-256:
 
 ```text
-34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189
+f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180
 ```
 
 The 1.1 GB weight file and resumable optimizer state remain on D: and are not
@@ -79,14 +92,18 @@ committed. The source/derived license is CC-BY-NC-SA-4.0.
 ```powershell
 & $layout scripts/calibrate_multitask_model.py `
   --profile final --checkpoint `
-  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final' `
-  --device cuda --streams ground_truth paddleocr
+  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
+  --manifest data\metadata\final_model_dataset_manifest_ocr_v2.csv `
+  --device cuda --ocr-profile original `
+  --streams ground_truth paddleocr `
+  --output models\multitask_calibration.json
 ```
 
-Calibration uses 708 public `dev_calibration` examples. It writes
+Calibration uses 653 public `dev_calibration` examples. It writes
 `models/multitask_calibration.json` with temperatures and thresholds bound to
 the exact build, manifest, and checkpoint hashes. It records zero private and
-zero Gmail rows.
+zero Gmail rows. The calibration SHA-256 is
+`81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`.
 
 ## 5. Run inference
 
@@ -96,7 +113,7 @@ zero Gmail rows.
   --output 'D:\CSX4201\vision-info-extraction-assets\generated\run-001' `
   --language auto --device gpu:0 `
   --model-checkpoint `
-  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final'
+  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 ```
 
 The OCR process selects orientation, preprocessing, and general/Thai route. A
@@ -115,25 +132,31 @@ remain under the ignored D: root.
 ```powershell
 & $layout scripts/evaluate_multitask_model.py `
   --profile final --checkpoint `
-  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final' `
+  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --split test_in_domain --streams ground_truth --device cuda `
   --group-by dataset language --calibration models\multitask_calibration.json `
-  --report-name final_test_in_domain_ground_truth.json
+  --report-name ocr_upgrade_locked_test_ground_truth.json
 & $layout scripts/evaluate_layout_angles.py `
-  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final' `
+  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --device cuda --pages-per-dataset 10
-& $ocr scripts/run_ocr_preprocessing_ablation.py --device gpu:0 --limit-per-dataset 1
 & $ocr scripts/evaluate_end_to_end_angles.py `
-  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final' `
+  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --device gpu:0 --pages-per-dataset 1
 & $ocr scripts/evaluate_unseen_coru.py `
-  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final' `
+  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --device gpu:0 --limit 100
-& $ocr scripts/run_integration_smoke.py --device gpu:0
-python scripts/compile_final_reports.py
-python scripts/verify_information_extraction.py --complete
+& $ocr scripts/evaluate_private_gmail.py `
+  --layout-checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
+  --device gpu:0 --limit 2
+& $ocr scripts/run_integration_smoke.py --device gpu:0 `
+  --model-checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+python scripts/compile_ocr_upgrade_reports.py
+& $layout scripts/compile_final_reports.py `
+  --heldout-report ocr_upgrade_locked_test_ground_truth.json
 ```
 
-The locked test is executed once and is not used for calibration, profile
-selection, thresholds, or checkpoint selection. See
-[evaluation.md](evaluation.md) for results and limitations.
+The two `TEST_IN_DOMAIN` evaluations above have already executed once. They
+are recorded for audit and must not be rerun to select, calibrate, or tune a
+model. See [evaluation.md](evaluation.md) for results and limitations and
+[OCR_UPGRADE_RELEASE_NOTES.md](OCR_UPGRADE_RELEASE_NOTES.md) for the exact OCR
+data, training, rejection, cache, adaptive-component, and inference commands.

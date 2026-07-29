@@ -39,11 +39,11 @@ cannot control or block OCR/extraction.
 | DT-003 | Use document/duplicate-safe split identities. | Pass: 29,886 identities, zero cross-split violations. |
 | DT-004 | Reserve CORU as wholly unseen domain. | Pass: all 1,261 pages are `unseen_domain_test`. |
 | DT-005 | Keep Gmail private-test only. | Pass: zero private/Gmail rows in model data, training, calibration, selection, and public evaluation. |
-| DT-006 | Build a full public labeled final profile with multiple OCR streams. | Pass: 11,684 examples, including 11,172 ground-truth and 512 OCR/hybrid variants. |
+| DT-006 | Build a full public labeled final profile with multiple OCR streams. | Pass: 16,781 examples, including 11,172 ground-truth, 2,038 PaddleOCR, 2,038 hybrid, and 1,533 train-only OCR-noise examples. |
 | DT-007 | Apply continuous rotations with aligned targets. | Pass: final training uses 60% upright/40% arbitrary-angle geometry. |
-| DT-008 | Train real entity/document/canonical/relation targets. | Pass: 514,220 entity tokens, 152,875 canonical tokens, 40,954 relation pairs, 4,545 positives. |
-| DT-009 | Select checkpoints without private or test data. | Pass: four bounded dev trials; final selection uses public dev-select upright/37° only. |
-| DT-010 | Calibrate without private or test data and bind the result. | Pass: 708 public dev-calibration examples; exact checkpoint/build/manifest hashes. |
+| DT-008 | Train real entity/document/canonical/relation targets. | Pass: 783,680 entity tokens, 216,063 canonical tokens, 78,095 relation pairs, 10,535 positives. |
+| DT-009 | Select checkpoints without private or test data. | Pass: five bounded adaptation candidates; selection uses public DEV_SELECT upright/37° plus predetermined end-to-end gates only. |
+| DT-010 | Calibrate without private or test data and bind the result. | Pass: 653 public DEV_CALIBRATION examples; exact checkpoint/build/manifest/OCR-stack hashes. |
 | DT-011 | Save/reload model, tokenizer, labels, heads, and resumable state. | Pass; checkpoint reload maximum difference 0.0; final resume state retained on D:. |
 | DT-012 | Execute a locked in-domain test once, without tuning from it. | Pass: 1,760 public ground-truth examples; report is hash-bound. |
 
@@ -51,7 +51,7 @@ cannot control or block OCR/extraction.
 
 | ID | Requirement | Final validated state |
 |---|---|---|
-| SF-001 | Preserve at least 15 GiB free on C: and D: at materialization/training gates. | Pass; final complete verifier records more than 43/362 GiB free. |
+| SF-001 | Preserve at least 15 GiB free on C: and D: at materialization/training gates. | Pass; after fresh portable setup C: had 23.71 GiB and D: 391.685 GiB free. |
 | SF-002 | Keep large assets below the configured D: root. | Pass for environments, caches, examples, checkpoint, generated and private output. |
 | SF-003 | Detect incomplete/hash-mismatched OCR artifacts. | Pass in registry, downloader, verifier, and tests. |
 | SF-004 | Isolate Paddle CUDA from CUDA PyTorch on Windows. | Pass with persistent subprocess inference and separate environment partitions. |
@@ -70,27 +70,36 @@ On 1,760 public `test_in_domain` ground-truth examples (1,761 windows):
 
 | Head | Raw micro-F1 | Calibrated/abstained micro-F1 | Raw macro-F1 |
 |---|---:|---:|---:|
-| Entity | 0.9807 | 0.9813 | 0.7290 |
-| Canonical evidence | 0.9792 | 0.9814 | 0.9749 |
-| Relation | 0.4668 | 0.4632 | 0.5620 |
+| Entity | 0.9827 | 0.9835 | 0.7718 |
+| Canonical evidence | 0.9795 | 0.9860 | 0.9736 |
+| Relation | 0.5726 | 0.5603 | 0.6887 |
 
-Document accuracy is 1.0. Calibrated document coverage is 0.9756 with 1.0
-selective accuracy. The micro/macro gap and per-dataset slices expose class and
-dataset imbalance; B-HEADER and QUESTION_ANSWER are the weakest supported
-entity/relation classes.
+Document accuracy and calibrated coverage/selective accuracy are 1.0. The
+micro/macro gap and per-dataset slices expose class and dataset imbalance;
+B-HEADER and QUESTION_ANSWER are the weakest supported entity/relation
+classes.
+
+### Locked image-to-JSON test
+
+The one-time full `TEST_IN_DOMAIN` run processed 1,760/1,760 pages with zero
+failures. Polygon F1 is 0.3815, recognized-text coverage 0.1663, WER 0.9692,
+critical-field exact match 0.3496, entity F1 0.0944, relation F1 0.0111, and
+canonical-field accuracy 0.2534. These results missed the requested accuracy
+targets and were not used for tuning.
 
 ### Rotation robustness
 
 The 18-angle layout-only grid uses 30 dataset-balanced test pages and rotates
-reference geometry with the page. Minimum calibrated scores are entity 0.7491,
-canonical 0.9360, relation 0.3434, and composite 0.7227. Minimum entity and
-canonical retention versus upright are 95.30% and 98.66%.
+reference geometry with the page. Minimum calibrated scores are entity 0.7683,
+canonical 0.9640, relation 0.3358, and composite 0.7324. Minimum retention
+versus upright is 96.69% entity, 99.26% canonical, 61.44% relation, and 91.86%
+composite.
 
 The bounded 18-angle end-to-end grid uses one real page from each labeled
 dataset plus one synthetic Thai page at each angle. All 72 cases are nonempty.
-Across real pages, OCR text coverage is 0.4026–0.4368, detection F1
-0.3330–0.3592, entity F1 0.1314–0.1830, relation F1 0–0.0205, and field
-accuracy 0.2222–0.5556. Synthetic Thai text/routing succeeds 18/18. This gap
+Across real pages, OCR text coverage is 0.3068–0.3839, detection F1
+0.1707–0.1941, entity F1 0.1326–0.1807, relation F1 0–0.0342, and field
+accuracy 0.4444–0.5556. Synthetic Thai text/routing succeeds 18/18. This gap
 shows that OCR, not only the layout heads, limits usable extraction.
 
 ### Unseen and private operation
@@ -100,9 +109,9 @@ All 100 deterministic CORU pages succeed with nonempty OCR. The model finds
 canonical fields. CORU lacks compatible token polygons, so entity/relation F1
 is undefined.
 
-All 26 anonymous Gmail documents and 203 pages succeed locally with zero
-failures. There is no private ground truth, so the aggregate is an operation
-check—not accuracy.
+The current OCR-upgrade private check succeeds on 2/2 anonymous Gmail
+documents/pages with zero failures and aggregate-only reporting. There is no
+private ground truth, so the aggregate is an operation check, not accuracy.
 
 ## Open acceptance decisions
 

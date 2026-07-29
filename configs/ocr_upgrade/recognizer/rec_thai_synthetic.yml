@@ -1,0 +1,56 @@
+schema_version: "1.0"
+trial_id: rec_thai_synthetic
+kind: thai_recognizer
+base_config: configs/rec/PP-OCRv5/multi_language/th_PP-OCRv5_mobile_rec.yaml
+source_checkpoint: D:/CSX4201/vision-info-extraction-assets/models/paddleocr/training/th_PP-OCRv5_mobile_rec_pretrained.pdparams
+metadata:
+  purpose: Bounded Thai financial-domain continuation using only OFL-font synthetic data.
+  selection_split: dev_select
+  epochs: 3
+  expected_iterations_per_epoch: 261
+  early_stopping: Select the best checkpoint from synthetic Thai DEV_SELECT accuracy.
+  claim_boundary: Synthetic and integration evidence only; no real public Thai benchmark is claimed.
+  train_data: OFL-font synthetic TRAIN only
+  environment_gate: O2 AMP lifecycle passed with CUDA 13.0 NVRTC 13.0.48.
+overrides:
+  Global:
+    epoch_num: 3
+    print_batch_step: 10
+    save_epoch_step: 1
+    eval_batch_step: [0, 261]
+    cal_metric_during_train: true
+    max_text_length: 64
+    d2s_train_image_shape: [3, 48, 320]
+    character_dict_path: D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv5_th_dict.txt
+    use_visualdl: false
+    use_amp: true
+    amp_level: O2
+    scale_loss: 1.0
+    use_dynamic_loss_scaling: false
+  Optimizer:
+    lr:
+      name: Cosine
+      learning_rate: 0.0001
+      warmup_epoch: 0
+  Train:
+    dataset:
+      data_dir: D:/
+      label_file_list:
+        - D:/CSX4201/vision-info-extraction-assets/data/ocr_trial_lists/thai_train.txt
+    sampler:
+      first_bs: 64
+    loader:
+      shuffle: true
+      batch_size_per_card: 64
+      drop_last: true
+      num_workers: 4
+  Eval:
+    dataset:
+      data_dir: D:/
+      label_file_list:
+        - D:/CSX4201/vision-info-extraction-assets/data/ocr_trial_lists/thai_dev_select.txt
+    loader:
+      shuffle: false
+      drop_last: false
+      batch_size_per_card: 128
+      num_workers: 4

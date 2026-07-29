@@ -1,0 +1,28 @@
+{
+  "accepted": false,
+  "criteria": {
+    "wer_improvement_or_floor": false,
+    "critical_field_exact_gain": true,
+    "numeric_and_amount_no_regression": true,
+    "english_no_material_regression": true,
+    "turkish_valid": false,
+    "confidence_finite": true,
+    "export_reload_passed": true,
+    "dictionary_match_passed": true,
+    "processing_time_acceptable": true,
+    "no_private_data": true
+  },
+  "wer_relative_gain": 0.1146914404323217,
+  "critical_field_exact_gain": 0.3155548852054341,
+  "baseline_selection_score": 0.2948377309605481,
+  "candidate_selection_score": 0.425805418476788,
+  "baseline_trial_id": "rec_general_baseline_official",
+  "candidate_trial_id": "rec_general_real",
+  "selected_trial_id": "rec_general_baseline_official",
+  "baseline_report": "C:/Assumption University/CSX4201/Project/reports/ocr_upgrade/recognizer_trials/rec_general_baseline_official.json",
+  "baseline_report_sha256": "18132ea7d67431bef91c211306e3488c9bf4939fe98719982a0bf1e7b540602f",
+  "candidate_report": "reports/ocr_upgrade/recognizer_trials/rec_general_real.json",
+  "candidate_report_sha256": "2dba4cdad09164212c20f86cbce4120adf2c16a0986934e6a2a5a2e28e1f1673",
+  "candidate_checkpoint_sha256": "f9db02444cf46e7ddf9d0da048ec7efc14fd3736d9ed6e033c58652de54881c5",
+  "candidate_recognizer_sha256": "add5cb92f78c824fa76adcd6ab97d55514caba3ebf58132793721018150f01aa"
+}

@@ -1,0 +1,353 @@
+{
+  "schema_version": "1.0",
+  "status": "passed",
+  "build_id": "adaptive-rendering-8014135e8054ec44",
+  "split": "dev_select",
+  "manifest_sha256": "1786af155d1c2c3e69224c87f1885da3a62ef59617d7d57ff4d7d4bea661e3ec",
+  "detector_sha256": "eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d",
+  "recognizer_sha256": "37102c71d75c2adec5fcef4710bfbacc84a4fe0d87d9d1a71a47b910543591e4",
+  "checkpoint_sha256": null,
+  "calibration_sha256": null,
+  "configuration_sha256": "a0e44c8378b677395c0cc9f15e0fa091a637a348bf845302d56eb043c94e97d5",
+  "source_commit": "1a102f9e98c24b94116b8a2c5ef052b2650036dd",
+  "device": "gpu:0",
+  "sample_count": 30,
+  "failure_count": 0,
+  "duration_seconds": 87.45151210005861,
+  "private_row_count": 0,
+  "ocr_profile": "original",
+  "preprocessing_profile": "original",
+  "source_pdf": {
+    "path": "D:/CSX4201/vision-info-extraction-assets/evaluations/ocr_upgrade/adaptive_rendering/public_dev_select.pdf",
+    "sha256": "289300142a3ffea13180a3c79f4a1e166d607242b892ed8bc535080cacbba6fa",
+    "page_count": 30,
+    "source_dpi": 300,
+    "public_only": true
+  },
+  "rendering_config": {
+    "base_dpi": 200,
+    "rerender_dpi": 300,
+    "minimum_box_count": 3,
+    "minimum_median_text_height_ratio": 0.007,
+    "minimum_text_coverage": 0.0015,
+    "minimum_mean_confidence": 0.55,
+    "minimum_median_confidence": 0.55,
+    "minimum_text_characters": 16,
+    "sparse_table_box_count": 8,
+    "minimum_score_gain": 0.0
+  },
+  "rerender_trigger_count": 0,
+  "rerender_trigger_rate": 0.0,
+  "selected_300_dpi_count": 0,
+  "selected_300_dpi_rate": 0.0,
+  "reason_counts": {},
+  "metrics": {
+    "dpi_200": {
+      "polygon_precision": 0.47905559786747903,
+      "polygon_recall": 0.4173855341738553,
+      "polygon_f1": 0.4460992907801418,
+      "recognized_text_coverage": 0.46435527853525516,
+      "cer": 0.5356447214647448,
+      "wer": 0.6824417009602195,
+      "critical_field_exact_match": 0.625,
+      "critical_field_count": 128,
+      "nonempty_output_rate": 1.0,
+      "time_per_page_seconds": 2.2088056066539137,
+      "page_failure_rate": 0.0
+    },
+    "dpi_300": {
+      "polygon_precision": 0.4745634016704632,
+      "polygon_recall": 0.41473125414731254,
+      "polygon_f1": 0.4426345609065156,
+      "recognized_text_coverage": 0.4764316322555512,
+      "cer": 0.5235683677444488,
+      "wer": 0.6697530864197531,
+      "critical_field_exact_match": 0.6328125,
+      "critical_field_count": 128,
+      "nonempty_output_rate": 1.0,
+      "time_per_page_seconds": 0.46236905000017336,
+      "page_failure_rate": 0.0
+    },
+    "adaptive": {
+      "polygon_precision": 0.47905559786747903,
+      "polygon_recall": 0.4173855341738553,
+      "polygon_f1": 0.4460992907801418,
+      "recognized_text_coverage": 0.46435527853525516,
+      "cer": 0.5356447214647448,
+      "wer": 0.6824417009602195,
+      "critical_field_exact_match": 0.625,
+      "critical_field_count": 128,
+      "nonempty_output_rate": 1.0,
+      "time_per_page_seconds": 2.2088056066539137,
+      "page_failure_rate": 0.0
+    }
+  },
+  "adaptive_vs_200_deltas": {
+    "polygon_f1": 0.0,
+    "recognized_text_coverage": 0.0,
+    "cer": 0.0,
+    "wer": 0.0,
+    "critical_field_exact_match": 0.0,
+    "nonempty_output_rate": 0.0,
+    "time_per_page_seconds": 0.0,
+    "page_failure_rate": 0.0
+  },
+  "dpi_300_vs_200_deltas": {
+    "polygon_f1": -0.0034647298736262266,
+    "recognized_text_coverage": 0.01207635372029603,
+    "cer": -0.01207635372029603,
+    "wer": -0.012688614540466436,
+    "critical_field_exact_match": 0.0078125,
+    "nonempty_output_rate": 0.0,
+    "time_per_page_seconds": -1.7464365566537403,
+    "page_failure_rate": 0.0
+  },
+  "page_selection_evidence": [
+    {
+      "page_id_hash": "d8207b8aa6acebe9e872ef0f8a8796d6ab2c20ef93185564b33bebab58fbe3ce",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.881090286599445,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "775240231e6181d6d801a7ddf2048269b8336ae633d57df5c0de12c5b9e27be5",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8961395779420552,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "b7059200b73c26e6b446755b25493676058d3eb64cce7774b5fb2e5ba828649e",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8997952600378946,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "1d1c411b62e553e593efd43c4034f638158e2955af21ef2803e55145527393db",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8912884707205649,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "6a87fb4635145e3e767fd967116db118e8318aa81c2b5f1ff95a84e364a34e78",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8722854542117194,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "b3908f07faf63dff5b6e77559dd645d9448e3e80f67ff70c0022fb5eb176bb8d",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8965922687198258,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "304c9ff512cf30fc8bedb8fbf6f2e224e08436b8db5823e7715bfb490055c37c",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8417455134560504,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "85d78bb8055911fbc1bb603cc41941064be1e69004810ed02e1b98bb6180302c",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8956990939968619,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "79af1561a895849c241f603b200ccae3d2ce70e36d78fcc0dbe43859f0c43522",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8977427773393165,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "7561dbc2932acbf0e3608e617a6c2f1cd020793c516e9d41f738382503bf363f",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8903058518432778,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "e88185b2b2c8b983b064b4aeaa2238d4f600314deae78b285edd4a2ed109ca5e",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.897034648958337,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "17ef1bd5c86b10e280858ad38203ebf87cc70eb2cb28053f7bf852eb4aa011c9",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8690139669507069,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "4423bab44130d1a5b0262610bdac503e4c18f5e3bfc5f2fd368f5becbe195d10",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8592358696090097,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "59f1da792e9659a53d17eaa2e08036d0f53b11666c82f3145de922613d445d0d",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8742169400152874,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "e71aeb839c96f06f180080e90bf6abd3d2f2df50edefecf42dd849734905bc57",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.895979002594472,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "954ae08f61964036cdcc14537309dfce55ce268183cc643381b49d160281105f",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8752110640290394,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "9238b32e1f1f3e785c160944afab99743876f7d8fdf90c6c187a170bde16e857",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8811264560475832,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "e032646623aa040353886872188918ad9792f9b778a3b1ebb2c8aed1f324934c",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8928538206914253,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "f3a5d152d3f31200be34e3ec0ea92e0f6d20d92876160bfe8c6fbccd5acba6e5",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8855516688288654,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "7ab0e9407a9765b47c1b2a2413491056df95d2696963bb5a4a76ef80bb730ade",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8716975033519144,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "0e35f001d0de5946b18fd3b57659fc7f2eaf1e31f64ef04030792eb354f29bc1",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8877013876474878,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "30c4ead293891f684ebf81e3550b977057b7f9a0bd3355f0dd407d4ac08f25b2",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8986463247797022,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "868cc19ac8aea9d1e5c06e30c8318c828c1f2b72b82de60f7d6dd3be7d6ae8f9",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8955315843258153,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "ea20356ae4779beeabc926e29374a41fe093b69bcb465b84423c03570f4396d5",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8929268498811028,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "ba3983580505baa9550448537b9e1b1420999c9cb395d51e585aecc3747fbd35",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8796213479353924,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "90ef2e1b1a917aabb9bf4c47b8a5261f16e3ead301c5b9659ff3de4be9fca8e6",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8980049988067061,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "97ba63a9a55f11cf7474bee090313910136f8e4b3f89be1a0b4864580162d39a",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8974811020646318,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "0bd5c9da6a11f80d40fa53e539739b8b80cff71acd73f1fac54a6f993c47326b",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8506438418888245,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "0f796ed7facf494f95f70e7c6fd961fe17ab85fddf9e459276dcfededc79700c",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8961374384613298,
+      "second_pass_score": null
+    },
+    {
+      "page_id_hash": "c532edea860b85c06d3fc6144dc6e2f85c719a01ab4d2bc635ca2283e127e314",
+      "triggered": false,
+      "selected_dpi": 200,
+      "reasons": [],
+      "first_pass_score": 0.8516516590939229,
+      "second_pass_score": null
+    }
+  ],
+  "test_private_tuning_rows": 0,
+  "kmeans_controls_ocr": false,
+  "limitations": [
+    "The PDF is derived only from public DEV_SELECT images at a declared 300-DPI physical scale.",
+    "This isolates raster render resolution; vector-PDF behavior is covered by integration tests."
+  ]
+}

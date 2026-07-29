@@ -1,16 +1,42 @@
 from __future__ import annotations
 
+import csv
+import json
 from pathlib import Path
 
 import pytest
 
+from scripts.run_integration_smoke import _command_record
 from scripts.verify_information_extraction import (
     _integration_semantic_errors,
+    _load_execution_evidence,
+    _metric_report_provenance_errors,
     _private_name_scan,
     _secret_scan,
     _split_leakage_summary,
+    _upgrade_report_inventory,
     _valid_locked_unseen_evaluation,
 )
+from scripts.record_ocr_upgrade_verification import _load_ledger, _portable_path
+
+
+def test_integration_command_records_effective_checkpoint_and_paths(
+    tmp_path: Path,
+) -> None:
+    checkpoint = tmp_path / "selected-checkpoint"
+    command = _command_record(
+        config_path=tmp_path / "config.yaml",
+        device="gpu:0",
+        model_setup_path=tmp_path / "model_setup.json",
+        checkpoint=checkpoint,
+        artifact_root=tmp_path / "artifacts",
+        output_path=tmp_path / "integration.json",
+    )
+
+    assert command[command.index("--model-checkpoint") + 1] == str(checkpoint)
+    assert "--model-setup" in command
+    assert "--artifact-root" in command
+    assert "--output" in command
 
 
 def test_integration_provenance_covers_the_learned_worker_call_path() -> None:
@@ -133,4 +159,145 @@ def test_unseen_evaluation_requires_locked_100_page_zero_failure_run() -> None:
     report["failed_pages"] = 1
     assert not _valid_locked_unseen_evaluation(
         report, checkpoint_model_sha256=checkpoint_hash
+    )
+
+
+def test_metric_report_provenance_accepts_json_and_csv_alias(
+    tmp_path: Path,
+) -> None:
+    values = {
+        "build_id": "build",
+        "split": "dev_select",
+        "manifest_sha256": "a" * 64,
+        "detector_sha256": "b" * 64,
+        "recognizer_sha256": "c" * 64,
+        "checkpoint_sha256": "d" * 64,
+        "calibration_sha256": "",
+        "configuration_hash": "e" * 64,
+        "source_commit": "1" * 40,
+        "device": "gpu:0",
+        "sample_count": 1,
+        "failure_count": 0,
+        "duration_seconds": 1.0,
+        "private_row_count": 0,
+    }
+    json_path = tmp_path / "metrics.json"
+    json_path.write_text(json.dumps(values), encoding="utf-8")
+    csv_path = tmp_path / "metrics.csv"
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(values))
+        writer.writeheader()
+        writer.writerow(values)
+
+    assert _metric_report_provenance_errors(json_path) == []
+    assert _metric_report_provenance_errors(csv_path) == []
+
+
+def test_upgrade_inventory_reports_missing_and_bad_provenance(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "training_environment.json").write_text(
+        json.dumps({"build_id": "incomplete"}),
+        encoding="utf-8",
+    )
+
+    inventory = _upgrade_report_inventory(
+        tmp_path,
+        required_files=(
+            "training_environment.json",
+            "final_upgrade_summary.md",
+        ),
+        metric_files=("training_environment.json",),
+    )
+
+    assert inventory["missing"] == ["final_upgrade_summary.md"]
+    assert "training_environment.json" in inventory["provenance_errors"]
+    assert any(
+        "duration_seconds" in error
+        for error in inventory["provenance_errors"][
+            "training_environment.json"
+        ]
+    )
+
+
+def test_execution_evidence_requires_exact_passing_artifact_backed_matrix(
+    tmp_path: Path,
+) -> None:
+    evidence = tmp_path / "evidence.json"
+    artifact = tmp_path / "artifact.json"
+    artifact.write_text("{}", encoding="utf-8")
+    evidence.write_text(
+        json.dumps(
+            {
+                "checks": [
+                    {
+                        "name": "host_tests",
+                        "command": "python -m pytest -q",
+                        "status": "passed",
+                        "evidence_path": str(artifact),
+                        "timestamp": "2026-07-26T12:00:00+00:00",
+                        "relevant_hashes": {"source_commit": "a" * 40},
+                        "detail": {"passed": 365, "skipped": 2},
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    checks, errors = _load_execution_evidence(
+        evidence,
+        required_names=("host_tests",),
+    )
+
+    assert errors == []
+    assert checks[0]["passed"] is True
+    assert checks[0]["evidence_path"] == str(artifact)
+
+    payload = json.loads(evidence.read_text(encoding="utf-8"))
+    payload["checks"][0]["status"] = "failed"
+    payload["checks"][0]["evidence_path"] = str(tmp_path / "missing.json")
+    payload["checks"].append(dict(payload["checks"][0]))
+    evidence.write_text(json.dumps(payload), encoding="utf-8")
+
+    checks, errors = _load_execution_evidence(
+        evidence,
+        required_names=("host_tests", "compileall"),
+    )
+
+    assert checks[0]["passed"] is False
+    assert any("status_not_passed" in error for error in errors)
+    assert any("evidence_path_missing" in error for error in errors)
+    assert any("duplicate_name" in error for error in errors)
+    assert any("missing_checks:compileall" in error for error in errors)
+
+
+def test_verification_recorder_helpers_reject_duplicate_or_unknown_checks(
+    tmp_path: Path,
+) -> None:
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(
+        json.dumps(
+            {
+                "checks": [
+                    {"name": "all_original_tests"},
+                    {"name": "all_original_tests"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="duplicate"):
+        _load_ledger(ledger)
+
+    ledger.write_text(
+        json.dumps({"checks": [{"name": "invented_check"}]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="unknown"):
+        _load_ledger(ledger)
+
+    project_file = Path(__file__).resolve()
+    assert _portable_path(project_file).endswith(
+        "tests/test_information_verifier.py"
     )

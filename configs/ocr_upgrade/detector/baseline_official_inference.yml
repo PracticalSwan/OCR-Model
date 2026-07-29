@@ -1,0 +1,8 @@
+schema_version: "1.0"
+trial_id: det_baseline_official
+kind: detector_baseline
+model_name: PP-OCRv6_medium_det
+model_source: official PaddleOCR 3.7.0 inference export
+selection_split: dev_select
+iou_threshold: 0.5
+private_data_allowed: false

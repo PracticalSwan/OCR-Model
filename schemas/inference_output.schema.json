@@ -291,7 +291,12 @@
             "lines": {"type": "array", "items": {"$ref": "#/$defs/line"}},
             "candidate_scores": {"type": "array", "items": {"type": "object"}},
             "provenance_hash": {"type": "string", "minLength": 8},
-            "duration_seconds": {"type": "number", "minimum": 0}
+            "duration_seconds": {"type": "number", "minimum": 0},
+            "adaptive_rendering": {"type": "object"},
+            "tiling": {"type": "object"},
+            "preprocessing": {"type": "object"},
+            "recognition_retries": {"type": "object"},
+            "route_decision": {"type": "object"}
           }
         },
         "entities": {"type": "array", "items": {"$ref": "#/$defs/entity"}},

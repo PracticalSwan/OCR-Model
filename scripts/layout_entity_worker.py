@@ -20,6 +20,9 @@ def main() -> int:
     parser.add_argument("--cache-dir")
     parser.add_argument("--max-length", type=int, default=512)
     parser.add_argument("--calibration")
+    parser.add_argument("--ocr-detector-sha256")
+    parser.add_argument("--ocr-recognizer-sha256")
+    parser.add_argument("--ocr-preprocessing-sha256")
     parser.add_argument("--confidence-threshold", type=float)
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
@@ -33,6 +36,21 @@ def main() -> int:
         cache_dir=args.cache_dir,
         max_length=args.max_length,
         calibration_path=args.calibration,
+        ocr_binding=(
+            {
+                "detector_sha256": args.ocr_detector_sha256,
+                "recognizer_sha256": args.ocr_recognizer_sha256,
+                "preprocessing_sha256": args.ocr_preprocessing_sha256,
+            }
+            if all(
+                (
+                    args.ocr_detector_sha256,
+                    args.ocr_recognizer_sha256,
+                    args.ocr_preprocessing_sha256,
+                )
+            )
+            else None
+        ),
         confidence_threshold=args.confidence_threshold,
     )
     for line in sys.stdin:

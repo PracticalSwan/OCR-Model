@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import statistics
 import time
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -16,10 +17,19 @@ from src.information_extraction.rules import extract_rule_fields
 from src.information_extraction.schema import build_document_result, validate_document_result
 from src.information_extraction.multitask_inference import reconstruct_ocr_tables
 from src.inference.document_io import DocumentInputError, DocumentPage, load_document_pages
+from src.inference.document_io import rerender_pdf_page
 from src.inference.kmeans_display import KMeansRotationDisplay, safe_kmeans_display
 from src.ocr.cache import OCRCache
 from src.ocr.model_registry import ModelRegistry
+from src.ocr.stack_binding import build_ocr_stack_binding
 from src.ocr.pipeline import MultilingualOCR
+from src.ocr.adaptive import (
+    AdaptiveRenderingConfig,
+    no_rerender_provenance,
+    page_quality_signals,
+    rerender_reasons,
+    select_render_candidate,
+)
 
 
 class DocumentPipelineError(RuntimeError):
@@ -36,6 +46,9 @@ class DocumentPipeline:
         kmeans_predictor: Any | None = None,
         enable_kmeans_display: bool = True,
         initialization_warnings: Sequence[str] = (),
+        adaptive_rendering: AdaptiveRenderingConfig | None = None,
+        pdf_rerenderer: Any = rerender_pdf_page,
+        max_render_pixels: int = 60_000_000,
     ) -> None:
         self.ocr = ocr
         self.device = device
@@ -43,6 +56,9 @@ class DocumentPipeline:
         self.kmeans_predictor = kmeans_predictor
         self.enable_kmeans_display = bool(enable_kmeans_display)
         self.initialization_warnings = list(initialization_warnings)
+        self.adaptive_rendering = adaptive_rendering
+        self.pdf_rerenderer = pdf_rerenderer
+        self.max_render_pixels = int(max_render_pixels)
 
     def close(self) -> None:
         close = getattr(self.entity_extractor, "close", None)
@@ -67,13 +83,83 @@ class DocumentPipeline:
         confidence_threshold: float | None = None,
         enable_kmeans_display: bool = True,
         require_layout_model: bool = False,
+        use_layout_calibration: bool = True,
+        ocr_profile: str | None = None,
+        detector_model: str = "auto",
+        general_recognizer: str = "auto",
+        thai_recognizer: str = "auto",
     ) -> "DocumentPipeline":
-        registry = ModelRegistry.from_setup(model_setup)
+        configured_profile = str(
+            ocr_profile or cfg.get("ocr", {}).get("default_profile", "original")
+        ).casefold()
+        if configured_profile == "auto":
+            configured_profile = str(
+                cfg.get("ocr", {}).get("default_profile", "original")
+            ).casefold()
+        if configured_profile not in {"original", "custom", "adaptive"}:
+            raise DocumentPipelineError(
+                f"unsupported OCR profile {configured_profile!r}; expected original, custom, or adaptive"
+            )
+        registry_value = cfg.get("ocr", {}).get("model_registry")
+        registry_path = (
+            _resolve_configured_path(cfg, registry_value)
+            if registry_value
+            else None
+        )
+        if registry_path is not None and not registry_path.is_file():
+            if configured_profile in {"custom", "adaptive"}:
+                raise DocumentPipelineError(
+                    f"OCR profile {configured_profile!r} requires the upgrade registry: "
+                    f"{registry_path}"
+                )
+            registry_path = None
+        def profile_choice(value: str) -> str:
+            return (
+                "original"
+                if configured_profile == "original" and value == "auto"
+                else value
+            )
+
+        registry = ModelRegistry.from_setup(
+            model_setup,
+            upgrade_registry=registry_path,
+            detector_choice=profile_choice(detector_model),
+            general_choice=profile_choice(general_recognizer),
+            thai_choice=profile_choice(thai_recognizer),
+        )
+        ocr_stack_binding = build_ocr_stack_binding(
+            cfg,
+            registry,
+            ocr_profile=configured_profile,
+        )
         cache = OCRCache(cfgmod.resolve_path(cfg, "ocr_cache")) if cfg.get("ocr", {}).get("cache_enabled", True) else None
         options = {
             "use_doc_orientation_classify": bool(cfg.get("ocr", {}).get("enable_document_orientation_classifier", False)),
             "use_doc_unwarping": bool(cfg.get("ocr", {}).get("enable_document_unwarping", False)),
             "use_textline_orientation": bool(cfg.get("ocr", {}).get("enable_textline_orientation", False)),
+            "enable_recognition_retries": (
+                configured_profile == "adaptive"
+                and bool(
+                    cfg.get("ocr", {})
+                    .get("recognition_retries", {})
+                    .get("enabled", False)
+                )
+            ),
+            "retry_confidence_threshold": float(
+                cfg.get("ocr", {})
+                .get("recognition_retries", {})
+                .get("confidence_threshold", 0.65)
+            ),
+            "retry_max_candidates": int(
+                cfg.get("ocr", {})
+                .get("recognition_retries", {})
+                .get("maximum_candidates", 5)
+            ),
+            "retry_padding_profile": str(
+                cfg.get("ocr", {})
+                .get("recognition_retries", {})
+                .get("padding_profile", "B")
+            ),
         }
         ocr = MultilingualOCR(
             registry,
@@ -82,7 +168,58 @@ class DocumentPipeline:
             adapter_options=options,
             cache=cache,
             preprocessing_version=str(cfg.get("ocr", {}).get("preprocessing_version", "1.0")),
-            preprocessing_profile=str(cfg.get("ocr", {}).get("preprocessing_profile", "original")),
+            preprocessing_profile=(
+                str(cfg.get("ocr", {}).get("adaptive_preprocessing_profile", "quality_auto"))
+                if configured_profile == "adaptive"
+                else str(cfg.get("ocr", {}).get("preprocessing_profile", "original"))
+            ),
+            enable_tiling=(
+                configured_profile == "adaptive"
+                and bool(cfg.get("ocr", {}).get("tiling", {}).get("enabled", False))
+            ),
+            tile_grid=tuple(cfg.get("ocr", {}).get("tiling", {}).get("grid", [2, 2])),
+            tile_overlap=float(cfg.get("ocr", {}).get("tiling", {}).get("overlap", 0.15)),
+            tile_upscale=float(cfg.get("ocr", {}).get("tiling", {}).get("upscale", 1.0)),
+            tile_iou_threshold=float(
+                cfg.get("ocr", {}).get("tiling", {}).get("polygon_iou_threshold", 0.50)
+            ),
+            tile_minimum_score_gain=float(
+                cfg.get("ocr", {}).get("tiling", {}).get("minimum_score_gain", 0.0)
+            ),
+        )
+        adaptive_cfg = cfg.get("ocr", {}).get("adaptive_rendering", {})
+        adaptive_rendering = (
+            AdaptiveRenderingConfig(
+                base_dpi=int(adaptive_cfg.get("base_dpi", 200)),
+                rerender_dpi=int(adaptive_cfg.get("rerender_dpi", 300)),
+                minimum_box_count=int(adaptive_cfg.get("minimum_box_count", 3)),
+                minimum_median_text_height_ratio=float(
+                    adaptive_cfg.get("minimum_median_text_height_ratio", 0.007)
+                ),
+                minimum_text_coverage=float(
+                    adaptive_cfg.get("minimum_text_coverage", 0.0015)
+                ),
+                minimum_mean_confidence=float(
+                    adaptive_cfg.get("minimum_mean_confidence", 0.55)
+                ),
+                minimum_median_confidence=float(
+                    adaptive_cfg.get("minimum_median_confidence", 0.55)
+                ),
+                minimum_text_characters=int(
+                    adaptive_cfg.get("minimum_text_characters", 16)
+                ),
+                sparse_table_box_count=int(
+                    adaptive_cfg.get("sparse_table_box_count", 8)
+                ),
+                minimum_score_gain=float(
+                    adaptive_cfg.get("minimum_score_gain", 0.0)
+                ),
+            )
+            if (
+                configured_profile == "adaptive"
+                and bool(adaptive_cfg.get("enabled", False))
+            )
+            else None
         )
         warnings: list[str] = []
         entity_extractor = None
@@ -93,10 +230,20 @@ class DocumentPipeline:
             else cfgmod.resolve_path(cfg, "ie_checkpoints") / "layoutxlm_multitask" / "final"
         )
         configured_calibration = cfg.get("layout_model", {}).get("calibration")
-        calibration = Path(calibration_path) if calibration_path else (
-            _resolve_configured_path(cfg, configured_calibration)
-            if configured_calibration
-            else cfgmod.project_root(cfg) / "models" / "multitask_calibration.json"
+        calibration = (
+            (
+                Path(calibration_path)
+                if calibration_path
+                else (
+                    _resolve_configured_path(cfg, configured_calibration)
+                    if configured_calibration
+                    else cfgmod.project_root(cfg)
+                    / "models"
+                    / "multitask_calibration.json"
+                )
+            )
+            if use_layout_calibration
+            else None
         )
         try:
             from src.information_extraction.entity_worker_client import (
@@ -111,6 +258,7 @@ class DocumentPipeline:
                 cache_dir=cfgmod.resolve_path(cfg, "layout_models"),
                 max_length=int(cfg.get("layout_model", {}).get("max_length", 512)),
                 calibration_path=calibration,
+                ocr_binding=ocr_stack_binding,
                 confidence_threshold=confidence_threshold,
             )
         except Exception as exc:
@@ -134,6 +282,12 @@ class DocumentPipeline:
             kmeans_predictor=kmeans_predictor,
             enable_kmeans_display=enable_kmeans_display,
             initialization_warnings=warnings,
+            adaptive_rendering=adaptive_rendering,
+            max_render_pixels=int(
+                cfg.get("ocr", {}).get("adaptive_rendering", {}).get(
+                    "max_render_pixels", 60_000_000
+                )
+            ),
         )
 
     def extract_path(
@@ -177,6 +331,31 @@ class DocumentPipeline:
         continue_on_page_error: bool = False,
         deskew_angle: float | None = None,
     ) -> dict[str, Any]:
+        result, _ = self.extract_pages_with_rendered_pages(
+            document_id=document_id,
+            source_type=source_type,
+            pages=pages,
+            language=language,
+            language_hint=language_hint,
+            private_output=private_output,
+            continue_on_page_error=continue_on_page_error,
+            deskew_angle=deskew_angle,
+        )
+        return result
+
+    def extract_pages_with_rendered_pages(
+        self,
+        *,
+        document_id: str,
+        source_type: str,
+        pages: Sequence[DocumentPage],
+        language: str = "auto",
+        language_hint: str | None = None,
+        private_output: bool = False,
+        continue_on_page_error: bool = False,
+        deskew_angle: float | None = None,
+    ) -> tuple[dict[str, Any], list[DocumentPage]]:
+        """Extract pages and return the exact render selected for visualization."""
         if not pages:
             raise DocumentPipelineError("document contains no pages")
         started = time.perf_counter()
@@ -186,9 +365,10 @@ class DocumentPipeline:
         routes: list[str] = []
         confidences: list[float] = []
         warnings = list(self.initialization_warnings)
+        selected_pages: list[DocumentPage] = []
         for page in pages:
             try:
-                result, fields, document_type = self._extract_page(
+                result, fields, document_type, selected_page = self._extract_page_adaptive(
                     page,
                     language=language,
                     language_hint=language_hint,
@@ -202,8 +382,10 @@ class DocumentPipeline:
                 result = _failed_page(page, exc)
                 fields = {}
                 document_type = {"label": "unknown", "confidence": None}
+                selected_page = page
                 warnings.append(f"page {page.page_number} failed and was retained as an empty result")
             output_pages.append(result)
+            selected_pages.append(selected_page)
             page_fields.append(fields)
             page_document_types.append(document_type)
             routes.append(str(result["ocr"]["language_route"]))
@@ -240,7 +422,77 @@ class DocumentPipeline:
             warnings=warnings,
         )
         validate_document_result(payload)
-        return payload
+        return payload, selected_pages
+
+    def _extract_page_adaptive(
+        self,
+        page: DocumentPage,
+        *,
+        language: str,
+        language_hint: str | None,
+        deskew_angle: float | None,
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], DocumentPage]:
+        first_ocr = self._run_page_ocr(
+            page,
+            language=language,
+            language_hint=language_hint,
+            deskew_angle=deskew_angle,
+        )
+        selected_page = page
+        selected_ocr = first_ocr
+        if (
+            self.adaptive_rendering is not None
+            and page.source_type == "pdf"
+            and page.source_path is not None
+        ):
+            config = self.adaptive_rendering
+            signals = page_quality_signals(
+                first_ocr,
+                image_width=page.image.width,
+                image_height=page.image.height,
+                critical_fields_expected=_critical_text_expected(first_ocr),
+                table_like=_table_like_page(first_ocr),
+            )
+            reasons = rerender_reasons(signals, config)
+            if reasons:
+                second_page = self.pdf_rerenderer(
+                    page.source_path,
+                    page_number=page.page_number,
+                    dpi=config.rerender_dpi,
+                    max_pixels=self.max_render_pixels,
+                )
+                second_ocr = self._run_page_ocr(
+                    second_page,
+                    language=language,
+                    language_hint=language_hint,
+                    deskew_angle=deskew_angle,
+                )
+                selected_ocr, provenance = select_render_candidate(
+                    first_ocr,
+                    second_ocr,
+                    first_size=page.image.size,
+                    second_size=second_page.image.size,
+                    first_dpi=page.render_dpi or config.base_dpi,
+                    second_dpi=config.rerender_dpi,
+                    reasons=reasons,
+                    minimum_score_gain=config.minimum_score_gain,
+                )
+                if selected_ocr is second_ocr:
+                    selected_page = second_page
+            else:
+                provenance = no_rerender_provenance(
+                    first_ocr,
+                    image_size=page.image.size,
+                    dpi=page.render_dpi or config.base_dpi,
+                )
+            selected_ocr = dict(selected_ocr)
+            selected_ocr["adaptive_rendering"] = provenance
+            selected_ocr["adaptive_rendering"]["first_pass_signals"] = signals
+        result, fields, document_type = self._materialize_page(
+            selected_page,
+            selected_ocr,
+        )
+        return result, fields, document_type, selected_page
 
     def _extract_page(
         self,
@@ -250,14 +502,36 @@ class DocumentPipeline:
         language_hint: str | None,
         deskew_angle: float | None,
     ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-        image = page.image
-        ocr = self.ocr.extract_page(
-            image,
+        ocr = self._run_page_ocr(
+            page,
+            language=language,
+            language_hint=language_hint,
+            deskew_angle=deskew_angle,
+        )
+        return self._materialize_page(page, ocr)
+
+    def _run_page_ocr(
+        self,
+        page: DocumentPage,
+        *,
+        language: str,
+        language_hint: str | None,
+        deskew_angle: float | None,
+    ) -> dict[str, Any]:
+        return self.ocr.extract_page(
+            page.image,
             language_mode=language,
             language_hint=language_hint,
             metadata_language=language_hint,
             deskew_angle=deskew_angle,
         )
+
+    def _materialize_page(
+        self,
+        page: DocumentPage,
+        ocr: Mapping[str, Any],
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+        image = page.image
         page_warnings = list(ocr.get("warnings") or [])
         entities: list[dict[str, Any]] = []
         model_relations: list[dict[str, Any]] = []
@@ -306,23 +580,33 @@ class DocumentPipeline:
         fields, field_warnings = merge_page_fields(model_fields, rule_fields)
         page_warnings.extend(field_warnings)
         transform = ocr.get("candidate_transform") or _identity_transform(image.width, image.height)
+        ocr_payload = {
+            "detector_model": str(ocr.get("detector_model", "unavailable")),
+            "recognizer_model": str(ocr.get("recognizer_model", "unavailable")),
+            "language_route": str(ocr.get("language_route", "general")),
+            "mean_confidence": ocr.get("mean_confidence"),
+            "words": list(ocr.get("words") or []),
+            "lines": list(ocr.get("lines") or []),
+            "candidate_scores": list(ocr.get("candidate_scores") or []),
+            "provenance_hash": str(ocr.get("provenance_hash", "unavailable")),
+            "duration_seconds": max(0.0, float(ocr.get("duration_seconds", 0.0))),
+        }
+        for optional in (
+            "adaptive_rendering",
+            "tiling",
+            "preprocessing",
+            "recognition_retries",
+            "route_decision",
+        ):
+            if optional in ocr:
+                ocr_payload[optional] = ocr[optional]
         page_result = {
             "page_number": int(page.page_number),
             "width": int(image.width),
             "height": int(image.height),
             "selected_ocr_orientation": float(ocr.get("orientation", 0.0)) % 360.0,
             "full_text": str(ocr.get("full_text", "")),
-            "ocr": {
-                "detector_model": str(ocr.get("detector_model", "unavailable")),
-                "recognizer_model": str(ocr.get("recognizer_model", "unavailable")),
-                "language_route": str(ocr.get("language_route", "general")),
-                "mean_confidence": ocr.get("mean_confidence"),
-                "words": list(ocr.get("words") or []),
-                "lines": list(ocr.get("lines") or []),
-                "candidate_scores": list(ocr.get("candidate_scores") or []),
-                "provenance_hash": str(ocr.get("provenance_hash", "unavailable")),
-                "duration_seconds": max(0.0, float(ocr.get("duration_seconds", 0.0))),
-            },
+            "ocr": ocr_payload,
             "entities": entities,
             "key_value_pairs": relations,
             "tables": model_tables,
@@ -498,6 +782,34 @@ def _detected_languages(pages: Sequence[Mapping[str, Any]]) -> list[str]:
 def _identity_transform(width: int, height: int) -> dict[str, Any]:
     matrix = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     return {"forward": matrix, "inverse": matrix, "source_width": width, "source_height": height}
+
+
+def _critical_text_expected(ocr: Mapping[str, Any]) -> bool:
+    text = str(ocr.get("full_text", "")).casefold()
+    return any(
+        label in text
+        for label in (
+            "invoice",
+            "receipt",
+            "subtotal",
+            "total",
+            "amount",
+            "tax",
+            "reference",
+        )
+    )
+
+
+def _table_like_page(ocr: Mapping[str, Any]) -> bool:
+    words = list(ocr.get("words") or [])
+    if len(words) < 4:
+        return False
+    rows = Counter(
+        round((float(word["bbox"][1]) + float(word["bbox"][3])) / 20.0)
+        for word in words
+        if isinstance(word.get("bbox"), Sequence) and len(word["bbox"]) == 4
+    )
+    return sum(count >= 2 for count in rows.values()) >= 2
 
 
 def _failed_page(page: DocumentPage, exc: Exception) -> dict[str, Any]:

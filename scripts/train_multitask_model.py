@@ -7,6 +7,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 import time
 from collections import Counter, defaultdict
@@ -69,7 +70,35 @@ def main() -> int:
         help="validation epochs without improvement before stopping (final default: 2)",
     )
     parser.add_argument("--resume", default=None, help="resume directory created by this script")
+    parser.add_argument(
+        "--initial-checkpoint",
+        default=None,
+        help=(
+            "initialize a new bounded training run from an existing model checkpoint "
+            "without restoring optimizer or scheduler state"
+        ),
+    )
     parser.add_argument("--checkpoint", default=None)
+    parser.add_argument(
+        "--trial-id",
+        default=None,
+        help="safe identifier used to retain a separate OCR-upgrade training report",
+    )
+    parser.add_argument(
+        "--publish-canonical-report",
+        action="store_true",
+        help=(
+            "Also update canonical final-model reports. Trial runs do not "
+            "publish canonically unless this flag is explicit."
+        ),
+    )
+    parser.add_argument(
+        "--manifest",
+        default=None,
+        help="optional profile-compatible model-dataset manifest override",
+    )
+    parser.add_argument("--encoder-learning-rate", type=float, default=None)
+    parser.add_argument("--head-learning-rate", type=float, default=None)
     parser.add_argument("--tiny-overfit", action="store_true")
     parser.add_argument(
         "--upright-probability",
@@ -80,10 +109,14 @@ def main() -> int:
     parser.add_argument(
         "--streams",
         nargs="+",
-        choices=("ground_truth", "paddleocr", "hybrid"),
+        choices=("ground_truth", "paddleocr", "hybrid", "ocr_noise"),
         default=("ground_truth",),
     )
     args = parser.parse_args()
+    if args.resume and args.initial_checkpoint:
+        parser.error("--resume and --initial-checkpoint are mutually exclusive")
+    if args.trial_id and not re.fullmatch(r"[A-Za-z0-9._-]+", args.trial_id):
+        parser.error("--trial-id may contain only letters, digits, dot, underscore, and dash")
     if args.max_steps is not None and args.max_steps < 1:
         parser.error("--max-steps must be positive")
     if args.epochs is not None and args.epochs < 1:
@@ -92,6 +125,10 @@ def main() -> int:
         parser.error("--early-stopping-patience must be non-negative")
     if args.upright_probability is not None and not 0.0 <= args.upright_probability <= 1.0:
         parser.error("--upright-probability must be in [0, 1]")
+    if args.encoder_learning_rate is not None and args.encoder_learning_rate <= 0:
+        parser.error("--encoder-learning-rate must be positive")
+    if args.head_learning_rate is not None and args.head_learning_rate <= 0:
+        parser.error("--head-learning-rate must be positive")
 
     cfg = cfgmod.load_config(args.config)
     asset_root = cfgmod.resolve_path(cfg, "external_assets")
@@ -126,7 +163,13 @@ def main() -> int:
     _seed_everything(seed, torch)
     selected_device = _device(args.device, torch)
 
-    manifest_path = profile_manifest_path(cfgmod.resolve_path(cfg, "metadata"), args.profile)
+    manifest_path = (
+        Path(args.manifest).resolve()
+        if args.manifest
+        else profile_manifest_path(cfgmod.resolve_path(cfg, "metadata"), args.profile)
+    )
+    if not manifest_path.is_file():
+        raise SystemExit(f"model-dataset manifest is missing: {manifest_path}")
     manifest_rows = read_csv_rows(manifest_path)
     build_ids = {row.get("build_id", "") for row in manifest_rows}
     if len(build_ids) != 1 or "" in build_ids:
@@ -163,7 +206,7 @@ def main() -> int:
         raise SystemExit("private or unmarked model example detected; training refused")
 
     checkpoint_id = str(cfg.get("layout_model", {}).get("checkpoint", "microsoft/layoutxlm-base"))
-    source_checkpoint = args.resume or checkpoint_id
+    source_checkpoint = args.resume or args.initial_checkpoint or checkpoint_id
     tokenizer = LayoutXLMTokenizerFast.from_pretrained(
         source_checkpoint,
         cache_dir=str(cfgmod.resolve_path(cfg, "layout_models")),
@@ -190,7 +233,7 @@ def main() -> int:
         source_checkpoint,
         config=model_config,
         cache_dir=str(cfgmod.resolve_path(cfg, "layout_models")),
-        ignore_mismatched_sizes=not bool(args.resume),
+        ignore_mismatched_sizes=not bool(args.resume or args.initial_checkpoint),
     )
     model.to(selected_device)
 
@@ -199,12 +242,17 @@ def main() -> int:
         if args.upright_probability is not None
         else float(cfg.get("augmentation", {}).get("upright_probability", 0.2))
     )
+    source_model_path = Path(source_checkpoint) / "model.safetensors"
+    tokenizer_binding = {
+        "source": str(source_checkpoint),
+        "model_sha256": _sha256(source_model_path) if source_model_path.is_file() else None,
+    }
     cache_signature = configuration_hash({
         "schema": "multitask-window-v1",
         "build_id": build_id,
         "max_length": settings["max_length"],
         "stride": 64,
-        "tokenizer": checkpoint_id,
+        "tokenizer": tokenizer_binding,
         "entity_labels": BIO_LABELS,
         "canonical_labels": CANONICAL_FIELD_LABELS,
         "relation_labels": RELATION_LABELS,
@@ -290,10 +338,24 @@ def main() -> int:
     encoder_parameters = []
     for name, parameter in model.named_parameters():
         (encoder_parameters if name.startswith("layoutlmv2.") else head_parameters).append(parameter)
+    default_encoder_learning_rate = 5e-6 if args.initial_checkpoint else 2e-5
+    default_head_learning_rate = (
+        5e-5 if args.initial_checkpoint else (3e-4 if args.tiny_overfit else 1e-4)
+    )
+    encoder_learning_rate = (
+        float(args.encoder_learning_rate)
+        if args.encoder_learning_rate is not None
+        else default_encoder_learning_rate
+    )
+    head_learning_rate = (
+        float(args.head_learning_rate)
+        if args.head_learning_rate is not None
+        else default_head_learning_rate
+    )
     optimizer = torch.optim.AdamW(
         [
-            {"params": encoder_parameters, "lr": 2e-5},
-            {"params": head_parameters, "lr": 1e-4 if not args.tiny_overfit else 3e-4},
+            {"params": encoder_parameters, "lr": encoder_learning_rate},
+            {"params": head_parameters, "lr": head_learning_rate},
         ],
         weight_decay=0.01,
     )
@@ -457,6 +519,21 @@ def main() -> int:
             best_metric=best_metric,
             best_epoch=best_epoch,
         )
+        print(
+            json.dumps(
+                {
+                    "event": "epoch_completed",
+                    "trial_id": args.trial_id,
+                    "epoch": epoch + 1,
+                    "optimizer_steps": optimizer_steps,
+                    "selection_composite_score": metrics[
+                        "selection_composite_score"
+                    ],
+                    "best_selection_composite_score": best_metric,
+                }
+            ),
+            flush=True,
+        )
         if stop_requested:
             break
 
@@ -502,7 +579,14 @@ def main() -> int:
         "manifest_sha256": _sha256(manifest_path),
         "public_only": True,
         "gmail_fit_rows": 0,
-        "source_checkpoint": checkpoint_id,
+        "source_checkpoint": str(source_checkpoint),
+        "base_checkpoint": checkpoint_id,
+        "initial_checkpoint": str(args.initial_checkpoint) if args.initial_checkpoint else None,
+        "resume_checkpoint": str(args.resume) if args.resume else None,
+        "learning_rates": {
+            "encoder": encoder_learning_rate,
+            "heads": head_learning_rate,
+        },
         "optimizer_steps": optimizer_steps,
         "micro_steps": micro_steps,
         "best_epoch": best_epoch,
@@ -518,6 +602,7 @@ def main() -> int:
         "stopped_early": stop_reason == "early_stopping",
         "stop_reason": stop_reason or "completed_requested_epochs",
         "resume_contract": "deterministic epoch/order and optimizer-boundary next_batch_index",
+        "trial_id": args.trial_id,
     }
     atomic_write_json(checkpoint / "training_state.json", training_state)
     report = {
@@ -566,14 +651,44 @@ def main() -> int:
             "Canonical supervision trains evidence-token field labels; final value generation and abstention are evaluated separately.",
         ],
     }
-    report_root = cfgmod.resolve_path(cfg, "reports") / "final_model"
-    atomic_write_json(report_root / f"multitask_training_{args.profile}.json", report)
-    atomic_write_json(
-        cfgmod.resolve_path(cfg, "reports") / "information_extraction" / "layout_model_training.json",
-        report,
-    )
+    for report_path in _training_report_targets(
+        cfgmod.resolve_path(cfg, "reports"),
+        profile=args.profile,
+        trial_id=args.trial_id,
+        publish_canonical=args.publish_canonical_report,
+    ):
+        atomic_write_json(report_path, report)
     print(json.dumps(report, indent=2))
     return 0 if reload_result["passed"] else 1
+
+
+def _training_report_targets(
+    reports_root: Path,
+    *,
+    profile: str,
+    trial_id: str | None,
+    publish_canonical: bool,
+) -> list[Path]:
+    targets = []
+    if trial_id:
+        targets.append(
+            reports_root
+            / "ocr_upgrade"
+            / "layout_training"
+            / f"{trial_id}.json"
+        )
+    if not trial_id or publish_canonical:
+        targets.extend(
+            (
+                reports_root
+                / "final_model"
+                / f"multitask_training_{profile}.json",
+                reports_root
+                / "information_extraction"
+                / "layout_model_training.json",
+            )
+        )
+    return targets
 
 
 class TokenizedWindowDataset:

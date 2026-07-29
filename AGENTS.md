@@ -18,7 +18,35 @@
   `vision_info_extraction_data/` husk was removed during verified cleanup on
   2026-07-21; canonical data remains under `data/`.
 - **Domain (confirmed by professor, 2026-07-13):** vision information extraction — build a model that extracts information correctly and accurately from images, documents, and any file that contains information. The datasets on disk are scanned forms, receipts, and invoices (OCR + IE + possibly DocVQA).
-- **Status:** Dataset organization and the bounded rotation baseline remain verified. On 2026-07-17 the repository completed the full public information-extraction pre-model lifecycle: a 7,782-example four-epoch final LayoutXLM run, public-only calibration, locked in-domain evaluation, required 18-angle layout and end-to-end grids, a fixed 100-page unseen CORU evaluation, exact general/Thai OCR verification, hash-bound image/rotation/Thai/multipage integration, and aggregate-only private operation. The exact final checkpoint hash is `34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189`. Reference-token entity F1 is 0.9813, but bounded end-to-end entity F1 is only 0.1314-0.1830 because OCR remains the main bottleneck; relation quality is limited by FUNSD-only supervision. K-Means remains display-only, and the failed exact-angle estimator is disabled for inference. On 2026-07-21 the final model has a one-command CLI, repaired local GUI, portable Windows setup, Docker-based macOS route, and consent-gated Codex/MCP review workflow that uses no OpenAI API key. The clean weights-included archive is 1,152,835,265 bytes with SHA-256 `c6c874f5b0879478497c9a33529f6416d48be60d586197fb625540d795f9ec6b`; it is built from clean commit `e47023de2a201092df6fd3393ec297b2835e0a50`, includes the MIT license and contribution policy, uses hash-bound numeric K-Means inference parameters, and is published in the public `v1.0.0-build-week` GitHub Release with a matching remote digest. Native Windows GPU and Docker Linux/AMD64 CPU outputs are verified on the safe validation document; the rebuilt package also passed a full CPU sample extraction. Physical Apple hardware remains untested. Devpost submission `1102544` is in `Submitted` state with the public 2:54 demo and `/feedback` Session ID.
+- **Status:** Dataset organization and the bounded rotation baseline remain
+  verified. The 2026-07-24 through 2026-07-28 OCR upgrade froze a 400-page
+  public DEV_SELECT benchmark, built 8,755 detector pages/163,679 regions and
+  137,886 real recognition crops, generated 48,471 licensed synthetic crops,
+  and executed bounded detector, general-recognizer, and Thai-recognizer
+  trials. The global default remains the original detector/general recognizer;
+  the custom Thai recognizer is synthetic-only and limited to explicit
+  custom/adaptive profiles. The selected fresh four-epoch LayoutXLM checkpoint
+  used 12,455 public TRAIN examples and has SHA-256
+  `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`;
+  its public-only calibration SHA-256 is
+  `81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`.
+  The locked 1,760-page image-to-JSON run had zero failures but measured only
+  0.3815 polygon F1, 0.1663 text coverage, 0.9692 WER, 0.0944 entity F1,
+  0.0111 relation F1, and 0.2534 canonical accuracy. These miss the requested
+  quality targets; do not describe the system as production-ready or accurate
+  on every document. The 100-page CORU run remains wholly unseen, and the
+  current private operation is a two-document/page aggregate-only check with
+  zero Gmail fit rows. K-Means remains display-only and the failed exact-angle
+  estimator remains disabled. The locally verified branch archive was built
+  from clean commit `fcae32edc193ff6574bf99362da0e2368d5ef464`; it is
+  1,159,061,897 bytes with SHA-256
+  `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`
+  and passed fresh CPU setup, CPU/GPU inference, schema, visualization,
+  fallback, privacy, archive, and GUI probes. The public
+  `v1.0.0-build-week` package and Devpost submission `1102544` remain
+  historical July 21 publication evidence; do not imply that the newer branch
+  package replaced that Release unless a new publication is explicitly
+  verified.
 
 ## Project goal and model requirements (confirmed by professor, 2026-07-13)
 
@@ -56,9 +84,17 @@ reports/                   # preparation, features, K-Means, angles, verificatio
 schemas/                   # versioned inference-output JSON Schema
 scripts/                   # organization plus rotation-stage CLI entry points
 src/                       # organization, rotation, OCR, IE, inference, evaluation
-tests/                     # synthetic/regression tests; 244 pass, 2 environment-dependent skips
+tests/                     # synthetic/regression tests; final counts must come from the current verification ledger
 ```
-Large OCR/layout assets live below `D:\CSX4201\vision-info-extraction-assets` in separate Python 3.10 environments. Raw totals remain 128,793 files and 35,459,126,772 bytes. The bounded rotation run generated 8,332 rotations with 0 failures and 2,083 rows per zone. Rotation verification passes 20/20 checks; the host suite passes 244 tests with two environment-dependent skips. The explicit OCR-runtime and CUDA-layout partitions pass 122 and 2 tests respectively.
+Large OCR/layout assets live below
+`D:\CSX4201\vision-info-extraction-assets` in separate Python 3.10
+environments. Raw totals remain 128,793 files and 35,459,126,772 bytes. The
+bounded rotation run generated 8,332 rotations with 0 failures and 2,083 rows
+per zone. Rotation verification passes 20/20 checks. Use
+`reports/ocr_upgrade/verification_executions.json` for the current host,
+OCR-runtime, layout-runtime, compilation, schema, privacy, storage, cache,
+profile, and portable verification evidence rather than copying an older test
+count into new reports.
 
 ---
 
@@ -77,7 +113,7 @@ Large OCR/layout assets live below `D:\CSX4201\vision-info-extraction-assets` in
 - **No implied work.** Do not claim an edit, validation, sync, or doc update happened unless it actually did.
 
 ## Data and git hygiene
-- The repo is initialized on `main` with an existing private GitHub remote. Before every commit or push:
+- The repo is initialized on `main` with an existing public GitHub remote. Before every commit or push:
   - `.gitignore` already excludes OS junk (`__MACOSX/`, `.DS_Store`), Python build/venv artifacts, and IDE folders — keep it that way.
   - Large binaries are present (`.zip`, `.pdf`, image archives). Before committing, decide policy: **Git LFS**, gitignore + documented download steps, or commit directly. Do not blindly push hundreds of MB.
   - Derived rotations, features, private page renders, private operational manifests, and large operational manifests are local ignored outputs. Classical artifacts under `models/kmeans_rotation/` are legitimate for this stage, but verify their provenance and contents before staging.
@@ -97,7 +133,7 @@ Large OCR/layout assets live below `D:\CSX4201\vision-info-extraction-assets` in
 - [ ] Confirm official quality thresholds and test protocol. Current smoke and natural CORU-holdout results are not final benchmarks.
 - [ ] Is `gmail_private_test` the private leaderboard set? Should derived outputs be derived from it at all?
 - [x] Target deliverable — the final trained model, portable Windows/Docker-macOS package, public demo, and OpenAI Build Week submission were completed by 2026-07-21. Devpost submission `1102544` is `Submitted`.
-- [x] Repo visibility for GitHub — confirmed private before the 2026-07-15 publication pass; recheck before every future upload.
+- [x] Repo visibility for GitHub — confirmed public after the owner-authorized 2026-07-21 transition; recheck before every future upload.
 - [x] README.md — updated for the final working information-extraction and portable-product lifecycle (2026-07-19), while preserving historical metrics, limitations, and open research decisions.
 
 > When the user provides the above, update this section, `AGENT_MEMORY.md`, and then `README.md`.

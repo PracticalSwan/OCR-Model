@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+  "build_id": "ocr-recognizer-eval-450826540c10bac6",
+  "generated_at_utc": "2026-07-24T09:46:57.213843+00:00",
+  "split": "dev_select",
+  "manifest_sha256": "681166ae0c3bb8f021ced665f70a38587e8215a18728b2c14e9659d1967ffe43",
+  "detector_sha256": "eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d",
+  "recognizer_sha256": "6c46447e05189eb3f863dc75855f0cfccf16a4af188a249861377c69216f40b1",
+  "checkpoint_sha256": "c4a110423c23739f157ff870e27f41649d8c89e4c8df5230c2cd2e9fd90a7e92",
+  "calibration_sha256": null,
+  "configuration_sha256": "9cb65b971a8c3714806b991e664646ef0ee1ef5f50be2643887f367b256dfc89",
+  "source_commit": "070478c40b1a763f7bab78db753bb9507bcbcf3f",
+  "device": "gpu:0",
+  "sample_count": 22356,
+  "failure_count": 0,
+  "duration_seconds": 383.5151745985495,
+  "private_row_count": 0,
+  "metrics": {
+    "sample_count": 22356,
+    "reference_characters": 961045,
+    "character_errors": 571132,
+    "cer": 0.5942822656587361,
+    "reference_words": 144703,
+    "word_errors": 109363,
+    "wer": 0.7557756231729819,
+    "exact_line_accuracy": 0.3273394167113974,
+    "numeric_exact_match": 0.3163206789769469,
+    "amount_exact_match": 0.15407521782287417,
+    "date_exact_match": 0.19737464522232734,
+    "identifier_exact_match": 0.30523038605230385,
+    "currency_exact_match": 0.16117615028586987,
+    "email_exact_match": 0.06161221590909091,
+    "turkish_character_accuracy": 0.8033509700176367,
+    "english_exact_match": 0.2837468208647248,
+    "confidence_all_finite": true,
+    "confidence_ece": 0.5002087677448539,
+    "confidence_brier": 0.4582185830927175,
+    "duration_seconds": 383.5151745985495,
+    "time_per_sample_seconds": 0.017154910296947105,
+    "failure_count": 0,
+    "selection_score": 0.2948377309605481,
+    "track": "general",
+    "trial_id": "rec_general_baseline_official",
+    "peak_gpu_memory_bytes": 3349591808,
+    "source_manifests": [
+      {
+        "path": "D:/CSX4201/vision-info-extraction-assets/data/recognition_training/dataset_manifest.csv",
+        "sha256": "43292a320eeb8cc07ee425e5f65446cb9a3e5984405e1877b538a36b793503e2"
+      },
+      {
+        "path": "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition/dataset_manifest.csv",
+        "sha256": "cbc1fc8950558210df8b684af6bc7f59126673233376ffa12b6d31c1948a4ac4"
+      }
+    ],
+    "dictionary": {
+      "path": "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv6_dict.txt",
+      "sha256": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6",
+      "compatible_evaluated_samples": 22356,
+      "excluded_sample_count": 285,
+      "excluded_by_codepoint": {
+        "U+0E3F": 283,
+        "U+F702": 1,
+        "U+F703": 1
+      },
+      "excluded_sample_ids_sha256": "79fad2fd81be9be1a28568634419e5d788ea2f2943e02f7c647cb582e888f644",
+      "policy": "Unrepresentable targets are excluded and reported; target text is never silently mutated."
+    },
+    "predictions_path": "D:/CSX4201/vision-info-extraction-assets/evaluations/ocr_upgrade/recognizer/rec_general_baseline_official/predictions.jsonl",
+    "predictions_sha256": "de61f63db672270bdff93513bb9671a394b32327615e27d20e4e96cca5894a5a",
+    "model_directory": "D:/CSX4201/vision-info-extraction-assets/cache/paddlex/official_models/PP-OCRv6_medium_rec"
+  },
+  "model_name": "PP-OCRv6_medium_rec",
+  "environment": {
+    "python": "3.10.11",
+    "paddle": "3.3.0",
+    "paddleocr": "3.7.0",
+    "paddlex": "3.7.2"
+  }
+}

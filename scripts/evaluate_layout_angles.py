@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 import time
 from collections import defaultdict
@@ -20,6 +21,8 @@ from src.information_extraction.model_dataset import profile_manifest_path, vali
 from src.information_extraction.multitask_data import CANONICAL_FIELD_LABELS, RELATION_LABELS  # noqa: E402
 from src.information_extraction.multitask_evaluation import validate_evaluation_binding  # noqa: E402
 from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
+from src.ocr.model_registry import ModelRegistry  # noqa: E402
+from src.ocr.stack_binding import build_ocr_stack_binding, validate_ocr_stack_binding  # noqa: E402
 from src.rotation_common import atomic_write_json, configuration_hash, deterministic_rank, read_csv_rows, sha256_file  # noqa: E402
 from scripts.train_multitask_model import TokenizedWindowDataset, _device, _evaluate, _seed_everything  # noqa: E402
 
@@ -30,6 +33,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
     parser.add_argument("--checkpoint", required=True)
+    parser.add_argument(
+        "--manifest",
+        default=None,
+        help="optional final-profile model-dataset manifest override",
+    )
     parser.add_argument(
         "--calibration", default=str(PROJECT_ROOT / "models" / "multitask_calibration.json")
     )
@@ -55,7 +63,27 @@ def main() -> int:
     state = json.loads((checkpoint / "training_state.json").read_text(encoding="utf-8"))
     calibration_path = Path(args.calibration).resolve()
     calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
-    manifest_path = profile_manifest_path(cfgmod.resolve_path(cfg, "metadata"), "final")
+    profile = str(cfg.get("ocr", {}).get("default_profile", "original"))
+    choice = "original" if profile == "original" else "auto"
+    registry = ModelRegistry.from_setup(
+        PROJECT_ROOT / "reports" / "ocr" / "model_setup.json",
+        upgrade_registry=cfgmod.resolve_path(cfg, "reports")
+        / "ocr_upgrade"
+        / "model_registry.json",
+        detector_choice=choice,
+        general_choice=choice,
+        thai_choice=choice,
+    )
+    ocr_stack = build_ocr_stack_binding(
+        cfg, registry, ocr_profile=profile
+    )
+    manifest_path = (
+        Path(args.manifest).resolve()
+        if args.manifest
+        else profile_manifest_path(cfgmod.resolve_path(cfg, "metadata"), "final")
+    )
+    if not manifest_path.is_file():
+        raise SystemExit(f"model-dataset manifest is missing: {manifest_path}")
     rows = read_csv_rows(manifest_path)
     build_ids = {row.get("build_id", "") for row in rows}
     if len(build_ids) != 1 or "" in build_ids:
@@ -73,6 +101,13 @@ def main() -> int:
         or calibration.get("private_example_count") != 0
     ):
         raise SystemExit("calibration is not bound to the final public checkpoint/build")
+    try:
+        validate_ocr_stack_binding(
+            calibration.get("ocr_stack_binding") or {},
+            ocr_stack,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     examples = load_model_examples(
         manifest_path, "test_in_domain", expected_profile="final",
         expected_build_id=build_id, token_sources={"ground_truth"},
@@ -132,9 +167,19 @@ def main() -> int:
         "private_example_count": 0,
         "checkpoint": str(checkpoint),
         "checkpoint_model_sha256": sha256_file(checkpoint / "model.safetensors"),
+        "checkpoint_sha256": sha256_file(checkpoint / "model.safetensors"),
         "calibration_sha256": sha256_file(calibration_path),
         "build_id": build_id,
         "manifest_sha256": sha256_file(manifest_path),
+        "detector_sha256": ocr_stack["detector_sha256"],
+        "recognizer_sha256": ocr_stack["recognizer_sha256"],
+        "configuration_sha256": ocr_stack["preprocessing_sha256"],
+        "source_commit": _git_commit(),
+        "device": str(device),
+        "sample_count": len(examples) * len(ANGLES),
+        "failure_count": 0,
+        "private_row_count": 0,
+        "test_used_for_selection": False,
         "sample_strategy": "deterministic dataset-balanced ground-truth geometry sample",
         "pages_per_dataset": args.pages_per_dataset,
         "example_count": len(examples),
@@ -163,6 +208,14 @@ def _balanced_examples(examples: list[dict[str, Any]], limit: int) -> list[dict[
         )
         selected.extend(ordered[:limit])
     return selected
+
+
+def _git_commit() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        text=True,
+    ).strip()
 
 
 if __name__ == "__main__":

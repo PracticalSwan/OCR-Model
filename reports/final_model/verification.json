@@ -15,19 +15,19 @@
     },
     "model_dataset": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\model_dataset_final_summary.json",
-      "sha256": "68d2caf3085f38f7b35b71bd33059bd0f84a5be3399e3c0a1c6af050e237942d"
+      "sha256": "7a2d6b0c5dacbab1f4c6d2b38caad5ab7ef2a442da66545909cedfd98c1c5dfb"
     },
     "training": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\training_summary.json",
-      "sha256": "907af7be28ef4e691811ed4363a10c1e5c2d5526979f656718121109770c9e45"
+      "sha256": "720ca6cd88290d881bbb38c2f6dada7640fee499d12f1e15956516ad4594e169"
     },
     "heldout": {
-      "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\evaluations\\final_test_in_domain_ground_truth.json",
-      "sha256": "ab6c4180c3706b531d56971780b1faf6bfb3aea738bd020177482cc762770ba3"
+      "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\evaluations\\ocr_upgrade_locked_test_ground_truth.json",
+      "sha256": "6dec770964bcb9d487f7f07265417cc6c957f8500466fbfef6c6179807190982"
     },
     "calibration": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\models\\multitask_calibration.json",
-      "sha256": "b1c683d3f1e1cfc4b9515bb83cf64ce455343445a553ab7525f845272b902087"
+      "sha256": "81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44"
     },
     "ocr_ablation": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\ocr_preprocessing_ablation.json",
@@ -35,27 +35,27 @@
     },
     "layout_angles": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\layout_angle_metrics.json",
-      "sha256": "5b8afaaaeecc22409844417daa5d5b5048557c64eafabe09a441337728aa3315"
+      "sha256": "f60e996579f5937b8f0514a923f2952ea4389f0368b1b05ed6e96788b6c564ab"
     },
     "end_to_end_angles": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\end_to_end_angle_metrics.json",
-      "sha256": "154304a403169b8abf267d559bfcd6b46bc36ecf0f9a6ebb9921b2a196585d54"
+      "sha256": "36bd33ad7beef0f79948ba35ab60576bf3bcd5696cb7f3363199c0e96c959bf3"
     },
     "unseen": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\unseen_domain_metrics.json",
-      "sha256": "a752a399383672e3609f560b25d5508fe2aef85335408e6e8c7c0cf1cf5eec9a"
+      "sha256": "6cd7402ffc5c2cdfcb9429edd122f8ae4d8e07fe845a8ae1dd0ff56bd9aa0adf"
     },
     "private": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\final_model\\private_test_aggregate.json",
-      "sha256": "d5d4fab750012c0cfd8873b332f2dd41a319e4fbd2f781c84110d825e089f203"
+      "sha256": "9f908dde6e8a84c291939bf4565571fc976be0e63967f810a20382b0d2ef248e"
     },
     "integration": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\information_extraction\\integration_smoke.json",
-      "sha256": "27262400ff6f04a452317f1383fa6cd8cb6117c2f4d94b9a0b4cead3efd891d5"
+      "sha256": "0567cae9ad7a44c380b7b5ad7cb02454620023fc7e73c81ea84b21273081a78a"
     },
     "ocr_models": {
       "path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr\\model_verification.json",
-      "sha256": "c8ababa7001c20f59725821bc94dd15ce3b2da8402f568862f4effb01b7a2dc1"
+      "sha256": "38e79cc136de4d3879a86f5beb68c40cd3436280f24ea1118ff2540ca07b1b41"
     }
   },
   "limitations": [

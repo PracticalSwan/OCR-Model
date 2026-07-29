@@ -72,3 +72,19 @@ def test_external_asset_link_is_not_treated_as_committable_output(
     passed, detail = verify_data._check_forbidden(tmp_path)
 
     assert passed, detail
+
+
+def test_git_internal_checkpoint_directory_is_ignored(tmp_path: Path) -> None:
+    _touch(
+        tmp_path
+        / ".git"
+        / "refs"
+        / "codex"
+        / "turn-diffs"
+        / "checkpoints"
+        / "state.json"
+    )
+
+    passed, detail = verify_data._check_forbidden(tmp_path)
+
+    assert passed, detail

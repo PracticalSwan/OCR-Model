@@ -3,9 +3,9 @@
   "heldout_scope": "bounded end-to-end public test sample; development ablation reported separately",
   "upright": {
     "page_count": 3,
-    "recognized_text_coverage": 0.4027889972234873,
-    "wer": 0.6998877146245568,
-    "detection_f1": 0.3395106950662506,
+    "recognized_text_coverage": 0.31315974665728363,
+    "wer": 0.8191721132897604,
+    "detection_f1": 0.18370883882149047,
     "nonempty_rate": 1.0
   },
   "preprocessing_ablation": {
@@ -479,11 +479,11 @@
       }
     },
     "passed": true,
-    "duration_seconds": 16.123712799992063
+    "duration_seconds": 9.680529499892145
   },
   "model_hashes": {
-    "PP-OCRv6_medium_det": "393f629d341e6388ca72d19b25983b96cae36dfdf1f7146adf42d6ab68789388",
-    "PP-OCRv6_medium_rec": "666f7c4d6d5c846c7e202f63356b3fc4a7a3d4ff7040e763b93c5771608c7ae0",
-    "th_PP-OCRv5_mobile_rec": "507c659e3abb6c2c7262a07965ec880119751a29e3c8ed7437b337f74b36608d"
+    "PP-OCRv6_medium_det": "eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d",
+    "PP-OCRv6_medium_rec": "6c46447e05189eb3f863dc75855f0cfccf16a4af188a249861377c69216f40b1",
+    "th_PP-OCRv5_mobile_rec": "cfbe184aa358ce0f3f7707e245a13015b53dfa5ed86118f10b7625f728159b1a"
   }
 }

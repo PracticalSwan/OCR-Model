@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +31,11 @@ from src.information_extraction.multitask_evaluation import (  # noqa: E402
     validate_evaluation_binding,
 )
 from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
+from src.ocr.model_registry import ModelRegistry  # noqa: E402
+from src.ocr.stack_binding import (  # noqa: E402
+    build_ocr_stack_binding,
+    validate_ocr_stack_binding,
+)
 from src.rotation_common import (  # noqa: E402
     atomic_write_json,
     configuration_hash,
@@ -50,13 +57,25 @@ PUBLIC_EVALUATION_SPLITS = (
 
 
 def main() -> int:
+    started = time.perf_counter()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
     parser.add_argument("--profile", choices=("development", "final"), required=True)
     parser.add_argument("--checkpoint", required=True)
+    parser.add_argument(
+        "--manifest",
+        default=None,
+        help="optional profile-compatible model-dataset manifest override",
+    )
     parser.add_argument("--split", choices=PUBLIC_EVALUATION_SPLITS, required=True)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--max-length", type=int, default=512)
+    parser.add_argument(
+        "--ocr-profile",
+        choices=("original", "custom", "adaptive"),
+        default=None,
+        help="OCR stack whose hashes bind this evaluation report",
+    )
     parser.add_argument(
         "--rotation-angle",
         type=float,
@@ -86,6 +105,25 @@ def main() -> int:
         parser.error("--report-name may contain only letters, digits, dot, underscore, and dash")
 
     cfg = cfgmod.load_config(args.config)
+    selected_ocr_profile = str(
+        args.ocr_profile
+        or cfg.get("ocr", {}).get("default_profile", "original")
+    ).casefold()
+    def profile_choice(value: str) -> str:
+        return "original" if selected_ocr_profile == "original" else value
+
+    registry = ModelRegistry.from_setup(
+        PROJECT_ROOT / "reports" / "ocr" / "model_setup.json",
+        upgrade_registry=PROJECT_ROOT / "reports" / "ocr_upgrade" / "model_registry.json",
+        detector_choice=profile_choice("auto"),
+        general_choice=profile_choice("auto"),
+        thai_choice=profile_choice("auto"),
+    )
+    expected_ocr_binding = build_ocr_stack_binding(
+        cfg,
+        registry,
+        ocr_profile=selected_ocr_profile,
+    )
     asset_root = cfgmod.resolve_path(cfg, "external_assets")
     configure_external_environment(asset_root)
     require_storage_gate(
@@ -111,9 +149,13 @@ def main() -> int:
         raise SystemExit(f"checkpoint is incomplete: {checkpoint}")
     training_state = json.loads(state_path.read_text(encoding="utf-8"))
 
-    manifest_path = profile_manifest_path(
-        cfgmod.resolve_path(cfg, "metadata"), args.profile
+    manifest_path = (
+        Path(args.manifest).resolve()
+        if args.manifest
+        else profile_manifest_path(cfgmod.resolve_path(cfg, "metadata"), args.profile)
     )
+    if not manifest_path.is_file():
+        raise SystemExit(f"model-dataset manifest is missing: {manifest_path}")
     manifest_rows = read_csv_rows(manifest_path)
     build_ids = {row.get("build_id", "") for row in manifest_rows}
     if len(build_ids) != 1 or "" in build_ids:
@@ -151,6 +193,13 @@ def main() -> int:
             or calibration.get("private_example_count") != 0
         ):
             raise SystemExit("calibration is not bound to this public checkpoint/build")
+        try:
+            validate_ocr_stack_binding(
+                calibration.get("ocr_stack_binding") or {},
+                expected_ocr_binding,
+            )
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
 
     token_sources = set(args.streams)
     examples = load_model_examples(
@@ -232,23 +281,58 @@ def main() -> int:
                 ),
             }
     report = {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "profile": args.profile,
+        "build_id": evaluation_build_id,
         "split": args.split,
         "token_sources": sorted(token_sources),
         "public_only": True,
         "private_example_count": 0,
         "checkpoint": str(checkpoint),
         "checkpoint_model_sha256": _sha256(model_path),
+        "checkpoint_sha256": _sha256(model_path),
         "checkpoint_build_id": str(training_state.get("build_id", "")),
         "evaluation_build_id": evaluation_build_id,
         "cross_build_comparison": str(training_state.get("build_id", "")) != evaluation_build_id,
         "manifest_path": str(manifest_path),
         "manifest_sha256": _sha256(manifest_path),
+        "detector_sha256": expected_ocr_binding["detector_sha256"],
+        "recognizer_sha256": expected_ocr_binding["recognizer_sha256"],
+        "preprocessing_sha256": expected_ocr_binding[
+            "preprocessing_sha256"
+        ],
+        "calibration_sha256": (
+            _sha256(calibration_path)
+            if calibration_path is not None
+            else None
+        ),
+        "configuration_sha256": configuration_hash(
+            {
+                "schema_version": "2.0",
+                "profile": args.profile,
+                "split": args.split,
+                "token_sources": sorted(token_sources),
+                "rotation_angle": float(args.rotation_angle) % 360.0,
+                "max_length": args.max_length,
+                "checkpoint_sha256": _sha256(model_path),
+                "manifest_sha256": _sha256(manifest_path),
+                "calibration_sha256": (
+                    _sha256(calibration_path)
+                    if calibration_path is not None
+                    else None
+                ),
+                "ocr_stack_binding": expected_ocr_binding,
+            }
+        ),
+        "source_commit": _git_commit(),
         "example_count": len(examples),
+        "sample_count": len(examples),
+        "failure_count": 0,
         "window_count": len(dataset),
         "rotation_angle": float(args.rotation_angle) % 360.0,
         "device": str(selected_device),
+        "duration_seconds": time.perf_counter() - started,
+        "private_row_count": 0,
         "calibration": (
             {
                 "path": str(calibration_path),
@@ -268,6 +352,14 @@ def main() -> int:
     atomic_write_json(report_path, report)
     print(json.dumps({**report, "report_path": str(report_path)}, indent=2))
     return 0
+
+
+def _git_commit() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        text=True,
+    ).strip()
 
 
 if __name__ == "__main__":

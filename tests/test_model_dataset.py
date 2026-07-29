@@ -10,6 +10,7 @@ import pytest
 from src.information_extraction.alignment import align_ocr_to_annotations
 from src.information_extraction.layoutxlm_data import load_model_examples, to_bio_labels
 from src.information_extraction.model_dataset import (
+    _multilingual_ocr_options,
     assign_leakage_safe_splits,
     build_ground_truth_example,
     build_hybrid_example,
@@ -18,6 +19,7 @@ from src.information_extraction.model_dataset import (
     predict_model_data_ocr,
     profile_manifest_path,
     select_ocr_variant_rows,
+    prepare_model_dataset,
     validate_manifest_profile,
     validate_profile_requirements,
     validate_reusable_example,
@@ -446,6 +448,40 @@ def test_ocr_variant_selection_is_bounded_balanced_and_deterministic() -> None:
     assert len(select_ocr_variant_rows(rows, 0)) == len(rows)
 
 
+def test_stack_binding_drives_exact_model_dataset_ocr_runtime_options() -> None:
+    options = _multilingual_ocr_options(
+        {
+            "preprocessing_policy": {
+                "preprocessing_version": "3.1",
+                "preprocessing_profile": "grayscale_normalized",
+                "orientation_candidates": [0, 90],
+                "enable_continuous_deskew": False,
+                "tiling": {
+                    "enabled": True,
+                    "grid": [3, 3],
+                    "overlap": 0.20,
+                    "upscale": 1.25,
+                    "polygon_iou_threshold": 0.45,
+                    "minimum_score_gain": 0.02,
+                },
+                "recognition_retries": {
+                    "enabled": True,
+                    "confidence_threshold": 0.61,
+                    "maximum_candidates": 4,
+                    "padding_profile": "C",
+                },
+            }
+        }
+    )
+    assert options["preprocessing_version"] == "3.1"
+    assert options["preprocessing_profile"] == "grayscale_normalized"
+    assert options["cardinal_angles"] == (0.0, 90.0)
+    assert options["enable_fine_deskew"] is False
+    assert options["enable_tiling"] is True
+    assert options["tile_grid"] == (3, 3)
+    assert options["adapter_options"]["retry_padding_profile"] == "C"
+
+
 def test_model_data_ocr_uses_verified_orientation_pipeline(tmp_path: Path) -> None:
     class FakePipeline:
         def __init__(self) -> None:
@@ -531,3 +567,26 @@ def test_private_ground_truth_example_is_refused() -> None:
             profile="final",
             split_group_id="group_1",
         )
+
+
+def test_model_dataset_rejects_unknown_ocr_profile_before_io() -> None:
+    with pytest.raises(ValueError, match="unsupported OCR profile"):
+        prepare_model_dataset(
+            {},
+            None,  # type: ignore[arg-type]
+            profile="smoke",
+            streams=("ground_truth",),
+            ocr_profile="experimental",
+        )
+
+
+def test_model_dataset_refuses_ocr_variants_on_calibration_or_test_splits() -> None:
+    for split in ("dev_calibration", "test_in_domain"):
+        with pytest.raises(ValueError, match="unsupported OCR variant split"):
+            prepare_model_dataset(
+                {},
+                None,  # type: ignore[arg-type]
+                profile="smoke",
+                streams=("ground_truth", "paddleocr"),
+                ocr_variant_split_limits={split: 1},
+            )

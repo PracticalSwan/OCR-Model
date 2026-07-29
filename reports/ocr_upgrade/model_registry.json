@@ -1,0 +1,626 @@
+{
+  "schema_version": "2.0",
+  "generated_at_utc": "2026-07-28T10:58:19.352734+00:00",
+  "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+  "defaults": {
+    "detector": "original",
+    "general_recognizer": "original",
+    "thai_recognizer": "custom"
+  },
+  "models": {
+    "PP-OCRv6_medium_det_original": {
+      "available": true,
+      "accepted": true,
+      "selected": true,
+      "default": true,
+      "variant": "original",
+      "role": "detector",
+      "language": "multilingual",
+      "model_name": "PP-OCRv6_medium_det_original",
+      "upstream_base": "PP-OCRv6_medium_det",
+      "local_path": "D:\\CSX4201\\vision-info-extraction-assets\\cache\\paddlex\\official_models\\PP-OCRv6_medium_det",
+      "files": [
+        {
+          "path": ".cache/huggingface/.gitignore",
+          "size_bytes": 1,
+          "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1"
+        },
+        {
+          "path": ".cache/huggingface/CACHEDIR.TAG",
+          "size_bytes": 195,
+          "sha256": "e8893e2dcb3f4545ef67a0a5b7b769113d38eef1aa61c7c7ba14659b02af955f"
+        },
+        {
+          "path": ".cache/huggingface/download/.gitattributes.metadata",
+          "size_bytes": 104,
+          "sha256": "edb8442dae11b4f8fb550a4cf0d76b8128a8d89767821b85194f9e8d9fd3b5e7"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.json.metadata",
+          "size_bytes": 104,
+          "sha256": "735ccea862da8a6e0a872ba726384f17437d3cb20373630c21def5e1c014dfa5"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.pdiparams.metadata",
+          "size_bytes": 128,
+          "sha256": "0862a77b3587ab05c3693b6cfe396e9dc2fc59df5b1859797428177b3e5d0720"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.yml.metadata",
+          "size_bytes": 104,
+          "sha256": "2e6865f448ca6f1b9a665fedc426d675f103b6878b69223e87ef0c26be36b690"
+        },
+        {
+          "path": ".cache/huggingface/download/README.md.metadata",
+          "size_bytes": 104,
+          "sha256": "cc959bf56e239d39d93e9280993bde9d966fc6e17adede75c040d25459eac014"
+        },
+        {
+          "path": ".cache/huggingface/trees/8e0f56fb2ef86b461d99cfc7ac5c137738985f61.json",
+          "size_bytes": 769,
+          "sha256": "a594e1c1da719685f9ceefd47a7aad4e37d6ff012c1abcb8993767a47e8d29bf"
+        },
+        {
+          "path": ".gitattributes",
+          "size_bytes": 1575,
+          "sha256": "a3a43406012ee8c7b9b38dfab1b11610f33e8245cd864a9a9302d042616a859e"
+        },
+        {
+          "path": "inference.json",
+          "size_bytes": 312150,
+          "sha256": "0f1a7ec35da36173529c7a60238b7f7919e3831929c3f700ad90ad4896adecd5"
+        },
+        {
+          "path": "inference.pdiparams",
+          "size_bytes": 61960476,
+          "sha256": "85218d2e3d98f5a21c58b4220627be923a97aee5db3cc71f39536ab31ac53960"
+        },
+        {
+          "path": "inference.yml",
+          "size_bytes": 886,
+          "sha256": "7298d5ead546584af2504d03355f881ac7a7bc0eb1e282d3e159277c1d0af871"
+        },
+        {
+          "path": "README.md",
+          "size_bytes": 23247,
+          "sha256": "59f37b08a9a49aa6c1275e7b0363991353582f4dc7676539a5d2b05aab57e744"
+        }
+      ],
+      "model_sha256": "eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d",
+      "export_date": null,
+      "source_training_config": "configs/det/PP-OCRv6/PP-OCRv6_medium_det.yml",
+      "training_data_manifest_sha256": null,
+      "training_data_manifest_note": "The upstream publisher did not provide a training-data manifest; this registry binds the downloaded official checkpoint and local inference export.",
+      "license": "Apache-2.0",
+      "intended_domain": "upstream multilingual document text detection",
+      "development_metrics": {
+        "true_positive": 7291,
+        "expected": 11251,
+        "predicted": 16347,
+        "small_expected": 10329,
+        "small_matched": 7197,
+        "medium_expected": 887,
+        "medium_matched": 94,
+        "large_expected": 35,
+        "large_matched": 0,
+        "critical_expected": 3004,
+        "critical_matched": 2290,
+        "precision": 0.4460145592463449,
+        "recall": 0.6480312861079015,
+        "f1": 0.5283716211319661,
+        "small_text_recall": 0.6967760673830962,
+        "medium_text_recall": 0.10597519729425028,
+        "large_text_recall": 0.0,
+        "critical_region_recall": 0.7623169107856191,
+        "sample_count": 400,
+        "failure_count": 0,
+        "duration_seconds": 24.401827700436115,
+        "time_per_page_seconds": 0.06100456925109029,
+        "trial_id": "det_baseline_official",
+        "iou_threshold": 0.5,
+        "small_text_definition": "polygon height <= 5% of page height",
+        "medium_text_definition": "5% < polygon height <= 20% of page height",
+        "large_text_definition": "polygon height > 20% of page height",
+        "predictions_path": "D:/CSX4201/vision-info-extraction-assets/evaluations/ocr_upgrade/detector/det_baseline_official/predictions.jsonl",
+        "predictions_sha256": "be5481fad4a9b9ed8b2c346347cab748f2b336cf2fbecb47e7cf0661e23f0d7f",
+        "model_directory": "D:/CSX4201/vision-info-extraction-assets/cache/paddlex/official_models/PP-OCRv6_medium_det",
+        "adapter_contract_passed": true,
+        "peak_gpu_memory_bytes": 1909681152
+      },
+      "source_checkpoint_sha256": "54d26fc6787060475fbd8a068008625f90688b8130ae2b2d463e561929a34a53"
+    },
+    "PP-OCRv6_medium_rec_original": {
+      "available": true,
+      "accepted": true,
+      "selected": true,
+      "default": true,
+      "variant": "original",
+      "role": "recognizer",
+      "language": "general",
+      "model_name": "PP-OCRv6_medium_rec_original",
+      "upstream_base": "PP-OCRv6_medium_rec",
+      "local_path": "D:\\CSX4201\\vision-info-extraction-assets\\cache\\paddlex\\official_models\\PP-OCRv6_medium_rec",
+      "files": [
+        {
+          "path": ".cache/huggingface/.gitignore",
+          "size_bytes": 1,
+          "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1"
+        },
+        {
+          "path": ".cache/huggingface/CACHEDIR.TAG",
+          "size_bytes": 195,
+          "sha256": "e8893e2dcb3f4545ef67a0a5b7b769113d38eef1aa61c7c7ba14659b02af955f"
+        },
+        {
+          "path": ".cache/huggingface/download/.gitattributes.metadata",
+          "size_bytes": 104,
+          "sha256": "e7d2b404717d117164f791d190782a23f7f74f24930c0e4b578d060e355b61b1"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.json.metadata",
+          "size_bytes": 104,
+          "sha256": "4446a7891c91b1c51a7258823e81f819ff2e581e07cea8f4a09828bbe64b393e"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.pdiparams.metadata",
+          "size_bytes": 128,
+          "sha256": "923396df5bf47742cdb8bc4972a1cf77dc8990907682e37549c45b10e2657fc4"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.yml.metadata",
+          "size_bytes": 104,
+          "sha256": "3db3deccb0c5cd41c54b6609d61676378cfa5719d9577e89d5dbe1c134f85d4f"
+        },
+        {
+          "path": ".cache/huggingface/download/README.md.metadata",
+          "size_bytes": 104,
+          "sha256": "e2bc0924b33a75ec6627289ead63f9600f3b88e95a87dcb9a5bb9dc41b05c7cd"
+        },
+        {
+          "path": ".cache/huggingface/trees/e5a92bcbc5cc1b494628e458d267778f0704fd7c.json",
+          "size_bytes": 772,
+          "sha256": "18bc6eb8bf348ff39f7af4340de5d6653d37dc2fae3c5354cbb44661bfd8ecc0"
+        },
+        {
+          "path": ".gitattributes",
+          "size_bytes": 1575,
+          "sha256": "a3a43406012ee8c7b9b38dfab1b11610f33e8245cd864a9a9302d042616a859e"
+        },
+        {
+          "path": "inference.json",
+          "size_bytes": 221814,
+          "sha256": "0b2e25e990bd072f1bf77d59d67d508bce6c4bd44af6624e0fb27d6da2cd00e8"
+        },
+        {
+          "path": "inference.pdiparams",
+          "size_bytes": 76465087,
+          "sha256": "1b01c79a914587933f615569e75de54f2e638ebb5d3f3b3c1b38c24ede8c7319"
+        },
+        {
+          "path": "inference.yml",
+          "size_bytes": 150580,
+          "sha256": "991b700facf5b50a7de193468207d5f4255b538dde0d312ae3b7c7a9b6873129"
+        },
+        {
+          "path": "README.md",
+          "size_bytes": 23474,
+          "sha256": "75ff9c4853ed171f36224127805062f9bcd1cfbbcacae3d577344866df74f6d3"
+        }
+      ],
+      "model_sha256": "6c46447e05189eb3f863dc75855f0cfccf16a4af188a249861377c69216f40b1",
+      "export_date": null,
+      "source_training_config": "configs/rec/PP-OCRv6/PP-OCRv6_medium_rec.yml",
+      "training_data_manifest_sha256": null,
+      "training_data_manifest_note": "The upstream publisher did not provide a training-data manifest; this registry binds the downloaded official checkpoint and local inference export.",
+      "license": "Apache-2.0",
+      "intended_domain": "upstream general text recognition",
+      "development_metrics": {
+        "sample_count": 22356,
+        "reference_characters": 961045,
+        "character_errors": 571132,
+        "cer": 0.5942822656587361,
+        "reference_words": 144703,
+        "word_errors": 109363,
+        "wer": 0.7557756231729819,
+        "exact_line_accuracy": 0.3273394167113974,
+        "numeric_exact_match": 0.3163206789769469,
+        "amount_exact_match": 0.15407521782287417,
+        "date_exact_match": 0.19737464522232734,
+        "identifier_exact_match": 0.30523038605230385,
+        "currency_exact_match": 0.16117615028586987,
+        "email_exact_match": 0.06161221590909091,
+        "turkish_character_accuracy": 0.8033509700176367,
+        "english_exact_match": 0.2837468208647248,
+        "confidence_all_finite": true,
+        "confidence_ece": 0.5002087677448539,
+        "confidence_brier": 0.4582185830927175,
+        "duration_seconds": 383.5151745985495,
+        "time_per_sample_seconds": 0.017154910296947105,
+        "failure_count": 0,
+        "selection_score": 0.2948377309605481,
+        "track": "general",
+        "trial_id": "rec_general_baseline_official",
+        "peak_gpu_memory_bytes": 3349591808,
+        "source_manifests": [
+          {
+            "path": "D:/CSX4201/vision-info-extraction-assets/data/recognition_training/dataset_manifest.csv",
+            "sha256": "43292a320eeb8cc07ee425e5f65446cb9a3e5984405e1877b538a36b793503e2"
+          },
+          {
+            "path": "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition/dataset_manifest.csv",
+            "sha256": "cbc1fc8950558210df8b684af6bc7f59126673233376ffa12b6d31c1948a4ac4"
+          }
+        ],
+        "dictionary": {
+          "path": "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv6_dict.txt",
+          "sha256": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6",
+          "compatible_evaluated_samples": 22356,
+          "excluded_sample_count": 285,
+          "excluded_by_codepoint": {
+            "U+0E3F": 283,
+            "U+F702": 1,
+            "U+F703": 1
+          },
+          "excluded_sample_ids_sha256": "79fad2fd81be9be1a28568634419e5d788ea2f2943e02f7c647cb582e888f644",
+          "policy": "Unrepresentable targets are excluded and reported; target text is never silently mutated."
+        },
+        "predictions_path": "D:/CSX4201/vision-info-extraction-assets/evaluations/ocr_upgrade/recognizer/rec_general_baseline_official/predictions.jsonl",
+        "predictions_sha256": "de61f63db672270bdff93513bb9671a394b32327615e27d20e4e96cca5894a5a",
+        "model_directory": "D:/CSX4201/vision-info-extraction-assets/cache/paddlex/official_models/PP-OCRv6_medium_rec"
+      },
+      "source_checkpoint_sha256": "c4a110423c23739f157ff870e27f41649d8c89e4c8df5230c2cd2e9fd90a7e92"
+    },
+    "th_PP-OCRv5_mobile_rec_original": {
+      "available": true,
+      "accepted": true,
+      "selected": false,
+      "default": false,
+      "variant": "original",
+      "role": "recognizer",
+      "language": "thai",
+      "model_name": "th_PP-OCRv5_mobile_rec_original",
+      "upstream_base": "th_PP-OCRv5_mobile_rec",
+      "local_path": "D:\\CSX4201\\vision-info-extraction-assets\\cache\\paddlex\\official_models\\th_PP-OCRv5_mobile_rec",
+      "files": [
+        {
+          "path": ".cache/huggingface/.gitignore",
+          "size_bytes": 1,
+          "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1"
+        },
+        {
+          "path": ".cache/huggingface/CACHEDIR.TAG",
+          "size_bytes": 195,
+          "sha256": "e8893e2dcb3f4545ef67a0a5b7b769113d38eef1aa61c7c7ba14659b02af955f"
+        },
+        {
+          "path": ".cache/huggingface/download/.gitattributes.metadata",
+          "size_bytes": 104,
+          "sha256": "51ef93009f7e46ca941d5e137b9ec40eb5793b10bb37486f8ff2b10c86cab599"
+        },
+        {
+          "path": ".cache/huggingface/download/config.json.metadata",
+          "size_bytes": 104,
+          "sha256": "dbde6b31ac5a5b700dec5891f6ed20a2b30ac0c7dc27f551d7e23089722b5aa3"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.json.metadata",
+          "size_bytes": 103,
+          "sha256": "bb316c552aef6b5aaeb556725628cd9ca388afb359903fc397e0aa18e48214bf"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.pdiparams.metadata",
+          "size_bytes": 127,
+          "sha256": "0e7c7c77e1c620430d470dc5cea3dc959c886338797d0a5e9eacf6274aeddc29"
+        },
+        {
+          "path": ".cache/huggingface/download/inference.yml.metadata",
+          "size_bytes": 104,
+          "sha256": "93f7823141c87a8b957f4b1bff7814f2fad28cd6b0254a9f135bf1ecc8cd2ab2"
+        },
+        {
+          "path": ".cache/huggingface/download/README.md.metadata",
+          "size_bytes": 104,
+          "sha256": "0c858141226a713744903b292927017aba7d6c5317c8daef9d2f97088e971000"
+        },
+        {
+          "path": ".cache/huggingface/trees/9e25080455925d3943f5db885fddc79db6a07ca3.json",
+          "size_bytes": 870,
+          "sha256": "bed90a2d0cba3421459fc1d10a736e907bb5be83ec35e2ba76574725455738fb"
+        },
+        {
+          "path": ".gitattributes",
+          "size_bytes": 1575,
+          "sha256": "a3a43406012ee8c7b9b38dfab1b11610f33e8245cd864a9a9302d042616a859e"
+        },
+        {
+          "path": "config.json",
+          "size_bytes": 12126,
+          "sha256": "4a23fb6c20225c198d8d9130534475e578da5d0a1d5c93852ae8857dbd7ac120"
+        },
+        {
+          "path": "inference.json",
+          "size_bytes": 217712,
+          "sha256": "b92a9442af5ac6da3c6ba30ce1672d00a2d7a0fbd8068ed543ac6dcb9d5c7764"
+        },
+        {
+          "path": "inference.pdiparams",
+          "size_bytes": 7814907,
+          "sha256": "45ec91f2322b58b8d30ba27d18fcfdbb8bf388b918dd978162d2af91e0c66d4b"
+        },
+        {
+          "path": "inference.yml",
+          "size_bytes": 4667,
+          "sha256": "f6ba7fefc38ca1ff398ddafa75d67d16e0b3757c4e6c833adffee98a981766c9"
+        },
+        {
+          "path": "README.md",
+          "size_bytes": 6995,
+          "sha256": "40483df501f83786b75cda7abe7b31db4c31e52a76b171fe3bbf4b5784701e5f"
+        }
+      ],
+      "model_sha256": "cfbe184aa358ce0f3f7707e245a13015b53dfa5ed86118f10b7625f728159b1a",
+      "export_date": null,
+      "source_training_config": "configs/rec/PP-OCRv5/multi_language/th_PP-OCRv5_mobile_rec.yaml",
+      "training_data_manifest_sha256": null,
+      "training_data_manifest_note": "The upstream publisher did not provide a training-data manifest; this registry binds the downloaded official checkpoint and local inference export.",
+      "license": "Apache-2.0",
+      "intended_domain": "upstream thai text recognition",
+      "development_metrics": {
+        "sample_count": 2000,
+        "reference_characters": 48737,
+        "character_errors": 1750,
+        "cer": 0.035907011100396,
+        "reference_words": 5454,
+        "word_errors": 1280,
+        "wer": 0.2346901356802347,
+        "exact_line_accuracy": 0.5445,
+        "numeric_exact_match": 0.46048537647790916,
+        "amount_exact_match": 0.0,
+        "date_exact_match": 0.4311377245508982,
+        "identifier_exact_match": 0.386,
+        "currency_exact_match": 0.49101796407185627,
+        "email_exact_match": null,
+        "turkish_character_accuracy": null,
+        "english_exact_match": 0.6597796143250688,
+        "confidence_all_finite": true,
+        "confidence_ece": 0.4051720174252986,
+        "confidence_brier": 0.39820982810735794,
+        "duration_seconds": 6.013657699921168,
+        "time_per_sample_seconds": 0.003006828849960584,
+        "failure_count": 0,
+        "selection_score": 0.5196498907475366,
+        "track": "thai",
+        "trial_id": "rec_thai_baseline_official",
+        "peak_gpu_memory_bytes": 276839424,
+        "source_manifests": [
+          {
+            "path": "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition/dataset_manifest.csv",
+            "sha256": "cbc1fc8950558210df8b684af6bc7f59126673233376ffa12b6d31c1948a4ac4"
+          }
+        ],
+        "dictionary": {
+          "path": "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv5_th_dict.txt",
+          "sha256": "acc2b4734336349a01654683fa0df6347b66aff0947f5591069ba062b597df80",
+          "compatible_evaluated_samples": 2000,
+          "excluded_sample_count": 0,
+          "excluded_by_codepoint": {},
+          "excluded_sample_ids_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "policy": "Unrepresentable targets are excluded and reported; target text is never silently mutated."
+        },
+        "predictions_path": "D:/CSX4201/vision-info-extraction-assets/evaluations/ocr_upgrade/recognizer/rec_thai_baseline_official/predictions.jsonl",
+        "predictions_sha256": "1c768325252c2fa8581c64be09da945b8f1b02a4c761b40de4bf4fc5d7676297",
+        "model_directory": "D:/CSX4201/vision-info-extraction-assets/cache/paddlex/official_models/th_PP-OCRv5_mobile_rec"
+      },
+      "source_checkpoint_sha256": "7fd9230cef2748d1c0519ba2b3d1d6df7c2a667d6aec24e4a6a150903c0f40a6"
+    },
+    "PP-OCRv6_medium_det_csx4201_v1": {
+      "available": false,
+      "accepted": false,
+      "selected": false,
+      "default": false,
+      "variant": "custom",
+      "role": "detector",
+      "language": "multilingual",
+      "model_name": "PP-OCRv6_medium_det_csx4201_v1",
+      "upstream_base": "PP-OCRv6_medium_det",
+      "local_path": null,
+      "files": [],
+      "model_sha256": null,
+      "export_date": null,
+      "source_training_config": "configs/ocr_upgrade/detector",
+      "training_data_manifest_sha256": "c72046534a6e6aac336e59f9c92a1a22877527128a5b7de712c434314e3c30d0",
+      "license": "Apache-2.0",
+      "intended_domain": "public financial document text detection",
+      "development_metrics": {},
+      "unavailable_reason": "The bounded 8 GiB GPU trials produced no valid accepted checkpoint; the verified original detector remains selected.",
+      "trial_evidence": "C:/Assumption University/CSX4201/Project/reports/ocr_upgrade/detector_trials.csv"
+    },
+    "PP-OCRv6_medium_rec_csx4201_v1": {
+      "available": true,
+      "accepted": false,
+      "selected": false,
+      "default": false,
+      "variant": "custom",
+      "role": "recognizer",
+      "language": "general",
+      "model_name": "PP-OCRv6_medium_rec_csx4201_v1",
+      "upstream_base": "PP-OCRv6_medium_rec",
+      "local_path": "D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade/general_recognizer/rec_general_real/exported",
+      "files": [
+        {
+          "path": "inference.json",
+          "size_bytes": 221814,
+          "sha256": "067f24879bf03809036bc836f7640528496148507b6403242066903b60bb2b47"
+        },
+        {
+          "path": "inference.pdiparams",
+          "size_bytes": 76465087,
+          "sha256": "a37b7c482ce940a81da9ed9e6297f3b082f86d73a2459008b25a5fe6bd1a7345"
+        },
+        {
+          "path": "inference.yml",
+          "size_bytes": 169331,
+          "sha256": "9beddce74c8863aa08a341c9becf7f35d994df987a67601d8401309e5c9c313b"
+        }
+      ],
+      "model_sha256": "add5cb92f78c824fa76adcd6ab97d55514caba3ebf58132793721018150f01aa",
+      "export_date": "2026-07-24T10:52:57.409599+00:00",
+      "source_training_config": "C:/Assumption University/CSX4201/Project/configs/ocr_upgrade/recognizer/rec_general_real.yml",
+      "training_data_manifest_sha256": "681166ae0c3bb8f021ced665f70a38587e8215a18728b2c14e9659d1967ffe43",
+      "license": "Apache-2.0",
+      "intended_domain": "public English/Turkish financial document recognition",
+      "development_metrics": {
+        "sample_count": 22356,
+        "reference_characters": 961045,
+        "character_errors": 549404,
+        "cer": 0.5716735428621968,
+        "reference_words": 144703,
+        "word_errors": 96820,
+        "wer": 0.669094628307637,
+        "exact_line_accuracy": 0.5683932724995527,
+        "numeric_exact_match": 0.5539052643651795,
+        "amount_exact_match": 0.44005735083269,
+        "date_exact_match": 0.5359508041627247,
+        "identifier_exact_match": 0.5895392278953923,
+        "currency_exact_match": 0.44922406751973865,
+        "email_exact_match": 0.4424715909090909,
+        "turkish_character_accuracy": 0.0008818342151675485,
+        "english_exact_match": 0.5406689380488507,
+        "confidence_all_finite": true,
+        "confidence_ece": 0.2888659274691806,
+        "confidence_brier": 0.2436392861184544,
+        "duration_seconds": 394.2688226995524,
+        "time_per_sample_seconds": 0.017635928730522114,
+        "failure_count": 0,
+        "selection_score": 0.425805418476788,
+        "track": "general",
+        "trial_id": "rec_general_real",
+        "peak_gpu_memory_bytes": 3349591808,
+        "source_manifests": [
+          {
+            "path": "D:/CSX4201/vision-info-extraction-assets/data/recognition_training/dataset_manifest.csv",
+            "sha256": "43292a320eeb8cc07ee425e5f65446cb9a3e5984405e1877b538a36b793503e2"
+          },
+          {
+            "path": "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition/dataset_manifest.csv",
+            "sha256": "cbc1fc8950558210df8b684af6bc7f59126673233376ffa12b6d31c1948a4ac4"
+          }
+        ],
+        "dictionary": {
+          "path": "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv6_dict.txt",
+          "sha256": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6",
+          "compatible_evaluated_samples": 22356,
+          "excluded_sample_count": 285,
+          "excluded_by_codepoint": {
+            "U+0E3F": 283,
+            "U+F702": 1,
+            "U+F703": 1
+          },
+          "excluded_sample_ids_sha256": "79fad2fd81be9be1a28568634419e5d788ea2f2943e02f7c647cb582e888f644",
+          "policy": "Unrepresentable targets are excluded and reported; target text is never silently mutated."
+        },
+        "predictions_path": "D:/CSX4201/vision-info-extraction-assets/evaluations/ocr_upgrade/recognizer/rec_general_real/predictions.jsonl",
+        "predictions_sha256": "ed53826725a0d53e09d64f196729aca6c0adec464694318351fc2bb85ac31b00",
+        "model_directory": "D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade/general_recognizer/rec_general_real/exported"
+      },
+      "checkpoint_sha256": "f9db02444cf46e7ddf9d0da048ec7efc14fd3736d9ed6e033c58652de54881c5",
+      "source_checkpoint_sha256": "c4a110423c23739f157ff870e27f41649d8c89e4c8df5230c2cd2e9fd90a7e92",
+      "source_commit": "45b6bac5615e053fdb179d5c780fafb504abf1fb",
+      "vendor_commit": "b03f46425e8ff4442b268ce449e3eef758146cd4",
+      "private_row_count": 0,
+      "claim_boundary": null,
+      "acceptance_report": "reports/ocr_upgrade/recognizer_acceptance.json",
+      "acceptance_evidence_sha256": "c72aaee81fa26ad3a5068a8a24f6f8be43e71db1822e7d1ea1a82808ad475cb9",
+      "acceptance_candidate_report_sha256": "2dba4cdad09164212c20f86cbce4120adf2c16a0986934e6a2a5a2e28e1f1673"
+    },
+    "th_PP-OCRv5_mobile_rec_csx4201_v1": {
+      "available": true,
+      "accepted": true,
+      "selected": true,
+      "default": true,
+      "variant": "custom",
+      "role": "recognizer",
+      "language": "thai",
+      "model_name": "th_PP-OCRv5_mobile_rec_csx4201_v1",
+      "upstream_base": "th_PP-OCRv5_mobile_rec",
+      "local_path": "D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade/thai_recognizer/rec_thai_synthetic/exported",
+      "files": [
+        {
+          "path": "inference.json",
+          "size_bytes": 217712,
+          "sha256": "fb2a060610f8ba3d5e967000a1aef09157cc9a96b208245a0aec8fb4300c287a"
+        },
+        {
+          "path": "inference.pdiparams",
+          "size_bytes": 7814907,
+          "sha256": "b2058a4c5d5e5691d2de2c4b257ff29af69fa3430636abaa9888ea29b9bca6a7"
+        },
+        {
+          "path": "inference.yml",
+          "size_bytes": 5234,
+          "sha256": "f7a29b5daf2c58fee0ae39f5410982479beadbf1a27114daf28f5d6d402a2fa5"
+        }
+      ],
+      "model_sha256": "0876e624221bf0ff2d888506c7b9fa84eacc99f98394b424e81c098769d91e73",
+      "export_date": "2026-07-24T09:58:43.236835+00:00",
+      "source_training_config": "C:/Assumption University/CSX4201/Project/configs/ocr_upgrade/recognizer/rec_thai_synthetic.yml",
+      "training_data_manifest_sha256": "43382cbba7807bcf736fe85dead236d1a71f9b5568aaeb86faf03212de4956d1",
+      "license": "Apache-2.0; synthetic fonts OFL-1.1",
+      "intended_domain": "Thai financial-domain recognition; trained and selected on OFL-font synthetic evidence only",
+      "development_metrics": {
+        "sample_count": 2000,
+        "reference_characters": 48737,
+        "character_errors": 541,
+        "cer": 0.011100396003036707,
+        "reference_words": 5454,
+        "word_errors": 389,
+        "wer": 0.07132379904657132,
+        "exact_line_accuracy": 0.866,
+        "numeric_exact_match": 0.8382078406969509,
+        "amount_exact_match": 0.7844311377245509,
+        "date_exact_match": 0.9251497005988024,
+        "identifier_exact_match": 0.786,
+        "currency_exact_match": 0.8862275449101796,
+        "email_exact_match": null,
+        "turkish_character_accuracy": null,
+        "english_exact_match": 0.9090909090909091,
+        "confidence_all_finite": true,
+        "confidence_ece": 0.105525202035904,
+        "confidence_brier": 0.11844197519099513,
+        "duration_seconds": 5.937935900175944,
+        "time_per_sample_seconds": 0.002968967950087972,
+        "failure_count": 0,
+        "selection_score": 0.8445727160402261,
+        "track": "thai",
+        "trial_id": "rec_thai_synthetic",
+        "peak_gpu_memory_bytes": 276839424,
+        "source_manifests": [
+          {
+            "path": "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition/dataset_manifest.csv",
+            "sha256": "cbc1fc8950558210df8b684af6bc7f59126673233376ffa12b6d31c1948a4ac4"
+          }
+        ],
+        "dictionary": {
+          "path": "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv5_th_dict.txt",
+          "sha256": "acc2b4734336349a01654683fa0df6347b66aff0947f5591069ba062b597df80",
+          "compatible_evaluated_samples": 2000,
+          "excluded_sample_count": 0,
+          "excluded_by_codepoint": {},
+          "excluded_sample_ids_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "policy": "Unrepresentable targets are excluded and reported; target text is never silently mutated."
+        },
+        "predictions_path": "D:/CSX4201/vision-info-extraction-assets/evaluations/ocr_upgrade/recognizer/rec_thai_synthetic/predictions.jsonl",
+        "predictions_sha256": "bd8ea4e443d547a3e106f265539fea1cb75199944bc4fb70d6f84734ce7be087",
+        "model_directory": "D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade/thai_recognizer/rec_thai_synthetic/exported"
+      },
+      "checkpoint_sha256": "96bbda4bd94ebeee676e07a3f7c11339b707a506433bbb24f63b54f5459f26e9",
+      "source_checkpoint_sha256": "7fd9230cef2748d1c0519ba2b3d1d6df7c2a667d6aec24e4a6a150903c0f40a6",
+      "source_commit": "1e64d296fb56791f0b26a65a15100413984fad77",
+      "vendor_commit": "b03f46425e8ff4442b268ce449e3eef758146cd4",
+      "private_row_count": 0,
+      "claim_boundary": "Synthetic and integration evidence only; no real public Thai benchmark is claimed."
+    }
+  },
+  "private_row_count": 0,
+  "configuration_sha256": "bbe3a234e478cd9574a73d8ff25ba2bdde860f0acdd0d554b1bd753f211305c1"
+}

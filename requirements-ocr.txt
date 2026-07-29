@@ -1,4 +1,8 @@
 -r requirements-ie.txt
 # setup_ie_environment.ps1 installs the CPU-only PyTorch wheel required by
 # ModelScope/PaddleX. Never install a CUDA PyTorch wheel in this environment.
+# This file is for the isolated inference environment. OCR fine-tuning uses
+# scripts/setup_ocr_training_environment.ps1, the separate ie-ocr-train
+# environment, and the hash-pinned PaddleOCR source checkout recorded in
+# reports/ocr_upgrade/training_environment.json.
 paddleocr==3.7.0

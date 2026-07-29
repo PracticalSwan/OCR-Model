@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import json
+
 import pytest
 
 from src.information_extraction.multitask_data import (
@@ -26,6 +29,50 @@ def test_explicit_missing_calibration_fails_closed(tmp_path) -> None:
 
     with pytest.raises(FileNotFoundError, match="required calibration file"):
         _load_calibration(missing, checkpoint)
+
+
+def test_calibration_rejects_stale_ocr_stack_binding(tmp_path) -> None:
+    checkpoint = tmp_path / "checkpoint"
+    checkpoint.mkdir()
+    model = checkpoint / "model.safetensors"
+    model.write_bytes(b"model")
+    calibration = tmp_path / "calibration.json"
+    calibration.write_text(
+        json.dumps(
+            {
+                "checkpoint_model_sha256": hashlib.sha256(b"model").hexdigest(),
+                "ocr_stack_binding": {
+                    "detector_sha256": "a" * 64,
+                    "recognizer_sha256": "b" * 64,
+                    "preprocessing_sha256": "c" * 64,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="preprocessing_sha256"):
+        _load_calibration(
+            calibration,
+            checkpoint,
+            expected_ocr_binding={
+                "detector_sha256": "a" * 64,
+                "recognizer_sha256": "b" * 64,
+                "preprocessing_sha256": "d" * 64,
+            },
+        )
+
+    loaded, warnings = _load_calibration(
+        calibration,
+        checkpoint,
+        expected_ocr_binding={
+            "detector_sha256": "a" * 64,
+            "recognizer_sha256": "b" * 64,
+            "preprocessing_sha256": "c" * 64,
+        },
+    )
+    assert warnings == []
+    assert loaded["thresholds"]
 
 
 def test_confidence_floor_never_weakens_fitted_thresholds() -> None:

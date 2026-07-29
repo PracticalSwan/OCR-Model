@@ -1,0 +1,183 @@
+{
+  "schema_version": "1.0",
+  "status": "passed",
+  "build_id": "ocr-trial-lists-34351e9061a16acb",
+  "output_root": "D:/CSX4201/vision-info-extraction-assets/data/ocr_trial_lists",
+  "source_hashes": {
+    "D:/CSX4201/vision-info-extraction-assets/data/recognition_training/dataset_manifest.csv": "43292a320eeb8cc07ee425e5f65446cb9a3e5984405e1877b538a36b793503e2",
+    "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition/dataset_manifest.csv": "cbc1fc8950558210df8b684af6bc7f59126673233376ffa12b6d31c1948a4ac4",
+    "C:/Assumption University/CSX4201/Project/reports/ocr_upgrade/training_data_summary.json": "c72046534a6e6aac336e59f9c92a1a22877527128a5b7de712c434314e3c30d0",
+    "D:/CSX4201/vision-info-extraction-assets/data/recognition_training/checksums.sha256": "13ff42c40f6e249e2a95d910340304188ea73412ea24fe582d0f9f5834844313",
+    "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition/checksums.sha256": "12d248ed589f8ff6d6c2af6560764d50767c573438435c1d8580d96069bb7847",
+    "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv6_dict.txt": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6",
+    "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv5_th_dict.txt": "acc2b4734336349a01654683fa0df6347b66aff0947f5591069ba062b597df80"
+  },
+  "counts": {
+    "general_real_train.txt": 119772,
+    "general_real_dev_select.txt": 18111,
+    "general_mixed_train.txt": 147844,
+    "general_mixed_dev_select.txt": 22356,
+    "thai_train.txt": 12000,
+    "thai_dev_select.txt": 2000
+  },
+  "source_counts_before_dictionary_gate": {
+    "real_train": 119773,
+    "real_validation": 18113,
+    "general_train": 29943,
+    "general_validation": 4528,
+    "thai_train": 12000,
+    "thai_validation": 2000
+  },
+  "general_mixed_synthetic_fraction": {
+    "train": 0.18987581504829415,
+    "dev_select": 0.18988191089640366
+  },
+  "dictionary_audit": {
+    "general": {
+      "path": "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv6_dict.txt",
+      "sha256": "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6",
+      "dictionary_token_count": 18708,
+      "observed_character_count": 6250392,
+      "observed_unique_character_count": 111,
+      "unsupported_unique_character_count": 0,
+      "unsupported_occurrence_count": 0,
+      "unsupported_characters": {},
+      "compatible": true
+    },
+    "thai": {
+      "path": "D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR/ppocr/utils/dict/ppocrv5_th_dict.txt",
+      "sha256": "acc2b4734336349a01654683fa0df6347b66aff0947f5591069ba062b597df80",
+      "dictionary_token_count": 524,
+      "observed_character_count": 311668,
+      "observed_unique_character_count": 97,
+      "unsupported_unique_character_count": 0,
+      "unsupported_occurrence_count": 0,
+      "unsupported_characters": {},
+      "compatible": true
+    }
+  },
+  "dictionary_exclusions": {
+    "count": 2157,
+    "reason": "Samples whose target text cannot be represented by the pinned official model dictionary are excluded rather than silently mutated.",
+    "by_source": {
+      "real_public": 3,
+      "synthetic_general": 2154
+    },
+    "by_split": {
+      "train": 1872,
+      "validation": 285
+    },
+    "by_codepoint": {
+      "U+0E3F": 2154,
+      "U+F702": 2,
+      "U+F703": 1
+    },
+    "sample_ids_sha256": "f77752cea53a9ea6e282b44a1a4ae9986ca71436de8ca971ed158f20609c0128",
+    "examples": [
+      {
+        "sample_id": "rec_977926d18cb2c9ef86d0",
+        "source": "real_public",
+        "split": "train",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+F702"
+        ],
+        "transcription_sha256": "ccd4bb56bca51dd173a13b90d1532e4baf5e924aa8c5e68c7a8c7d15ec865219"
+      },
+      {
+        "sample_id": "rec_f2ae0f60b3f2176f879e",
+        "source": "real_public",
+        "split": "validation",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+F703"
+        ],
+        "transcription_sha256": "93f13e645dadf6d44541885b951f419838d8d22997c89e9131c6c7fec4959c88"
+      },
+      {
+        "sample_id": "rec_95e977ffc619803faf68",
+        "source": "real_public",
+        "split": "validation",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+F702"
+        ],
+        "transcription_sha256": "31b7744d44615929b05db0f3b56520712f86906388b375862d9f79fd012a4cca"
+      },
+      {
+        "sample_id": "syn_general_train_000007",
+        "source": "synthetic_general",
+        "split": "train",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+0E3F"
+        ],
+        "transcription_sha256": "740dd8bc749393aa86d38d6d5aae5f6dcae85793a32ce2f21f9f950df11b17d2"
+      },
+      {
+        "sample_id": "syn_general_train_000023",
+        "source": "synthetic_general",
+        "split": "train",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+0E3F"
+        ],
+        "transcription_sha256": "2050488205fa1ee6f5e670acfc3082d600aedeebbb860c3c26f69acf9718126f"
+      },
+      {
+        "sample_id": "syn_general_train_000039",
+        "source": "synthetic_general",
+        "split": "train",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+0E3F"
+        ],
+        "transcription_sha256": "c6e03227b72722ade4ad2ad1bd2e7bb0cfa09399ab5fee1e1797d000c5e92b41"
+      },
+      {
+        "sample_id": "syn_general_train_000055",
+        "source": "synthetic_general",
+        "split": "train",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+0E3F"
+        ],
+        "transcription_sha256": "4b4ce4361984d39c6288e49fa39a802ff75fa3ae7f972a8dda94b182012cae1c"
+      },
+      {
+        "sample_id": "syn_general_train_000071",
+        "source": "synthetic_general",
+        "split": "train",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+0E3F"
+        ],
+        "transcription_sha256": "9c2a6290240a8f63b6c7c765f6bd59268f98c47ec6e931ebda9f1a4ac1a83d7b"
+      },
+      {
+        "sample_id": "syn_general_train_000087",
+        "source": "synthetic_general",
+        "split": "train",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+0E3F"
+        ],
+        "transcription_sha256": "b41fed338fbbe20d15c11bbb5215694f17e96f2660754abe802a4360ef09ef75"
+      },
+      {
+        "sample_id": "syn_general_train_000103",
+        "source": "synthetic_general",
+        "split": "train",
+        "reason": "unsupported_by_pinned_official_dictionary",
+        "unsupported_codepoints": [
+          "U+0E3F"
+        ],
+        "transcription_sha256": "25adb2feae9c068070fe5a8c86c1593582310b69cb253431712098b8384b581b"
+      }
+    ]
+  },
+  "private_row_count": 0,
+  "failure_count": 0,
+  "checksum_entry_count": 7,
+  "output_checksums_sha256": "ccadfaf47db9098e0eff1b35c5b51c0c784b254733f33b38556eb2eb1f6aec84"
+}

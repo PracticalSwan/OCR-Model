@@ -17,6 +17,7 @@ from src.ocr.pipeline import MultilingualOCR
 from src.ocr.paddleocr_adapter import PaddleOCRAdapter
 from src.ocr.result_normalizer import normalize_paddle_result
 from src.ocr.scoring import score_ocr_candidate
+from scripts.build_ocr_model_registry import build_registry
 from scripts.verify_ocr_models import _rotation_smoke
 
 
@@ -317,6 +318,177 @@ def test_registry_requires_exact_names_paths_and_hashes(tmp_path: Path) -> None:
         ModelRegistry.from_setup(setup)
 
 
+def test_registry_selects_versioned_custom_models_and_preserves_original_aliases(
+    tmp_path: Path,
+) -> None:
+    models = {}
+    for name in REQUIRED_MODEL_NAMES:
+        directory = tmp_path / name
+        directory.mkdir()
+        artifact = directory / "inference.json"
+        artifact.write_text(name, encoding="utf-8")
+        models[name] = {
+            "requested_name": name,
+            "resolved_name": name,
+            "resolved_path": str(directory),
+            "role": "detector" if name.endswith("det") else "recognizer",
+            "language": "thai" if name.startswith("th_") else "general",
+            "files": [{
+                "path": artifact.name,
+                "size_bytes": artifact.stat().st_size,
+                "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
+            }],
+        }
+    setup = tmp_path / "model_setup.json"
+    setup.write_text(json.dumps({"models": models}), encoding="utf-8")
+
+    custom = tmp_path / "custom-general"
+    custom.mkdir()
+    custom_file = custom / "inference.json"
+    custom_file.write_text("custom", encoding="utf-8")
+    custom_file_sha = hashlib.sha256(custom_file.read_bytes()).hexdigest()
+    custom_model_digest = hashlib.sha256()
+    custom_model_digest.update(custom_file.name.encode("utf-8"))
+    custom_model_digest.update(b"\0")
+    custom_model_digest.update(custom_file_sha.encode("ascii"))
+    custom_model_digest.update(b"\n")
+    upgrade = tmp_path / "upgrade_registry.json"
+    upgrade.write_text(
+        json.dumps({
+            "schema_version": "2.0",
+            "defaults": {
+                "detector": "original",
+                "general_recognizer": "custom",
+                "thai_recognizer": "original",
+            },
+            "models": {
+                "PP-OCRv6_medium_rec_csx4201_v1": {
+                    "available": True,
+                    "accepted": True,
+                    "variant": "custom",
+                    "role": "recognizer",
+                    "language": "general",
+                    "upstream_base": "PP-OCRv6_medium_rec",
+                    "local_path": str(custom),
+                    "files": [{
+                        "path": custom_file.name,
+                        "size_bytes": custom_file.stat().st_size,
+                        "sha256": custom_file_sha,
+                    }],
+                    "model_sha256": custom_model_digest.hexdigest(),
+                    "license": "Apache-2.0",
+                    "intended_domain": "public financial documents",
+                    "development_metrics": {"wer": 0.4},
+                }
+            },
+        }),
+        encoding="utf-8",
+    )
+
+    registry = ModelRegistry.from_setup(
+        setup,
+        upgrade_registry=upgrade,
+        general_choice="auto",
+    )
+    detector, recognizer = registry.route_models("general")
+
+    assert detector.runtime_name == "PP-OCRv6_medium_det"
+    assert recognizer.name == "PP-OCRv6_medium_rec_csx4201_v1"
+    assert recognizer.runtime_name == "PP-OCRv6_medium_rec"
+    assert registry.require("PP-OCRv6_medium_rec").path.is_dir()
+    assert registry.selection["general_recognizer"] == recognizer.name
+
+    upgrade_payload = json.loads(upgrade.read_text(encoding="utf-8"))
+    upgrade_payload["models"]["PP-OCRv6_medium_rec_csx4201_v1"][
+        "accepted"
+    ] = False
+    upgrade_payload["models"]["PP-OCRv6_medium_rec_csx4201_v1"][
+        "local_path"
+    ] = str(tmp_path / "missing-rejected-model")
+    upgrade.write_text(json.dumps(upgrade_payload), encoding="utf-8")
+    fallback = ModelRegistry.from_setup(
+        setup,
+        upgrade_registry=upgrade,
+        general_choice="auto",
+    )
+    assert fallback.selection["general_recognizer"] == "PP-OCRv6_medium_rec"
+    with pytest.raises(OCRModelUnavailable, match="no accepted artifact"):
+        ModelRegistry.from_setup(
+            setup,
+            upgrade_registry=upgrade,
+            general_choice="custom",
+        )
+
+
+def test_registry_builder_refuses_rejected_or_unbound_custom_general(
+    tmp_path: Path,
+) -> None:
+    model_files = [{
+        "path": "inference.json",
+        "size_bytes": 1,
+        "sha256": hashlib.sha256(b"x").hexdigest(),
+    }]
+    setup = tmp_path / "model_setup.json"
+    setup.write_text(
+        json.dumps({
+            "models": {
+                name: {
+                    "resolved_path": str(tmp_path / name),
+                    "files": model_files,
+                }
+                for name in REQUIRED_MODEL_NAMES
+            }
+        }),
+        encoding="utf-8",
+    )
+    pretrained = tmp_path / "pretrained.json"
+    pretrained.write_text(json.dumps({"models": {}}), encoding="utf-8")
+    general_report = tmp_path / "general_report.json"
+    general_report.write_text(
+        json.dumps({
+            "private_row_count": 0,
+            "metrics": {"trial_id": "rec_general_real"},
+        }),
+        encoding="utf-8",
+    )
+    acceptance = tmp_path / "acceptance.json"
+    acceptance_payload = {
+        "accepted": False,
+        "criteria": {"turkish_valid": False},
+        "candidate_trial_id": "rec_general_real",
+        "selected_trial_id": "rec_general_baseline_official",
+        "candidate_report": str(general_report),
+        "candidate_report_sha256": hashlib.sha256(
+            general_report.read_bytes()
+        ).hexdigest(),
+    }
+    acceptance.write_text(json.dumps(acceptance_payload), encoding="utf-8")
+
+    arguments = {
+        "model_setup": setup,
+        "pretrained_report": pretrained,
+        "detector_trials": tmp_path / "detector_trials.csv",
+        "general_trial_root": tmp_path / "general",
+        "general_report": general_report,
+        "general_acceptance": acceptance,
+        "general_selected": "custom",
+        "thai_trial_root": tmp_path / "thai",
+        "thai_report": tmp_path / "thai_report.json",
+    }
+    with pytest.raises(ValueError, match="was not accepted"):
+        build_registry(**arguments)
+
+    acceptance_payload.update({
+        "accepted": True,
+        "criteria": {"all_gates": True},
+        "selected_trial_id": "rec_general_real",
+        "candidate_report_sha256": "0" * 64,
+    })
+    acceptance.write_text(json.dumps(acceptance_payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="hash mismatch"):
+        build_registry(**arguments)
+
+
 def test_paddle_adapter_disables_mkldnn_for_portable_cpu_inference() -> None:
     class Registry:
         @staticmethod
@@ -329,3 +501,48 @@ def test_paddle_adapter_disables_mkldnn_for_portable_cpu_inference() -> None:
     adapter = PaddleOCRAdapter(Registry(), "general", device="cpu")
 
     assert adapter.options["enable_mkldnn"] is False
+
+
+def test_paddle_adapter_retries_low_confidence_crop_and_keeps_evidence() -> None:
+    class Registry:
+        @staticmethod
+        def route_models(_route: str):
+            return (
+                SimpleNamespace(name="det", path=Path("det"), artifact_hash="det-hash"),
+                SimpleNamespace(name="rec", path=Path("rec"), artifact_hash="rec-hash"),
+            )
+
+    class Pipeline:
+        @staticmethod
+        def predict(_image):
+            return [{
+                "res": {
+                    "rec_texts": ["T0tal 4S.00"],
+                    "rec_scores": [0.30],
+                    "rec_polys": [[[10, 10], [190, 10], [190, 50], [10, 50]]],
+                }
+            }]
+
+    predictions = iter(
+        [
+            {"text": "Total 45.00", "confidence": 0.95},
+            {"text": "Total 45.00", "confidence": 0.91},
+            {"text": "Total 45.00", "confidence": 0.90},
+            {"text": "Total 45.00", "confidence": 0.89},
+        ]
+    )
+    adapter = PaddleOCRAdapter(
+        Registry(),
+        "general",
+        enable_recognition_retries=True,
+        crop_recognizer=lambda _crop: next(predictions),
+    )
+    adapter._pipeline = Pipeline()
+
+    result = adapter.predict(Image.new("RGB", (220, 80), "white"))
+
+    assert result["full_text"] == "Total 45.00"
+    assert result["words"][0]["confidence"] >= 0.90
+    evidence = result["recognition_retries"]["items"][0]
+    assert evidence["original_candidate"]["text"] == "T0tal 4S.00"
+    assert evidence["candidate_count"] <= 5

@@ -12,9 +12,15 @@ from typing import Any
 
 from src import config as cfgmod
 from src.information_extraction.alignment import align_ocr_to_annotations
+from src.information_extraction.ocr_noise import (
+    OCR_NOISE_AUGMENTATION_VERSION,
+    OCRNoiseConfig,
+    build_noisy_example,
+)
 from src.ocr.cache import OCRCache
-from src.ocr.model_registry import ModelRegistry, REQUIRED_MODEL_NAMES
+from src.ocr.model_registry import ModelRegistry
 from src.ocr.pipeline import MultilingualOCR
+from src.ocr.stack_binding import build_ocr_stack_binding
 from src.rotation_common import (
     atomic_write_csv,
     atomic_write_json,
@@ -26,7 +32,8 @@ from src.rotation_common import (
 )
 
 PROFILE_LIMITS = {"smoke": 32, "development": 1_500, "final": 0}
-MODEL_DATA_PREPROCESSING_VERSION = "2.0-cardinal-polygon-fine"
+MODEL_DATA_PREPROCESSING_VERSION = "3.0-domain-adapted-adaptive"
+OCR_VARIANT_SPLITS = frozenset({"train", "dev_select"})
 PUBLIC_MODEL_SPLITS = (
     ("train", 0.70),
     ("dev_select", 0.10),
@@ -716,15 +723,31 @@ def prepare_model_dataset(
     streams: tuple[str, ...] = ("ground_truth",),
     ocr_pipeline: MultilingualOCR | None = None,
     ocr_variant_limit: int = 0,
+    ocr_variant_split_limits: Mapping[str, int] | None = None,
+    manifest_path_override: str | Path | None = None,
+    noise_config: OCRNoiseConfig = OCRNoiseConfig(),
+    ocr_profile: str = "adaptive",
 ) -> dict[str, Any]:
     if profile not in PROFILE_LIMITS:
         raise ValueError(f"unsupported model-data profile: {profile}")
     selected_streams = tuple(sorted(set(streams)))
-    supported_streams = {"ground_truth", "paddleocr", "hybrid"}
+    selected_ocr_profile = str(ocr_profile).casefold()
+    if selected_ocr_profile not in {"original", "custom", "adaptive"}:
+        raise ValueError(f"unsupported OCR profile: {ocr_profile!r}")
+    supported_streams = {"ground_truth", "paddleocr", "hybrid", "ocr_noise"}
     if not selected_streams or not set(selected_streams) <= supported_streams:
         raise ValueError(f"unsupported model-data streams: {selected_streams!r}")
     if ocr_variant_limit < 0:
         raise ValueError("OCR variant limit must be non-negative")
+    if ocr_variant_split_limits and ocr_variant_limit:
+        raise ValueError(
+            "use either ocr_variant_limit or ocr_variant_split_limits, not both"
+        )
+    for split, value in (ocr_variant_split_limits or {}).items():
+        if split not in OCR_VARIANT_SPLITS:
+            raise ValueError(f"unsupported OCR variant split: {split}")
+        if int(value) < 0:
+            raise ValueError("OCR variant split limits must be non-negative")
     root = cfgmod.project_root(cfg)
     metadata = cfgmod.resolve_path(cfg, "metadata")
     source_manifest = metadata / "information_extraction_manifest.csv"
@@ -755,34 +778,78 @@ def prepare_model_dataset(
     requires_ocr = bool({"paddleocr", "hybrid"} & set(selected_streams))
     if ocr_variant_limit and not requires_ocr:
         raise ValueError("OCR variant limit requires a paddleocr or hybrid stream")
-    variant_rows = (
-        select_ocr_variant_rows(candidates, ocr_variant_limit)
-        if requires_ocr
-        else []
-    )
+    ocr_variant_candidates = [
+        row
+        for row in candidates
+        if row.get("project_split") in OCR_VARIANT_SPLITS
+    ]
+    if requires_ocr and ocr_variant_split_limits:
+        variant_rows = []
+        for split, split_limit in sorted(ocr_variant_split_limits.items()):
+            split_rows = [
+                row
+                for row in ocr_variant_candidates
+                if row.get("project_split") == split
+            ]
+            variant_rows.extend(
+                select_ocr_variant_rows(split_rows, int(split_limit))
+                if split_limit
+                else []
+            )
+    else:
+        variant_rows = (
+            select_ocr_variant_rows(
+                ocr_variant_candidates,
+                ocr_variant_limit,
+            )
+            if requires_ocr
+            else []
+        )
     variant_page_ids = {row["page_id"] for row in variant_rows}
     variant_selection_sha256 = hashlib.sha256(
         "\n".join(sorted(variant_page_ids)).encode("utf-8")
     ).hexdigest()
     build_provenance: dict[str, Any] = {}
+    ocr_stack_binding: dict[str, Any] = {}
     if requires_ocr:
+        ocr_stack_binding = build_ocr_stack_binding(
+            cfg,
+            registry,
+            ocr_profile=selected_ocr_profile,
+        )
         build_provenance = {
             "preprocessing_version": MODEL_DATA_PREPROCESSING_VERSION,
+            "ocr_profile": selected_ocr_profile,
             "orientation_policy": {
                 "cardinal_angles": [0, 90, 180, 270],
                 "polygon_fine_deskew": True,
                 "kmeans_controls_ocr": False,
             },
-            "ocr_model_artifact_hashes": {
-                name: registry.require(name).artifact_hash
-                for name in REQUIRED_MODEL_NAMES
-            },
+            "ocr_model_artifact_hashes": _selected_model_artifact_hashes(
+                registry
+            ),
+            "ocr_stack_binding": ocr_stack_binding,
             "ocr_variant_selection": {
                 "requested_limit": ocr_variant_limit,
+                "split_limits": dict(ocr_variant_split_limits or {}),
                 "selected_page_count": len(variant_rows),
                 "page_ids_sha256": variant_selection_sha256,
                 "balance_keys": ["dataset", "project_split"],
+                "allowed_splits": sorted(OCR_VARIANT_SPLITS),
             },
+        }
+    if "ocr_noise" in selected_streams:
+        build_provenance["ocr_noise"] = {
+            "implementation_version": OCR_NOISE_AUGMENTATION_VERSION,
+            "configuration": {
+                "seed": noise_config.seed,
+                "example_probability": noise_config.example_probability,
+                "maximum_token_fraction": noise_config.maximum_token_fraction,
+                "maximum_transformations": noise_config.maximum_transformations,
+                "maximum_box_jitter_ratio": noise_config.maximum_box_jitter_ratio,
+            },
+            "train_only": True,
+            "unmodified_source_preserved": True,
         }
     build_id = compute_dataset_build_id(
         candidates,
@@ -795,11 +862,12 @@ def prepare_model_dataset(
     output_root.mkdir(parents=True, exist_ok=True)
     cache = OCRCache(cfgmod.resolve_path(cfg, "ocr_cache"))
     if requires_ocr and ocr_pipeline is None:
+        runtime_options = _multilingual_ocr_options(ocr_stack_binding)
         ocr_pipeline = MultilingualOCR(
             registry=registry,
             device=device,
             cache=cache,
-            preprocessing_version=MODEL_DATA_PREPROCESSING_VERSION,
+            **runtime_options,
         )
     manifest_rows: list[dict[str, Any]] = []
     exclusions: Counter[str] = Counter()
@@ -844,7 +912,9 @@ def prepare_model_dataset(
                     model_hashes[model_name] = registry.require(model_name).artifact_hash
 
         for stream in selected_streams:
-            if stream != "ground_truth" and not row_has_ocr_variant:
+            if stream in {"paddleocr", "hybrid"} and not row_has_ocr_variant:
+                continue
+            if stream == "ocr_noise" and row.get("project_split") != "train":
                 continue
             if stream == "ground_truth":
                 example = build_ground_truth_example(
@@ -865,7 +935,7 @@ def prepare_model_dataset(
                     split_group_id=row["split_group_id"],
                     model_hashes=model_hashes,
                 )
-            else:
+            elif stream == "hybrid":
                 assert ocr_result is not None and alignment is not None
                 example = build_hybrid_example(
                     row,
@@ -877,6 +947,20 @@ def prepare_model_dataset(
                     split_group_id=row["split_group_id"],
                     model_hashes=model_hashes,
                 )
+            else:
+                source_example = build_ground_truth_example(
+                    row,
+                    annotation,
+                    profile=profile,
+                    split_group_id=row["split_group_id"],
+                )
+                noisy = build_noisy_example(
+                    source_example,
+                    config=noise_config,
+                )
+                if noisy is None:
+                    continue
+                example = noisy
             example["build_id"] = build_id
             example["split_manifest_sha256"] = split_manifest_sha256
             output_path = output_root / row["project_split"] / stream / f"{row['page_id']}.json"
@@ -904,7 +988,13 @@ def prepare_model_dataset(
             counts[f"dataset:{row['dataset']}"] += 1
             counts[f"split:{row['project_split']}"] += 1
             counts[f"stream:{stream}"] += 1
-    manifest_path = profile_manifest_path(metadata, profile)
+    manifest_path = (
+        Path(manifest_path_override)
+        if manifest_path_override is not None
+        else profile_manifest_path(metadata, profile)
+    )
+    if not manifest_path.is_absolute():
+        manifest_path = root / manifest_path
     atomic_write_csv(manifest_path, manifest_rows, MODEL_MANIFEST_COLUMNS)
     manifest_sha256 = sha256_file(manifest_path)
     summary = {
@@ -942,6 +1032,71 @@ def prepare_model_dataset(
     atomic_write_json(legacy_report_root / "model_dataset_summary.json", summary)
     atomic_write_text(legacy_report_root / "model_dataset_report.md", _report(summary))
     return summary
+
+
+def _selected_model_artifact_hashes(
+    registry: ModelRegistry,
+) -> dict[str, str]:
+    detector, general = registry.route_models("general")
+    _, thai = registry.route_models("thai")
+    return {
+        artifact.name: artifact.artifact_hash
+        for artifact in (detector, general, thai)
+    }
+
+
+def _multilingual_ocr_options(
+    stack_binding: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Translate a frozen stack binding into the direct OCR runtime options."""
+    policy = dict(stack_binding.get("preprocessing_policy") or {})
+    tiling = dict(policy.get("tiling") or {})
+    retries = dict(policy.get("recognition_retries") or {})
+    return {
+        "cardinal_angles": tuple(
+            float(value)
+            for value in policy.get(
+                "orientation_candidates",
+                [0, 90, 180, 270],
+            )
+        ),
+        "preprocessing_version": str(
+            policy.get(
+                "preprocessing_version",
+                MODEL_DATA_PREPROCESSING_VERSION,
+            )
+        ),
+        "preprocessing_profile": str(
+            policy.get("preprocessing_profile", "original")
+        ),
+        "enable_fine_deskew": bool(
+            policy.get("enable_continuous_deskew", True)
+        ),
+        "enable_tiling": bool(tiling.get("enabled", False)),
+        "tile_grid": tuple(tiling.get("grid", [2, 2])),
+        "tile_overlap": float(tiling.get("overlap", 0.15)),
+        "tile_upscale": float(tiling.get("upscale", 1.0)),
+        "tile_iou_threshold": float(
+            tiling.get("polygon_iou_threshold", 0.50)
+        ),
+        "tile_minimum_score_gain": float(
+            tiling.get("minimum_score_gain", 0.0)
+        ),
+        "adapter_options": {
+            "enable_recognition_retries": bool(
+                retries.get("enabled", False)
+            ),
+            "retry_confidence_threshold": float(
+                retries.get("confidence_threshold", 0.65)
+            ),
+            "retry_max_candidates": int(
+                retries.get("maximum_candidates", 5)
+            ),
+            "retry_padding_profile": str(
+                retries.get("padding_profile", "B")
+            ),
+        },
+    }
 
 
 def predict_model_data_ocr(

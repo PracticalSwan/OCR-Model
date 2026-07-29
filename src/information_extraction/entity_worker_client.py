@@ -22,6 +22,7 @@ class SubprocessLayoutEntityExtractor:
         cache_dir: str | Path | None = None,
         max_length: int = 512,
         calibration_path: str | Path | None = None,
+        ocr_binding: Mapping[str, Any] | None = None,
         confidence_threshold: float | None = None,
         timeout_seconds: float = 300.0,
     ) -> None:
@@ -35,6 +36,7 @@ class SubprocessLayoutEntityExtractor:
         self.cache_dir = Path(cache_dir) if cache_dir else None
         self.max_length = int(max_length)
         self.calibration_path = Path(calibration_path) if calibration_path else None
+        self.ocr_binding = dict(ocr_binding or {})
         self.confidence_threshold = confidence_threshold
         self.timeout_seconds = float(timeout_seconds)
         self.process: subprocess.Popen[str] | None = None
@@ -118,6 +120,14 @@ class SubprocessLayoutEntityExtractor:
             command.extend(["--cache-dir", str(self.cache_dir)])
         if self.calibration_path:
             command.extend(["--calibration", str(self.calibration_path)])
+        for key, flag in (
+            ("detector_sha256", "--ocr-detector-sha256"),
+            ("recognizer_sha256", "--ocr-recognizer-sha256"),
+            ("preprocessing_sha256", "--ocr-preprocessing-sha256"),
+        ):
+            value = self.ocr_binding.get(key)
+            if value:
+                command.extend([flag, str(value)])
         if self.confidence_threshold is not None:
             command.extend(["--confidence-threshold", str(self.confidence_threshold)])
         environment = os.environ.copy()

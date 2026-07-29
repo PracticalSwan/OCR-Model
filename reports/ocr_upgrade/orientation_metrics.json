@@ -1,0 +1,466 @@
+{
+  "schema_version": "1.0",
+  "status": "passed",
+  "build_id": "ocr-orientation-363542c3c1dc2fcd",
+  "split": "dev_select",
+  "manifest_sha256": "1786af155d1c2c3e69224c87f1885da3a62ef59617d7d57ff4d7d4bea661e3ec",
+  "detector_sha256": "eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d",
+  "recognizer_sha256": "37102c71d75c2adec5fcef4710bfbacc84a4fe0d87d9d1a71a47b910543591e4",
+  "checkpoint_sha256": null,
+  "calibration_sha256": null,
+  "configuration_sha256": "fb147fec794ae77d476c5a5d0bb2ecf2382e4c00c195f7b8861ae2e456b37548",
+  "source_commit": "1a102f9e98c24b94116b8a2c5ef052b2650036dd",
+  "device": "gpu:0",
+  "sample_count": 162,
+  "failure_count": 0,
+  "duration_seconds": 528.6930184999947,
+  "private_row_count": 0,
+  "ocr_profile": "original",
+  "preprocessing_profile": "original",
+  "source_page_count": 9,
+  "datasets": [
+    "fatura",
+    "funsd",
+    "sroie"
+  ],
+  "angles": [
+    0,
+    1,
+    15,
+    30,
+    37,
+    45,
+    60,
+    89,
+    90,
+    91,
+    135,
+    179,
+    180,
+    225,
+    269,
+    270,
+    315,
+    359
+  ],
+  "metrics": {
+    "page_count": 162,
+    "polygon_f1": 0.5140752067839021,
+    "recognized_text_coverage": 0.45911424506711207,
+    "cer": 0.5408857549328879,
+    "wer": 0.656576980568012,
+    "critical_field_exact_match": 0.6216216216216216,
+    "orientation_selection_accuracy": 0.6851851851851852,
+    "mean_orientation_error_degrees": 28.609495965552103,
+    "time_per_page_seconds": 3.153572844445596,
+    "error_counts": {
+      "wrong_cardinal_orientation": 62,
+      "wrong_deskew": 0,
+      "close_candidate_ambiguity": 134,
+      "multi_orientation_page": 0
+    }
+  },
+  "by_angle": {
+    "0": {
+      "page_count": 9,
+      "polygon_f1": 0.5205479452054795,
+      "recognized_text_coverage": 0.44089812581183896,
+      "cer": 0.559101874188161,
+      "wer": 0.6569506726457399,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.4444444444444444,
+      "mean_orientation_error_degrees": 50.03404351358564,
+      "time_per_page_seconds": 2.6425860666592293,
+      "error_counts": {
+        "wrong_cardinal_orientation": 5,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0,
+        "recognized_text_coverage": 1.0,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "1": {
+      "page_count": 9,
+      "polygon_f1": 0.5225,
+      "recognized_text_coverage": 0.3750231953980331,
+      "cer": 0.6249768046019669,
+      "wer": 0.7365470852017937,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.5555555555555556,
+      "mean_orientation_error_degrees": 40.18145297460346,
+      "time_per_page_seconds": 1.910349233334677,
+      "error_counts": {
+        "wrong_cardinal_orientation": 4,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0037499999999997,
+        "recognized_text_coverage": 0.8505892255892257,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "15": {
+      "page_count": 9,
+      "polygon_f1": 0.5081351689612015,
+      "recognized_text_coverage": 0.5006494711449249,
+      "cer": 0.49935052885507514,
+      "wer": 0.6132286995515696,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.6666666666666666,
+      "mean_orientation_error_degrees": 30.193763776489245,
+      "time_per_page_seconds": 2.8660929111065343,
+      "error_counts": {
+        "wrong_cardinal_orientation": 3,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.976154403530729,
+        "recognized_text_coverage": 1.1355218855218854,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "30": {
+      "page_count": 9,
+      "polygon_f1": 0.4924623115577889,
+      "recognized_text_coverage": 0.341250695861941,
+      "cer": 0.658749304138059,
+      "wer": 0.7668161434977578,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.4444444444444444,
+      "mean_orientation_error_degrees": 50.245961983311815,
+      "time_per_page_seconds": 4.489642344453993,
+      "error_counts": {
+        "wrong_cardinal_orientation": 5,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 6,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.9460460195715417,
+        "recognized_text_coverage": 0.773989898989899,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "37": {
+      "page_count": 9,
+      "polygon_f1": 0.5087719298245614,
+      "recognized_text_coverage": 0.5435145667099648,
+      "cer": 0.45648543329003527,
+      "wer": 0.5852017937219731,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 1.0,
+      "mean_orientation_error_degrees": 0.3888917584426521,
+      "time_per_page_seconds": 3.7919137000054537,
+      "error_counts": {
+        "wrong_cardinal_orientation": 0,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 1,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.9773776546629731,
+        "recognized_text_coverage": 1.2327441077441077,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "45": {
+      "page_count": 9,
+      "polygon_f1": 0.5018820577164367,
+      "recognized_text_coverage": 0.5349786602338096,
+      "cer": 0.46502133976619037,
+      "wer": 0.6031390134529148,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 1.0,
+      "mean_orientation_error_degrees": 0.27254276657583254,
+      "time_per_page_seconds": 5.0683336222233875,
+      "error_counts": {
+        "wrong_cardinal_orientation": 1,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 7,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.9641418477184177,
+        "recognized_text_coverage": 1.2133838383838382,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "60": {
+      "page_count": 9,
+      "polygon_f1": 0.5056603773584907,
+      "recognized_text_coverage": 0.5383187975505659,
+      "cer": 0.46168120244943406,
+      "wer": 0.5964125560538116,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 1.0,
+      "mean_orientation_error_degrees": 0.3800099432124095,
+      "time_per_page_seconds": 4.840353299992987,
+      "error_counts": {
+        "wrong_cardinal_orientation": 0,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 0,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.9714001986097319,
+        "recognized_text_coverage": 1.2209595959595958,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "89": {
+      "page_count": 9,
+      "polygon_f1": 0.525,
+      "recognized_text_coverage": 0.4542586750788643,
+      "cer": 0.5457413249211357,
+      "wer": 0.6513452914798207,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.6666666666666666,
+      "mean_orientation_error_degrees": 30.71357056942712,
+      "time_per_page_seconds": 2.1524524111430057,
+      "error_counts": {
+        "wrong_cardinal_orientation": 3,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0085526315789473,
+        "recognized_text_coverage": 1.03030303030303,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "90": {
+      "page_count": 9,
+      "polygon_f1": 0.5205479452054795,
+      "recognized_text_coverage": 0.4403414362590462,
+      "cer": 0.5596585637409538,
+      "wer": 0.6580717488789237,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.4444444444444444,
+      "mean_orientation_error_degrees": 50.03404351358564,
+      "time_per_page_seconds": 1.782628899996376,
+      "error_counts": {
+        "wrong_cardinal_orientation": 5,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0,
+        "recognized_text_coverage": 0.9987373737373737,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "91": {
+      "page_count": 9,
+      "polygon_f1": 0.5131414267834793,
+      "recognized_text_coverage": 0.3625904620523288,
+      "cer": 0.6374095379476712,
+      "wer": 0.773542600896861,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.5555555555555556,
+      "mean_orientation_error_degrees": 40.21661853960398,
+      "time_per_page_seconds": 1.9159302111042456,
+      "error_counts": {
+        "wrong_cardinal_orientation": 4,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.9857716882945785,
+        "recognized_text_coverage": 0.8223905723905723,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "135": {
+      "page_count": 9,
+      "polygon_f1": 0.5018820577164367,
+      "recognized_text_coverage": 0.5377621079977732,
+      "cer": 0.46223789200222676,
+      "wer": 0.5952914798206278,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 1.0,
+      "mean_orientation_error_degrees": 0.30522676807970583,
+      "time_per_page_seconds": 5.045244177803397,
+      "error_counts": {
+        "wrong_cardinal_orientation": 4,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 7,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.9641418477184177,
+        "recognized_text_coverage": 1.2196969696969697,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "179": {
+      "page_count": 9,
+      "polygon_f1": 0.5218476903870163,
+      "recognized_text_coverage": 0.3774355167934682,
+      "cer": 0.6225644832065318,
+      "wer": 0.7331838565022422,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.5555555555555556,
+      "mean_orientation_error_degrees": 40.39693277043437,
+      "time_per_page_seconds": 2.1543234889007485,
+      "error_counts": {
+        "wrong_cardinal_orientation": 4,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0024968789013733,
+        "recognized_text_coverage": 0.8560606060606061,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "180": {
+      "page_count": 9,
+      "polygon_f1": 0.5230386052303861,
+      "recognized_text_coverage": 0.42475412878084984,
+      "cer": 0.5752458712191502,
+      "wer": 0.6636771300448431,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.3333333333333333,
+      "mean_orientation_error_degrees": 60.0,
+      "time_per_page_seconds": 1.7706019221934386,
+      "error_counts": {
+        "wrong_cardinal_orientation": 6,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0047846889952152,
+        "recognized_text_coverage": 0.9633838383838382,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "225": {
+      "page_count": 9,
+      "polygon_f1": 0.5094102885821832,
+      "recognized_text_coverage": 0.5360920393393951,
+      "cer": 0.4639079606606049,
+      "wer": 0.5975336322869955,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 1.0,
+      "mean_orientation_error_degrees": 0.34727414129584605,
+      "time_per_page_seconds": 5.098820055563313,
+      "error_counts": {
+        "wrong_cardinal_orientation": 3,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 7,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.9786039754341939,
+        "recognized_text_coverage": 1.2159090909090908,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "269": {
+      "page_count": 9,
+      "polygon_f1": 0.525,
+      "recognized_text_coverage": 0.46520690295045464,
+      "cer": 0.5347930970495454,
+      "wer": 0.6535874439461884,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.7777777777777778,
+      "mean_orientation_error_degrees": 20.453535315060723,
+      "time_per_page_seconds": 2.1742901999969035,
+      "error_counts": {
+        "wrong_cardinal_orientation": 2,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0085526315789473,
+        "recognized_text_coverage": 1.0551346801346801,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "270": {
+      "page_count": 9,
+      "polygon_f1": 0.5230386052303861,
+      "recognized_text_coverage": 0.42493969196511416,
+      "cer": 0.5750603080348858,
+      "wer": 0.6647982062780269,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.3333333333333333,
+      "mean_orientation_error_degrees": 60.03404351358563,
+      "time_per_page_seconds": 1.797329599982024,
+      "error_counts": {
+        "wrong_cardinal_orientation": 6,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0047846889952152,
+        "recognized_text_coverage": 0.9638047138047139,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "315": {
+      "page_count": 9,
+      "polygon_f1": 0.5037593984962406,
+      "recognized_text_coverage": 0.5346075338652811,
+      "cer": 0.46539246613471885,
+      "wer": 0.5952914798206278,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 1.0,
+      "mean_orientation_error_degrees": 0.29897723622073535,
+      "time_per_page_seconds": 5.092279766660391,
+      "error_counts": {
+        "wrong_cardinal_orientation": 3,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 7,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 0.9677483181638306,
+        "recognized_text_coverage": 1.2125420875420876,
+        "critical_field_exact_match": 1.0
+      }
+    },
+    "359": {
+      "page_count": 9,
+      "polygon_f1": 0.5263157894736842,
+      "recognized_text_coverage": 0.43143440341436257,
+      "cer": 0.5685655965856374,
+      "wer": 0.6737668161434978,
+      "critical_field_exact_match": 0.6216216216216216,
+      "orientation_selection_accuracy": 0.5555555555555556,
+      "mean_orientation_error_degrees": 40.4740382964231,
+      "time_per_page_seconds": 2.171139288900627,
+      "error_counts": {
+        "wrong_cardinal_orientation": 4,
+        "wrong_deskew": 0,
+        "close_candidate_ambiguity": 9,
+        "multi_orientation_page": 0
+      },
+      "retention_vs_upright": {
+        "polygon_f1": 1.0110803324099722,
+        "recognized_text_coverage": 0.9785353535353534,
+        "critical_field_exact_match": 1.0
+      }
+    }
+  },
+  "orientation_tolerance_degrees": 3.0,
+  "candidate_ambiguity_score_gap": 0.02,
+  "kmeans_instantiated": false,
+  "kmeans_controls_ocr": false,
+  "test_private_tuning_rows": 0
+}

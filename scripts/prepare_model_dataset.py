@@ -27,17 +27,64 @@ def main() -> int:
         default=0,
         help="Bound only PaddleOCR/hybrid variants; ground-truth pages remain complete.",
     )
+    parser.add_argument("--ocr-variant-train-limit", type=int)
+    parser.add_argument("--ocr-variant-dev-select-limit", type=int)
+    parser.add_argument(
+        "--manifest-output",
+        help="optional profile-bound manifest path (for example final_model_dataset_manifest_ocr_v2.csv)",
+    )
     parser.add_argument("--force", action="store_true")
     parser.add_argument(
         "--streams",
         nargs="+",
-        choices=("ground_truth", "paddleocr", "hybrid"),
+        choices=("ground_truth", "paddleocr", "hybrid", "ocr_noise"),
         default=("ground_truth",),
     )
     parser.add_argument("--model-setup", default=str(PROJECT_ROOT / "reports" / "ocr" / "model_setup.json"))
+    parser.add_argument(
+        "--model-registry",
+        default=str(PROJECT_ROOT / "reports" / "ocr_upgrade" / "model_registry.json"),
+    )
+    parser.add_argument(
+        "--ocr-profile",
+        choices=("original", "custom", "adaptive"),
+        default="adaptive",
+    )
+    parser.add_argument(
+        "--detector-model",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--general-recognizer",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--thai-recognizer",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
     args = parser.parse_args()
-    if args.limit < 0 or args.ocr_variant_limit < 0:
+    if (
+        args.limit < 0
+        or args.ocr_variant_limit < 0
+        or any(
+            value is not None and value < 0
+            for value in (
+                args.ocr_variant_train_limit,
+                args.ocr_variant_dev_select_limit,
+            )
+        )
+    ):
         parser.error("--limit and --ocr-variant-limit must be non-negative")
+    if args.ocr_variant_limit and (
+        args.ocr_variant_train_limit is not None
+        or args.ocr_variant_dev_select_limit is not None
+    ):
+        parser.error(
+            "--ocr-variant-limit cannot be combined with split-specific limits"
+        )
     cfg = cfgmod.load_config(args.config)
     asset_root = cfgmod.resolve_path(cfg, "external_assets")
     configure_external_environment(asset_root)
@@ -48,7 +95,29 @@ def main() -> int:
         anticipated_c_gib=0.25,
         anticipated_asset_gib=anticipated_asset_gib,
     )
-    registry = ModelRegistry.from_setup(args.model_setup)
+    def profile_choice(value: str) -> str:
+        return (
+            "original"
+            if args.ocr_profile == "original" and value == "auto"
+            else value
+        )
+
+    registry = ModelRegistry.from_setup(
+        args.model_setup,
+        upgrade_registry=args.model_registry,
+        detector_choice=profile_choice(args.detector_model),
+        general_choice=profile_choice(args.general_recognizer),
+        thai_choice=profile_choice(args.thai_recognizer),
+    )
+    split_limits = None
+    if (
+        args.ocr_variant_train_limit is not None
+        or args.ocr_variant_dev_select_limit is not None
+    ):
+        split_limits = {
+            "train": int(args.ocr_variant_train_limit or 0),
+            "dev_select": int(args.ocr_variant_dev_select_limit or 0),
+        }
     summary = prepare_model_dataset(
         cfg,
         registry,
@@ -58,6 +127,9 @@ def main() -> int:
         force=args.force,
         streams=tuple(args.streams),
         ocr_variant_limit=args.ocr_variant_limit,
+        ocr_variant_split_limits=split_limits,
+        manifest_path_override=args.manifest_output,
+        ocr_profile=args.ocr_profile,
     )
     import json
 

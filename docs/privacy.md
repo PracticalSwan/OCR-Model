@@ -19,6 +19,12 @@ must remain below the ignored D: private root. A committed report may contain
 aggregate counts and timings only and must explicitly declare that it contains
 no filenames, OCR text, images, or per-document predictions.
 
+The current OCR-upgrade aggregate is
+`reports/ocr_upgrade/private_aggregate.json`. It covers two anonymous
+documents/pages, records zero failures and zero Gmail fit rows, and contains no
+filename, path, OCR text, image, or per-document prediction. Detailed local
+status remains under the configured ignored D: private root.
+
 The general extraction CLI resolves every input against the four configured
 Gmail roots before opening it. A matching input is rejected unless
 `--private-output` is present; that mode then requires the destination to stay
@@ -33,6 +39,9 @@ below the ignored D: private root. The caller cannot opt out of either guard.
    `.env` content, credentials, source paths, and generated previews.
 5. Reject unexpectedly large files and model/checkpoint/cache artifacts.
 6. Confirm the training and checkpoint reports still show Gmail fit rows 0.
+7. Confirm all 30 entries in
+   `reports/ocr_upgrade/verification_executions.json` are current and that the
+   staged-file and portable-package privacy checks point to executed evidence.
 
 Ignore rules are a safeguard, not authorization to publish. A successful scan
 means no known match was found in the checked surface; it does not prove that

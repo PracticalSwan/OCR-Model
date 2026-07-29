@@ -4,14 +4,29 @@ Private Gmail documents are an operational test set only. This command runs
 the fixed final checkpoint locally; it cannot train, calibrate, select a
 checkpoint, or change thresholds.
 
-Run it from the OCR environment after final training and calibration:
+Run the final aggregate-only evaluator from the OCR environment after training
+and calibration:
 
 ```powershell
 $ocr = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr\Scripts\python.exe'
-$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final'
+$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+& $ocr scripts/evaluate_private_gmail.py `
+  --layout-checkpoint $checkpoint --device gpu:0 --limit 2
+```
+
+This command writes the committable aggregate to
+`reports/ocr_upgrade/private_aggregate.json` and keeps its anonymous
+document-status evidence under the ignored D: private root. `--limit` counts
+source documents, not page rows. It exposes no public filename, path, OCR text,
+image, or per-document prediction.
+
+For a larger owner-only manual-review run, use the separate private runner:
+
+```powershell
+$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 & $ocr scripts/run_private_test.py `
   --input-root 'data\raw\private\gmail' `
-  --output-root 'D:\CSX4201\vision-info-extraction-assets\private-evaluation\final-model' `
+  --output-root 'D:\CSX4201\vision-info-extraction-assets\private-evaluation\ocr-upgrade' `
   --language auto --device gpu:0 --private-output `
   --checkpoint $checkpoint --recursive --continue-on-error `
   --no-private-visualizations --aggregate-report `
@@ -25,10 +40,10 @@ root to remain below the configured ignored private root on D:.
 The general `extract_document.py` command enforces the same input boundary: a
 path under any configured Gmail root cannot run without `--private-output`.
 
-Detailed local output uses anonymous IDs:
+Detailed owner-only output uses anonymous IDs:
 
 ```text
-private-evaluation/final-model/
+private-evaluation/ocr-upgrade/
   aggregate_report.json
   aggregate_report.md
   manual_review.csv
@@ -50,10 +65,14 @@ completed. With `--continue-on-error`, anonymous error records remain local so
 the other documents can finish. Never use the aggregate result to tune the
 model; there is no private ground truth, so it is not an accuracy estimate.
 
-The final operational check ran only after every model, calibration, and
-threshold choice was fixed. It completed all 26/26 anonymous documents and
-203 pages with zero failures. The public aggregate reports 51.33 OCR words,
-6.00 entities, 2.24 relations per page, and 6.15 non-null fields per document
-on average, plus the exact checkpoint hash. It explicitly declares that it
-contains no filenames, OCR text, images, or per-document predictions. These
-counts are operational only and were not used to change the model.
+The OCR-upgrade operational check ran only after every model, calibration, and
+threshold choice was fixed. It was intentionally bounded to two anonymous
+documents and two pages. Both completed with nonempty output and zero failures
+in 126.586 wall seconds. The public aggregate records the selected detector,
+recognizer, checkpoint, calibration, zero Gmail fit rows, and explicit
+no-content declarations. These counts are operational only and were not used
+to change the model.
+
+The older July 17 lifecycle completed 26 documents and 203 pages with the
+historical checkpoint. That remains historical evidence and must not be
+reported as the current OCR-upgrade private run.

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import statistics
+import subprocess
 import sys
 import time
 from collections import Counter
@@ -21,7 +23,9 @@ from src.evaluation.metrics import normalized_text  # noqa: E402
 from src.inference.document_io import DocumentPage  # noqa: E402
 from src.inference.document_pipeline import DocumentPipeline  # noqa: E402
 from src.ocr.environment import configure_external_environment, require_storage_gate  # noqa: E402
-from src.rotation_common import atomic_write_json, deterministic_rank, read_csv_rows, sha256_file  # noqa: E402
+from src.ocr.model_registry import ModelRegistry  # noqa: E402
+from src.ocr.stack_binding import build_ocr_stack_binding  # noqa: E402
+from src.rotation_common import atomic_write_json, canonical_json, deterministic_rank, read_csv_rows, sha256_file  # noqa: E402
 
 
 def main() -> int:
@@ -43,6 +47,22 @@ def main() -> int:
     )
     checkpoint = Path(args.checkpoint).resolve()
     calibration = cfgmod.project_root(cfg) / "models" / "multitask_calibration.json"
+    model_manifest = (
+        cfgmod.resolve_path(cfg, "metadata")
+        / "final_model_dataset_manifest_ocr_v2.csv"
+    )
+    profile = str(cfg.get("ocr", {}).get("default_profile", "original"))
+    choice = "original" if profile == "original" else "auto"
+    registry = ModelRegistry.from_setup(
+        args.model_setup,
+        upgrade_registry=cfgmod.resolve_path(cfg, "reports")
+        / "ocr_upgrade"
+        / "model_registry.json",
+        detector_choice=choice,
+        general_choice=choice,
+        thai_choice=choice,
+    )
+    stack = build_ocr_stack_binding(cfg, registry, ocr_profile=profile)
     population = [
         row for row in read_csv_rows(cfgmod.resolve_path(cfg, "metadata") / "information_extraction_split_manifest.csv")
         if row.get("dataset") == "coru"
@@ -108,8 +128,36 @@ def main() -> int:
     successful = counts["successful_pages"]
     report = {
         "schema_version": "1.0",
+        "status": "passed" if counts["failed_pages"] == 0 else "completed_with_failures",
+        "build_id": "unseen-coru-"
+        + hashlib.sha256(
+            canonical_json(
+                {
+                    "manifest_sha256": sha256_file(model_manifest),
+                    "checkpoint_sha256": sha256_file(
+                        checkpoint / "model.safetensors"
+                    ),
+                    "calibration_sha256": sha256_file(calibration),
+                    "ocr_stack": stack,
+                    "sample_pages": len(rows),
+                }
+            ).encode("utf-8")
+        ).hexdigest()[:16],
         "dataset": "coru",
         "split": "unseen_domain_test",
+        "manifest_sha256": sha256_file(model_manifest),
+        "detector_sha256": stack["detector_sha256"],
+        "recognizer_sha256": stack["recognizer_sha256"],
+        "checkpoint_sha256": sha256_file(
+            checkpoint / "model.safetensors"
+        ),
+        "configuration_sha256": stack["preprocessing_sha256"],
+        "source_commit": _git_commit(),
+        "device": args.device,
+        "sample_count": len(rows),
+        "failure_count": counts["failed_pages"],
+        "duration_seconds": time.perf_counter() - started,
+        "private_row_count": 0,
         "public_only": True,
         "private_page_count": 0,
         "population_pages": len(population),
@@ -145,8 +193,22 @@ def main() -> int:
     }
     output = cfgmod.resolve_path(cfg, "reports") / "final_model" / "unseen_domain_metrics.json"
     atomic_write_json(output, report)
+    atomic_write_json(
+        cfgmod.resolve_path(cfg, "reports")
+        / "ocr_upgrade"
+        / "unseen_coru_metrics.json",
+        report,
+    )
     print(json.dumps(report, indent=2))
     return 0 if successful else 1
+
+
+def _git_commit() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=PROJECT_ROOT,
+        text=True,
+    ).strip()
 
 
 if __name__ == "__main__":

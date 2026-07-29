@@ -1,0 +1,52 @@
+schema_version: "1.0"
+trial_id: det_ft_official_amp
+kind: detector
+base_config: configs/det/PP-OCRv6/PP-OCRv6_medium_det.yml
+source_checkpoint: D:/CSX4201/vision-info-extraction-assets/models/paddleocr/training/PP-OCRv6_medium_det_pretrained.pdparams
+metadata:
+  purpose: Full-TRAIN PP-OCRv6 detector continuation using official O2 AMP to fit the 8 GiB GPU.
+  selection_split: dev_select
+  epochs: 1
+  expected_iterations: 956
+  early_stopping: Select the only full-TRAIN epoch checkpoint on DEV_SELECT; do not inspect TEST.
+  train_data: public TRAIN only
+  predecessor: det_ft_official_aug
+  predecessor_outcome: FP32 batch 4 was stopped after 20 steps because 9.8 GiB allocation paged an 8.15 GiB GPU and projected over 10 hours.
+overrides:
+  Global:
+    epoch_num: 1
+    print_batch_step: 20
+    save_epoch_step: 1
+    eval_batch_step: [0, 956]
+    cal_metric_during_train: false
+    use_visualdl: false
+    use_amp: true
+    amp_level: O2
+    scale_loss: 32768.0
+    use_dynamic_loss_scaling: true
+  Optimizer:
+    lr:
+      name: Cosine
+      learning_rate: 0.0001
+      warmup_epoch: 0
+  Train:
+    dataset:
+      data_dir: D:/CSX4201/vision-info-extraction-assets/data/detector_training
+      label_file_list:
+        - D:/CSX4201/vision-info-extraction-assets/data/detector_training/train_labels.txt
+      ratio_list: [1.0]
+    loader:
+      shuffle: true
+      drop_last: false
+      batch_size_per_card: 8
+      num_workers: 4
+  Eval:
+    dataset:
+      data_dir: D:/CSX4201/vision-info-extraction-assets/data/detector_training
+      label_file_list:
+        - D:/CSX4201/vision-info-extraction-assets/data/detector_training/validation_labels.txt
+    loader:
+      shuffle: false
+      drop_last: false
+      batch_size_per_card: 1
+      num_workers: 2

@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "status": "passed",
+  "generated_at_utc": "2026-07-24T08:12:12.2984988Z",
+  "generator_commit": "fd419de671f04cbe2fec750db9bdfafc30efd43c",
+  "source_split_manifest": "data/metadata/information_extraction_split_manifest.csv",
+  "source_split_manifest_sha256": "8dfe1c09d088ab8562d936fe12367be1f9998b9c2658a2bacf38780a82a75132",
+  "allowed_datasets": [
+    "fatura",
+    "funsd",
+    "sroie"
+  ],
+  "allowed_splits": [
+    "train",
+    "dev_select"
+  ],
+  "excluded": [
+    "dev_calibration",
+    "test_in_domain",
+    "unseen_domain_test",
+    "coru",
+    "private_test",
+    "gmail"
+  ],
+  "detector": {
+    "status": "passed",
+    "build_id": "ocr-detector-data-18dc9d4146f65a96",
+    "output_root": "D:/CSX4201/vision-info-extraction-assets/data/detector_training",
+    "input_page_count": 8759,
+    "output_page_count": 8755,
+    "train_page_count": 7646,
+    "validation_page_count": 1109,
+    "skipped_exact_duplicate_count": 4,
+    "text_region_count": 163679,
+    "failure_count": 0,
+    "private_row_count": 0,
+    "manifest_sha256": "cb78b0285fbf5d2c0fbbfd401d2bd997e518c0b56c6a0a1d31909cbd62e58f9e",
+    "checksums_sha256": "fd132bf157ab154d5acac7fe61d2ef95d0f03a18a0e07bc36acb955922f1eadf",
+    "checksum_entry_count": 8760,
+    "independent_checksum_verification": "passed"
+  },
+  "recognition": {
+    "status": "passed",
+    "build_id": "ocr-recognition-data-e362020295ef2b9a",
+    "output_root": "D:/CSX4201/vision-info-extraction-assets/data/recognition_training",
+    "input_page_count": 8759,
+    "processed_unique_page_count": 8755,
+    "skipped_exact_duplicate_count": 4,
+    "crop_count": 137886,
+    "line_crop_count": 71729,
+    "critical_word_crop_count": 66157,
+    "train_crop_count": 119773,
+    "validation_crop_count": 18113,
+    "invalid_crop_count": 0,
+    "private_row_count": 0,
+    "manifest_sha256": "43292a320eeb8cc07ee425e5f65446cb9a3e5984405e1877b538a36b793503e2",
+    "checksums_sha256": "13ff42c40f6e249e2a95d910340304188ea73412ea24fe582d0f9f5834844313",
+    "checksum_entry_count": 137893,
+    "independent_checksum_verification": "passed"
+  },
+  "synthetic": {
+    "status": "passed",
+    "build_id": "ocr-synthetic-563664fbfa949344",
+    "output_root": "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition",
+    "sample_count": 48471,
+    "general_train_count": 29943,
+    "general_validation_count": 4528,
+    "thai_train_count": 12000,
+    "thai_validation_count": 2000,
+    "general_train_fraction": 0.19999866413743353,
+    "general_validation_fraction": 0.1999911664679122,
+    "failure_count": 0,
+    "private_row_count": 0,
+    "manifest_sha256": "cbc1fc8950558210df8b684af6bc7f59126673233376ffa12b6d31c1948a4ac4",
+    "checksums_sha256": "12d248ed589f8ff6d6c2af6560764d50767c573438435c1d8580d96069bb7847",
+    "checksum_entry_count": 48477,
+    "independent_checksum_verification": "passed"
+  },
+  "source_repairs": {
+    "sroie_unmatched_quote_physical_row_v1": {
+      "affected_page_count": 2,
+      "reason": "Two official box files contain an unmatched quote that caused the prior CSV normalizer to absorb later physical rows into one transcription.",
+      "method": "Only newline continuations matching eight finite numeric coordinates plus nonempty text are reconstructed as separate regions.",
+      "silent_text_sanitization": false
+    }
+  },
+  "storage_policy": {
+    "c_drive_minimum_free_gib": 15.0,
+    "asset_volume_margin": 1.35,
+    "large_outputs_committed": false
+  }
+}

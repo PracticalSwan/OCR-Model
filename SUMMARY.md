@@ -1,17 +1,23 @@
-# Summary — Final Rotation-Robust Information-Extraction Pre-Model
+# Summary — Domain-Adapted OCR and Information-Extraction Pre-Model
 
 **Project:** CSX4201 vision-info-extraction
-**Verified through:** 2026-07-21
+**Verified through:** 2026-07-28
 
 ## Outcome
 
-The workspace now contains a complete working public-trained pre-model, not
-only a smoke lifecycle. Images and multipage PDFs pass through independent OCR
-orientation and fine-deskew selection, exact general/Thai PaddleOCR models, a
-calibrated multi-task LayoutXLM text-and-2D-layout encoder, learned entities,
-document type, canonical evidence, typed relations, evidence/arithmetic
-validation, table and generic key/value fallbacks, and a versioned JSON output
-contract.
+The workspace contains a public-trained academic pre-model with independently
+selectable original, custom, and adaptive OCR profiles. A deterministic
+400-page `DEV_SELECT` benchmark replaced the prior three-page selection
+evidence. Public-only detector/recognizer trials were executed, OCR-realistic
+LayoutXLM streams were rebuilt, a fresh checkpoint was selected and
+recalibrated, and the frozen stack completed one locked 1,760-page
+image-to-JSON evaluation.
+
+The selected global OCR profile remains `original`: no custom detector
+produced an eligible checkpoint on the verified laptop GPU, and the custom
+general recognizer failed the WER and Turkish non-regression gates. The custom
+Thai recognizer is available only in explicit custom/adaptive profiles and has
+synthetic-only selection evidence.
 
 The preserved K-Means quadrant experiment remains an auxiliary display branch.
 It never controls OCR or extraction. Its weak mapped accuracy and failed
@@ -23,25 +29,28 @@ exact-angle estimator are reported, not hidden.
 |---|---|
 | Raw integrity | 128,793 files; 35,459,126,772 bytes; public/private separation retained |
 | Normalized public population | 12,433 pages; zero Gmail fit rows; zero leakage across 29,886 identities |
-| Final model data | 11,684 examples; 7,782 train; 1,243 dev-select; 763 calibration; 1,896 test; 1,261 CORU pages held wholly unseen |
-| Final training | Four epochs; 7,812 optimizer steps; epoch 4 robustness-aware selection score 0.824160; reload max difference 0.0 |
-| Locked layout test | 1,760 examples; calibrated entity/canonical/relation F1 0.9813/0.9814/0.4632; 97.56% document coverage at 100% selective accuracy |
-| Layout rotation | 18 angles; minimum entity/canonical/relation F1 0.7491/0.9360/0.3434; entity retention at least 95.30% |
-| End-to-end rotation | 72/72 nonempty; bounded public OCR coverage 0.4026–0.4368; entity F1 0.1314–0.1830; synthetic Thai 18/18 |
-| Unseen CORU | 100/100 pages; 78.53% QA-answer text recall; 15.68% canonical exact match |
-| Private operation | 26/26 documents and 203/203 pages; public aggregate only; no private filename/text/image/per-document output |
-| Verification | Final report compilation passed; complete IE verifier 46/46; exact OCR and hash-bound integration passed |
-| Automated tests | Host suite: 244 passed, 2 environment-dependent skips; OCR-runtime partition: 122 passed; CUDA-layout partition: 2 passed |
+| OCR benchmark | 400 public DEV_SELECT pages: 283 FATURA, 20 FUNSD, 97 SROIE |
+| OCR training data | 8,755 detector pages/163,679 regions; 137,886 real recognition crops; 48,471 synthetic crops |
+| OCR selection | Original detector and general recognizer; custom Thai only for explicit custom/adaptive use |
+| Adapted model data | 16,781 examples; 12,455 train; 1,913 dev-select; 653 calibration; 1,760 locked test |
+| Adapted training | Four epochs; 12,556 optimizer steps; epoch 4 score 0.843343; reload max difference 0 |
+| Locked layout test | 1,760 examples; calibrated entity/canonical/relation F1 0.9835/0.9860/0.5603 |
+| Locked image-to-JSON test | 1,760 pages; polygon F1 0.3815; coverage 0.1663; WER 0.9692; entity/relation F1 0.0944/0.0111 |
+| Layout rotation | 540/540; minimum calibrated entity/canonical/relation F1 0.7683/0.9640/0.3358 |
+| End-to-end rotation | 72/72 nonempty; public coverage 0.3068–0.3839; entity F1 0.1326–0.1807; synthetic Thai 18/18 |
+| Unseen CORU | 100/100 pages; 78.53% QA-answer text recall; 15.68% canonical exact match; 25.96 seconds/page |
+| Private operation | 2/2 anonymous documents and pages; aggregate only; no filename/text/image/per-document output |
+| Integration | Original/custom/adaptive image profiles plus rotated, Thai, and mixed-language multipage PDF outputs are schema-valid |
 
 ## Portable product and publication
 
-The final model is available through a one-command CLI and repaired local GUI.
+The model is available through a one-command CLI and repaired local GUI.
 The GUI previews images and first-page PDF renders, uses one progress surface,
 and keeps long OCR and run-log output independently scrollable. Extraction is
 local and requires no OpenAI API key.
 
-The public `v1.0.0-build-week` Release contains a privacy-audited
-weights-included archive for Windows and a Docker-backed macOS route. The
+The public `v1.0.0-build-week` Release remains the historical July 21
+privacy-audited package for Windows and a Docker-backed macOS route. The
 1,152,835,265-byte ZIP has SHA-256
 `c6c874f5b0879478497c9a33529f6416d48be60d586197fb625540d795f9ec6b`
 and was built from clean commit
@@ -61,7 +70,17 @@ submission docs, the empty legacy directory tree, and staging copies. Raw
 data, final model assets, the local runtime, runtime configuration, canonical
 ZIP, and demo MP4 were preserved.
 
-## Model and runtime
+The current OCR-upgrade branch also has a new locally verified portable
+archive. It was built from clean commit
+`fcae32edc193ff6574bf99362da0e2368d5ef464`, is 1,159,061,897 bytes, and has
+SHA-256
+`d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
+Fresh CPU setup and real CPU/GPU image, rotated-image, two-page PDF, custom
+Thai, adaptive, schema, visualization, fallback, archive-integrity, privacy,
+and loopback GUI checks pass. It is not silently substituted for the
+historical published Release.
+
+## Current model and runtime
 
 The final checkpoint uses `microsoft/layoutxlm-base` multilingual text and
 normalized 2D-layout embeddings with entity, document, canonical-evidence, and
@@ -72,13 +91,13 @@ includes a fixed 37° slice.
 Checkpoint:
 
 ```text
-D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\final
+D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
 ```
 
 Model SHA-256:
 
 ```text
-34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189
+f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180
 ```
 
 Paddle GPU and CUDA PyTorch run in separate Python 3.10 processes to avoid a
@@ -88,12 +107,11 @@ The source and derived checkpoint license is CC-BY-NC-SA-4.0.
 
 ## What the scores mean
 
-The layout heads are accurate when evaluated on reference tokens and boxes,
-but the real OCR pipeline substantially limits end-to-end extraction. On the
-three-page angle sample, SROIE OCR is strong while the selected FATURA/FUNSD
-examples are weak; aggregate text coverage stays near 0.4. Sparse FUNSD-only
-relation labels further constrain learned relations. These are current model
-limitations, not verifier failures.
+The layout heads are strong when evaluated on reference tokens and boxes, but
+the real OCR pipeline substantially limits end-to-end extraction. The full
+locked image-to-JSON run measured only 0.1663 recognized-text coverage and
+0.9692 WER. Sparse FUNSD-only relation labels further constrain learned
+relations. These are measured model limitations, not verifier failures.
 
 CORU contributes no fit or selection row. Its 100-page result measures whether
 known answer strings appear in OCR and whether canonical values match exactly;
@@ -104,9 +122,12 @@ results prove local operation only and are never accuracy evidence.
 
 Complete:
 
-- public normalization, leakage-safe splits, final multi-stream data build;
-- four-epoch public-only training, resume state, reload check, calibration;
-- exact general/Thai OCR verification and automatic arbitrary-angle deskew;
+- public normalization, leakage-safe splits, 400-page OCR benchmark, detector
+  data, recognition crops, and licensed synthetic data;
+- bounded detector/general/Thai trials with explicit acceptance decisions;
+- rebuilt ground-truth, PaddleOCR, hybrid, and train-only noise streams;
+- fresh four-epoch public-only training, reload check, and calibration;
+- exact original/custom OCR verification and automatic arbitrary-angle deskew;
 - image, PDF, multipage, rotated, unknown-type, and Thai inference;
 - locked in-domain, 18-angle layout, 18-angle end-to-end, and 100-page unseen
   evaluation;
@@ -125,5 +146,8 @@ Still open research/product decisions:
 - any future commercial redistribution path, because the inherited
   LayoutXLM-derived checkpoint is CC BY-NC-SA 4.0.
 
-The result is a complete working academic pre-model with measured limitations,
-not a claim of production readiness.
+The result is a working academic pre-model with measured limitations. The
+locked end-to-end quality targets were not reached, so it is not a claim of
+production readiness or accurate operation on every document. Full upgrade
+evidence and commands are in
+[`docs/OCR_UPGRADE_RELEASE_NOTES.md`](docs/OCR_UPGRADE_RELEASE_NOTES.md).

@@ -19,12 +19,17 @@
   model, calibrated entities/relations/fields, schema-valid image/PDF
   inference, locked public evaluation, unseen-domain testing, and
   aggregate-only private operation.
-- Final build `final-6be3e0b46b0a4e4c` contains 11,684 examples and trained
-  four epochs over 7,782 public training examples. Its exact checkpoint hash
-  is `34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189`.
-  Reference-token entity F1 is 0.9813; bounded end-to-end entity F1 is only
-  0.1314-0.1830 because OCR remains the main bottleneck. Treat it as a final
-  academic pre-model, not a production or high-stakes system.
+- OCR-upgrade build `final-8bfcf79fed04e375` contains 16,781 examples and
+  trained four epochs over 12,455 public TRAIN examples. Its selected fresh
+  checkpoint hash is
+  `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`;
+  the bound calibration hash is
+  `81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`.
+  Locked reference-token calibrated entity F1 is 0.9835, but the full
+  1,760-page locked image-to-JSON entity F1 is only 0.0944. Polygon F1 is
+  0.3815, text coverage 0.1663, and WER 0.9692. The requested end-to-end
+  quality targets were not reached. Treat it as an academic pre-model, not a
+  production or high-stakes system.
 - On 2026-07-21 the final model has a one-command CLI, repaired local Gradio GUI,
   portable Windows installer, Docker-based macOS route, and a consent-gated
   Codex/MCP review workflow that uses no OpenAI API key. The clean,
@@ -144,20 +149,30 @@
   CUDA-layout environments.
 - Required OCR models: PP-OCRv6_medium_det, PP-OCRv6_medium_rec, and
   th_PP-OCRv5_mobile_rec; model hashes and GPU smoke initialization pass.
+  The global profile remains `original`. The original detector/general
+  inference-tree hashes are
+  `eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d`
+  and
+  `6c46447e05189eb3f863dc75855f0cfccf16a4af188a249861377c69216f40b1`.
+  The accepted synthetic-only custom Thai inference-tree hash is
+  `0876e624221bf0ff2d888506c7b9fa84eacc99f98394b424e81c098769d91e73`.
 - Public annotation normalization produced 12,433 authoritative records. The
-  final aligned build contains 11,684 public examples, with Gmail fit rows 0.
+  OCR-upgrade build contains 11,172 ground-truth, 2,038 PaddleOCR, 2,038
+  hybrid, and 1,533 train-only OCR-noise examples, with Gmail fit rows 0.
 - Final multi-task training saved/reloaded all heads with maximum logit
   difference 0.0. Public-only calibration is bound to the exact build,
   manifest, and checkpoint hashes.
 - Locked in-domain calibrated entity/canonical/relation F1 is
-  0.9813/0.9814/0.4632. The 18-angle layout grid retains at least 95.30% of
-  upright entity F1; the 72-case end-to-end grid exposes the weaker real-OCR
-  path while synthetic Thai recovery passes 18/18 angles.
-- Unseen CORU completed 100/100 pages without failures. Private operational
-  inference completed 26/26 anonymous documents and 203/203 pages, and
-  published aggregate counts only.
-- Current host suite: 244 tests pass with two environment-dependent skips;
-  OCR-runtime and CUDA-layout partitions pass 122 and 2 tests.
+  0.9835/0.9860/0.5603. The 540-case layout grid has minimum calibrated entity
+  F1 0.7683; the 72-case end-to-end grid exposes the weaker real-OCR path while
+  synthetic Thai recovery passes 18/18 angles.
+- Unseen CORU completed 100/100 pages without failures at 25.96 seconds/page.
+  Current private operational inference completed 2/2 anonymous
+  documents/pages and published aggregate counts only. The older 26-document,
+  203-page result belongs to the July 17 checkpoint.
+- Current test and verifier counts are recorded in
+  `reports/ocr_upgrade/verification_executions.json`; do not reuse the older
+  244/122/2 counts after the ledger is refreshed.
 
 ## Open questions
 
@@ -316,3 +331,26 @@
   cache, log, screenshot, test-output, obsolete-package-doc, empty-legacy-tree,
   and staging files totaling 2,443,608,061 bytes. It preserved raw/model data,
   the demo MP4, canonical ZIP, `.runtime`, and `runtime.local.json`.
+- 2026-07-28 - Completed the public-only domain-adapted OCR training and
+  selection lifecycle. The selected global OCR profile remains original; a
+  synthetic-only custom Thai model is available to explicit custom/adaptive
+  profiles. Fresh LayoutXLM checkpoint
+  `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`
+  and calibration
+  `81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`
+  are frozen. The one-time 1,760-page locked image-to-JSON run had zero
+  failures but missed the requested accuracy targets (coverage 0.1663, WER
+  0.9692, entity F1 0.0944). CORU completed 100/100 unseen pages and the
+  bounded two-document private aggregate remained content-free. Documentation
+  now separates this branch evidence from the historical July 21 public
+  Release. The locally verified branch archive was built from clean commit
+  `fcae32edc193ff6574bf99362da0e2368d5ef464`; it is 1,159,061,897 bytes with
+  SHA-256
+  `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
+  Fresh CPU setup plus CPU/GPU image, rotated-image, PDF, custom Thai,
+  adaptive, schema, visualization, fallback, privacy, archive, and GUI probes
+  pass. The archive is local and has not replaced the historical public
+  Release. The late independent review found no blocker and one medium
+  acceptance-control defect; registry construction and runtime selection now
+  refuse the rejected custom general recognizer before path/hash loading using
+  hash-bound acceptance evidence and focused regression tests.

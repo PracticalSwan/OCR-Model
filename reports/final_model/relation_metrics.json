@@ -3,49 +3,49 @@
   "profile": "final",
   "split": "test_in_domain",
   "example_count": 1760,
-  "micro_f1": 0.4667681380010147,
-  "macro_f1": 0.562000222774599,
+  "micro_f1": 0.5725853094274147,
+  "macro_f1": 0.6886774354448836,
   "counts": {
-    "fp": 733,
-    "fn": 318,
-    "tp": 460
+    "fn": 283,
+    "tp": 495,
+    "fp": 456
   },
   "per_class": {
     "QUESTION_ANSWER": {
-      "fn": 300,
-      "tp": 295,
-      "fp": 633,
-      "f1": 0.38739330269205513,
+      "fn": 275,
+      "tp": 320,
+      "fp": 425,
+      "f1": 0.47761194029850745,
       "support": 595
     },
     "OTHER_RELATION": {
-      "fp": 100,
-      "tp": 165,
-      "fn": 18,
-      "f1": 0.7366071428571429,
+      "tp": 175,
+      "fp": 31,
+      "fn": 8,
+      "f1": 0.8997429305912596,
       "support": 183
     }
   },
-  "calibrated_micro_f1": 0.46324007807417045,
-  "calibrated_macro_f1": 0.5740908228588067,
+  "calibrated_micro_f1": 0.5602787456445993,
+  "calibrated_macro_f1": 0.6770394067180456,
   "calibrated_counts": {
-    "fn": 422,
-    "tp": 356,
-    "fp": 403
+    "fn": 376,
+    "tp": 402,
+    "fp": 255
   },
   "calibrated_per_class": {
     "QUESTION_ANSWER": {
-      "fn": 399,
-      "tp": 196,
-      "fp": 348,
-      "f1": 0.34416154521510095,
+      "fn": 367,
+      "tp": 228,
+      "fp": 235,
+      "f1": 0.43100189035916825,
       "support": 595
     },
     "OTHER_RELATION": {
-      "tp": 160,
-      "fp": 55,
-      "fn": 23,
-      "f1": 0.8040201005025126,
+      "tp": 174,
+      "fn": 9,
+      "fp": 20,
+      "f1": 0.9230769230769231,
       "support": 183
     }
   },
@@ -54,9 +54,9 @@
       "example_count": 1584,
       "window_count": 1584,
       "metrics": {
-        "loss": 0.031139654345353315,
-        "entity_token_f1": 0.9994639811581255,
-        "entity_macro_f1": 0.9997768264724382,
+        "loss": 0.030423772786494423,
+        "entity_token_f1": 1.0,
+        "entity_macro_f1": 1.0,
         "entity_per_class": {
           "B-VALUE": {
             "tp": 10692,
@@ -65,8 +65,7 @@
           },
           "I-VALUE": {
             "tp": 49256,
-            "fp": 66,
-            "f1": 0.9993304794173142,
+            "f1": 1.0,
             "support": 49256
           },
           "B-TABLE_CELL": {
@@ -76,80 +75,79 @@
           }
         },
         "entity_counts": {
-          "tp": 61532,
-          "fp": 66
+          "tp": 61532
         },
-        "canonical_evidence_token_f1": 0.9841247580848737,
-        "canonical_macro_f1": 0.9796716213759284,
+        "canonical_evidence_token_f1": 0.9834768704238785,
+        "canonical_macro_f1": 0.9774856266287321,
         "canonical_per_class": {
           "organization_name": {
-            "tp": 3657,
-            "fn": 87,
-            "fp": 130,
-            "f1": 0.9711857655025893,
+            "tp": 3660,
+            "fn": 84,
+            "fp": 180,
+            "f1": 0.9651898734177216,
             "support": 3744
           },
           "document_title": {
-            "tp": 729,
-            "fp": 96,
-            "fn": 1,
-            "f1": 0.9376205787781351,
+            "tp": 728,
+            "fp": 127,
+            "fn": 2,
+            "f1": 0.9186119873817035,
             "support": 730
           },
           "date": {
-            "tp": 4244,
-            "fp": 40,
-            "fn": 27,
-            "f1": 0.9921683226183519,
+            "tp": 4209,
+            "fp": 32,
+            "fn": 62,
+            "f1": 0.9889567669172933,
             "support": 4271
           },
           "invoice_number": {
-            "tp": 3059,
-            "fn": 39,
-            "fp": 60,
-            "f1": 0.9840759208621521,
+            "tp": 3027,
+            "fn": 71,
+            "fp": 67,
+            "f1": 0.9777131782945736,
             "support": 3098
           },
           "subtotal": {
             "tp": 2571,
+            "fp": 23,
             "fn": 10,
-            "fp": 15,
-            "f1": 0.9951616024772595,
+            "f1": 0.9936231884057971,
             "support": 2581
           },
           "tax": {
             "tp": 2187,
-            "fp": 18,
+            "fp": 17,
             "fn": 5,
-            "f1": 0.9947691607914487,
+            "f1": 0.9949954504094631,
             "support": 2192
           },
           "total_amount": {
             "tp": 2611,
-            "fp": 61,
             "fn": 32,
-            "f1": 0.9825023518344309,
+            "fp": 39,
+            "f1": 0.9865860570564897,
             "support": 2643
           },
           "address": {
-            "tp": 14236,
-            "fn": 158,
-            "fp": 257,
-            "f1": 0.9856336760480493,
+            "tp": 14254,
+            "fn": 140,
+            "fp": 230,
+            "f1": 0.987187478357227,
             "support": 14394
           },
           "email": {
-            "tp": 1793,
-            "fp": 35,
-            "fn": 61,
-            "f1": 0.9739272134709397,
+            "tp": 1811,
+            "fp": 14,
+            "fn": 43,
+            "f1": 0.9845066594183202,
             "support": 1854
           }
         },
         "canonical_counts": {
-          "tp": 35087,
-          "fn": 420,
-          "fp": 712
+          "tp": 35058,
+          "fn": 449,
+          "fp": 729
         },
         "relation_f1": 0.0,
         "relation_macro_f1": 0.0,
@@ -157,10 +155,10 @@
         "relation_counts": {},
         "document_macro_f1": 1.0,
         "document_accuracy": 1.0,
-        "composite_score": 0.7458167819844687,
+        "composite_score": 0.7458692176059697,
         "evaluated_windows": 1584,
-        "entity_calibrated_f1": 0.9995045685279188,
-        "entity_calibrated_macro_f1": 0.9997937230952356,
+        "entity_calibrated_f1": 1.0,
+        "entity_calibrated_macro_f1": 1.0,
         "entity_calibrated_per_class": {
           "B-VALUE": {
             "tp": 10692,
@@ -169,8 +167,7 @@
           },
           "I-VALUE": {
             "tp": 49256,
-            "fp": 61,
-            "f1": 0.9993811692857071,
+            "f1": 1.0,
             "support": 49256
           },
           "B-TABLE_CELL": {
@@ -180,23 +177,23 @@
           }
         },
         "entity_calibrated_counts": {
-          "tp": 61532,
-          "fp": 61
+          "tp": 61532
         },
-        "canonical_calibrated_f1": 0.9861576403837655,
-        "canonical_calibrated_macro_f1": 0.9804116028442995,
+        "canonical_calibrated_f1": 0.9898094060461349,
+        "canonical_calibrated_macro_f1": 0.9886368527053173,
         "canonical_calibrated_per_class": {
           "organization_name": {
-            "tp": 3643,
-            "fn": 101,
-            "fp": 4,
-            "f1": 0.9857935326748748,
+            "tp": 3649,
+            "fn": 95,
+            "fp": 3,
+            "f1": 0.986749594375338,
             "support": 3744
           },
           "document_title": {
-            "tp": 717,
-            "fn": 13,
-            "f1": 0.9910158949550795,
+            "tp": 708,
+            "fn": 22,
+            "fp": 4,
+            "f1": 0.9819694868238558,
             "support": 730
           },
           "date": {
@@ -206,10 +203,10 @@
             "support": 4271
           },
           "invoice_number": {
-            "tp": 3037,
-            "fn": 61,
-            "fp": 4,
-            "f1": 0.9894119563446816,
+            "tp": 2995,
+            "fn": 103,
+            "fp": 14,
+            "f1": 0.9808416571147863,
             "support": 3098
           },
           "subtotal": {
@@ -225,30 +222,30 @@
             "support": 2192
           },
           "total_amount": {
-            "tp": 2589,
-            "fn": 54,
-            "fp": 8,
-            "f1": 0.9881679389312977,
+            "tp": 2579,
+            "fn": 64,
+            "f1": 0.9877441593259287,
             "support": 2643
           },
           "address": {
-            "tp": 14191,
-            "fn": 203,
-            "fp": 36,
-            "f1": 0.9916494881380804,
+            "tp": 14176,
+            "fn": 218,
+            "fp": 7,
+            "f1": 0.9921265353256115,
             "support": 14394
           },
           "email": {
-            "tp": 1503,
-            "fn": 351,
-            "f1": 0.8954423592493298,
+            "tp": 1806,
+            "fn": 48,
+            "fp": 3,
+            "f1": 0.9860769860769861,
             "support": 1854
           }
         },
         "canonical_calibrated_counts": {
-          "tp": 34588,
-          "fn": 919,
-          "fp": 52
+          "tp": 34821,
+          "fn": 686,
+          "fp": 31
         },
         "relation_calibrated_f1": 0.0,
         "relation_calibrated_macro_f1": 0.0,
@@ -256,69 +253,64 @@
         "relation_calibrated_counts": {},
         "document_calibrated_coverage": 1.0,
         "document_calibrated_selective_accuracy": 1.0,
-        "calibrated_composite_score": 0.7463412375071089
+        "calibrated_composite_score": 0.7474523515115338
       }
     },
     "funsd": {
       "example_count": 30,
       "window_count": 31,
       "metrics": {
-        "loss": 1.16636142423076,
-        "entity_token_f1": 0.745405537858368,
-        "entity_macro_f1": 0.5963910078304487,
+        "loss": 1.0490937098380058,
+        "entity_token_f1": 0.7558528428093646,
+        "entity_macro_f1": 0.6598298025059411,
         "entity_per_class": {
           "B-HEADER": {
-            "fn": 79,
-            "tp": 6,
-            "fp": 3,
-            "f1": 0.1276595744680851,
+            "tp": 28,
+            "fn": 57,
+            "fp": 24,
+            "f1": 0.40875912408759124,
             "support": 85
           },
           "I-HEADER": {
-            "fp": 106,
-            "tp": 82,
-            "fn": 91,
-            "f1": 0.45429362880886426,
+            "fp": 89,
+            "tp": 88,
+            "fn": 85,
+            "f1": 0.5028571428571429,
             "support": 173
           },
           "B-QUESTION": {
-            "fp": 191,
-            "tp": 523,
-            "fn": 90,
-            "f1": 0.7882441597588545,
+            "tp": 517,
+            "fp": 167,
+            "fn": 96,
+            "f1": 0.7972243639167309,
             "support": 613
           },
           "I-QUESTION": {
-            "fp": 269,
-            "tp": 549,
-            "fn": 247,
-            "f1": 0.6802973977695167,
+            "fp": 257,
+            "tp": 561,
+            "fn": 235,
+            "f1": 0.6951672862453532,
             "support": 796
           },
           "B-ANSWER": {
-            "fn": 134,
-            "fp": 216,
-            "tp": 430,
-            "f1": 0.7107438016528925,
+            "fn": 117,
+            "fp": 193,
+            "tp": 447,
+            "f1": 0.7425249169435216,
             "support": 564
           },
           "I-ANSWER": {
-            "fp": 464,
-            "tp": 1452,
-            "fn": 186,
-            "f1": 0.8171074845244795,
+            "fp": 423,
+            "tp": 1410,
+            "fn": 228,
+            "f1": 0.8124459809853068,
             "support": 1638
-          },
-          "B-TABLE_CELL": {
-            "fp": 2,
-            "f1": 0.0,
-            "support": 0
           }
         },
         "entity_counts": {
-          "fp": 1251,
-          "fn": 827,
-          "tp": 3042
+          "fp": 1153,
+          "fn": 818,
+          "tp": 3051
         },
         "canonical_evidence_token_f1": 0.0,
         "canonical_macro_f1": 0.0,
@@ -332,178 +324,180 @@
         "canonical_counts": {
           "fp": 3
         },
-        "relation_f1": 0.4667681380010147,
-        "relation_macro_f1": 0.562000222774599,
+        "relation_f1": 0.5725853094274147,
+        "relation_macro_f1": 0.6886774354448836,
         "relation_per_class": {
           "QUESTION_ANSWER": {
-            "fn": 300,
-            "tp": 295,
-            "fp": 633,
-            "f1": 0.38739330269205513,
+            "fn": 275,
+            "tp": 320,
+            "fp": 425,
+            "f1": 0.47761194029850745,
             "support": 595
           },
           "OTHER_RELATION": {
-            "fp": 100,
-            "tp": 165,
-            "fn": 18,
-            "f1": 0.7366071428571429,
+            "tp": 175,
+            "fp": 31,
+            "fn": 8,
+            "f1": 0.8997429305912596,
             "support": 183
           }
         },
         "relation_counts": {
-          "fp": 733,
-          "fn": 318,
-          "tp": 460
+          "fn": 283,
+          "tp": 495,
+          "fp": 456
         },
         "document_macro_f1": 1.0,
         "document_accuracy": 1.0,
-        "composite_score": 0.5148542496436009,
+        "composite_score": 0.5454874644805996,
         "evaluated_windows": 31,
-        "entity_calibrated_f1": 0.7121256179121838,
-        "entity_calibrated_macro_f1": 0.5437137572991778,
+        "entity_calibrated_f1": 0.7441796008869179,
+        "entity_calibrated_macro_f1": 0.6287971276871175,
         "entity_calibrated_per_class": {
           "B-HEADER": {
-            "fn": 85,
-            "f1": 0.0,
+            "tp": 16,
+            "fn": 69,
+            "fp": 10,
+            "f1": 0.2882882882882883,
             "support": 85
           },
           "I-HEADER": {
-            "tp": 60,
-            "fn": 113,
-            "fp": 26,
-            "f1": 0.46332046332046334,
+            "tp": 76,
+            "fn": 97,
+            "fp": 43,
+            "f1": 0.5205479452054794,
             "support": 173
           },
           "B-QUESTION": {
-            "tp": 394,
-            "fp": 56,
-            "fn": 219,
-            "f1": 0.7412982126058325,
+            "fn": 172,
+            "fp": 85,
+            "tp": 441,
+            "f1": 0.7743634767339772,
             "support": 613
           },
           "I-QUESTION": {
-            "tp": 395,
-            "fp": 116,
-            "fn": 401,
-            "f1": 0.6044376434583014,
+            "fp": 131,
+            "tp": 460,
+            "fn": 336,
+            "f1": 0.6633020908435472,
             "support": 796
           },
           "B-ANSWER": {
-            "fn": 245,
-            "tp": 319,
-            "fp": 103,
-            "f1": 0.6470588235294118,
+            "fn": 191,
+            "tp": 373,
+            "fp": 111,
+            "f1": 0.7118320610687023,
             "support": 564
           },
           "I-ANSWER": {
-            "fp": 259,
-            "tp": 1281,
-            "fn": 357,
-            "f1": 0.8061674008810573,
+            "fp": 282,
+            "tp": 1319,
+            "fn": 319,
+            "f1": 0.8144489039827107,
             "support": 1638
           }
         },
         "entity_calibrated_counts": {
-          "fn": 1420,
-          "tp": 2449,
-          "fp": 560
+          "fn": 1184,
+          "fp": 662,
+          "tp": 2685
         },
         "canonical_calibrated_f1": 0.0,
         "canonical_calibrated_macro_f1": 0.0,
         "canonical_calibrated_per_class": {},
         "canonical_calibrated_counts": {},
-        "relation_calibrated_f1": 0.46324007807417045,
-        "relation_calibrated_macro_f1": 0.5740908228588067,
+        "relation_calibrated_f1": 0.5602787456445993,
+        "relation_calibrated_macro_f1": 0.6770394067180456,
         "relation_calibrated_per_class": {
           "QUESTION_ANSWER": {
-            "fn": 399,
-            "tp": 196,
-            "fp": 348,
-            "f1": 0.34416154521510095,
+            "fn": 367,
+            "tp": 228,
+            "fp": 235,
+            "f1": 0.43100189035916825,
             "support": 595
           },
           "OTHER_RELATION": {
-            "tp": 160,
-            "fp": 55,
-            "fn": 23,
-            "f1": 0.8040201005025126,
+            "tp": 174,
+            "fn": 9,
+            "fp": 20,
+            "f1": 0.9230769230769231,
             "support": 183
           }
         },
         "relation_calibrated_counts": {
-          "fn": 422,
-          "tp": 356,
-          "fp": 403
+          "fn": 376,
+          "tp": 402,
+          "fp": 255
         },
-        "document_calibrated_coverage": 0.5806451612903226,
+        "document_calibrated_coverage": 1.0,
         "document_calibrated_selective_accuracy": 1.0,
-        "calibrated_composite_score": 0.5006602666834161
+        "calibrated_composite_score": 0.537741526765917
       }
     },
     "sroie": {
       "example_count": 146,
       "window_count": 146,
       "metrics": {
-        "loss": 0.3782313547403335,
-        "entity_token_f1": 0.8680535765175263,
-        "entity_macro_f1": 0.8672622566934045,
+        "loss": 0.3158276285784804,
+        "entity_token_f1": 0.8968660968660969,
+        "entity_macro_f1": 0.8964175266687515,
         "entity_per_class": {
           "B-VALUE": {
-            "tp": 1181,
-            "fp": 210,
-            "fn": 147,
-            "f1": 0.8687017285766826,
+            "tp": 1218,
+            "fp": 169,
+            "fn": 110,
+            "f1": 0.8972375690607735,
             "support": 1328
           },
           "I-VALUE": {
-            "fp": 38,
-            "fn": 68,
-            "tp": 342,
-            "f1": 0.8658227848101265,
+            "fp": 29,
+            "fn": 54,
+            "tp": 356,
+            "f1": 0.8955974842767296,
             "support": 410
           }
         },
         "entity_counts": {
-          "tp": 1523,
-          "fp": 248,
-          "fn": 215
+          "tp": 1574,
+          "fp": 198,
+          "fn": 164
         },
-        "canonical_evidence_token_f1": 0.8254109284762328,
-        "canonical_macro_f1": 0.7925075336737503,
+        "canonical_evidence_token_f1": 0.8538011695906432,
+        "canonical_macro_f1": 0.8348684758493918,
         "canonical_per_class": {
           "organization_name": {
-            "tp": 140,
-            "fp": 47,
-            "fn": 18,
-            "f1": 0.8115942028985508,
+            "tp": 144,
+            "fp": 34,
+            "fn": 14,
+            "f1": 0.8571428571428571,
             "support": 158
           },
           "date": {
-            "tp": 55,
-            "fp": 29,
-            "fn": 24,
-            "f1": 0.6748466257668712,
+            "tp": 62,
+            "fp": 22,
+            "fn": 17,
+            "f1": 0.7607361963190185,
             "support": 79
           },
           "total_amount": {
-            "tp": 342,
-            "fp": 127,
-            "fn": 53,
-            "f1": 0.7916666666666666,
+            "tp": 343,
+            "fn": 52,
+            "fp": 101,
+            "f1": 0.8176400476758046,
             "support": 395
           },
           "address": {
-            "fp": 40,
-            "fn": 55,
-            "tp": 392,
-            "f1": 0.8919226393629124,
+            "fp": 38,
+            "fn": 47,
+            "tp": 400,
+            "f1": 0.903954802259887,
             "support": 447
           }
         },
         "canonical_counts": {
-          "tp": 929,
-          "fp": 243,
-          "fn": 150
+          "tp": 949,
+          "fp": 195,
+          "fn": 130
         },
         "relation_f1": 0.0,
         "relation_macro_f1": 0.0,
@@ -511,74 +505,74 @@
         "relation_counts": {},
         "document_macro_f1": 1.0,
         "document_accuracy": 1.0,
-        "composite_score": 0.6535741627260687,
+        "composite_score": 0.6721967311440995,
         "evaluated_windows": 146,
-        "entity_calibrated_f1": 0.8679896462467644,
-        "entity_calibrated_macro_f1": 0.867370647637255,
+        "entity_calibrated_f1": 0.8953421506612996,
+        "entity_calibrated_macro_f1": 0.8927573547482126,
         "entity_calibrated_per_class": {
           "B-VALUE": {
-            "tp": 1169,
-            "fp": 195,
-            "fn": 159,
-            "f1": 0.8684992570579495,
+            "tp": 1208,
+            "fp": 156,
+            "fn": 120,
+            "f1": 0.8974739970282318,
             "support": 1328
           },
           "I-VALUE": {
-            "fp": 35,
-            "fn": 70,
-            "tp": 340,
-            "f1": 0.8662420382165605,
+            "fp": 27,
+            "fn": 61,
+            "tp": 349,
+            "f1": 0.8880407124681934,
             "support": 410
           }
         },
         "entity_calibrated_counts": {
-          "tp": 1509,
-          "fp": 230,
-          "fn": 229
+          "tp": 1557,
+          "fp": 183,
+          "fn": 181
         },
-        "canonical_calibrated_f1": 0.8099173553719008,
-        "canonical_calibrated_macro_f1": 0.6784521763713646,
+        "canonical_calibrated_f1": 0.8507386653082017,
+        "canonical_calibrated_macro_f1": 0.7983047550215352,
         "canonical_calibrated_per_class": {
           "organization_name": {
-            "tp": 86,
-            "fn": 72,
-            "fp": 10,
-            "f1": 0.6771653543307087,
+            "tp": 118,
+            "fp": 14,
+            "fn": 40,
+            "f1": 0.8137931034482758,
             "support": 158
           },
           "date": {
-            "fn": 64,
-            "tp": 15,
-            "f1": 0.3191489361702128,
+            "tp": 37,
+            "fn": 42,
+            "f1": 0.6379310344827587,
             "support": 79
           },
           "total_amount": {
-            "tp": 313,
-            "fn": 82,
-            "fp": 47,
-            "f1": 0.8291390728476821,
+            "tp": 300,
+            "fn": 95,
+            "fp": 23,
+            "f1": 0.8356545961002786,
             "support": 395
           },
           "address": {
-            "fp": 16,
-            "fn": 77,
-            "tp": 370,
-            "f1": 0.8883553421368547,
+            "fp": 12,
+            "fn": 67,
+            "tp": 380,
+            "f1": 0.9058402860548271,
             "support": 447
           }
         },
         "canonical_calibrated_counts": {
-          "tp": 784,
-          "fp": 73,
-          "fn": 295
+          "tp": 835,
+          "fp": 49,
+          "fn": 244
         },
         "relation_calibrated_f1": 0.0,
         "relation_calibrated_macro_f1": 0.0,
         "relation_calibrated_per_class": {},
         "relation_calibrated_counts": {},
-        "document_calibrated_coverage": 0.7945205479452054,
+        "document_calibrated_coverage": 1.0,
         "document_calibrated_selective_accuracy": 1.0,
-        "calibrated_composite_score": 0.649675197341681
+        "calibrated_composite_score": 0.6708215265915702
       }
     }
   },
@@ -587,275 +581,272 @@
       "example_count": 176,
       "window_count": 177,
       "metrics": {
-        "loss": 0.5162654347075833,
-        "entity_token_f1": 0.7822808671065034,
-        "entity_macro_f1": 0.6641088200461877,
+        "loss": 0.4442527614544425,
+        "entity_token_f1": 0.7985841319174652,
+        "entity_macro_f1": 0.7189767335466438,
         "entity_per_class": {
           "B-HEADER": {
-            "fn": 79,
-            "tp": 6,
-            "fp": 3,
-            "f1": 0.1276595744680851,
+            "tp": 28,
+            "fn": 57,
+            "fp": 24,
+            "f1": 0.40875912408759124,
             "support": 85
           },
           "I-HEADER": {
-            "fp": 106,
-            "tp": 82,
-            "fn": 91,
-            "f1": 0.45429362880886426,
+            "fp": 89,
+            "tp": 88,
+            "fn": 85,
+            "f1": 0.5028571428571429,
             "support": 173
           },
           "B-VALUE": {
-            "tp": 1181,
-            "fp": 210,
-            "fn": 147,
-            "f1": 0.8687017285766826,
+            "tp": 1218,
+            "fp": 169,
+            "fn": 110,
+            "f1": 0.8972375690607735,
             "support": 1328
           },
           "I-VALUE": {
-            "fp": 38,
-            "fn": 68,
-            "tp": 342,
-            "f1": 0.8658227848101265,
+            "fp": 29,
+            "fn": 54,
+            "tp": 356,
+            "f1": 0.8955974842767296,
             "support": 410
           },
           "B-QUESTION": {
-            "fp": 191,
-            "tp": 523,
-            "fn": 90,
-            "f1": 0.7882441597588545,
+            "tp": 517,
+            "fp": 167,
+            "fn": 96,
+            "f1": 0.7972243639167309,
             "support": 613
           },
           "I-QUESTION": {
-            "fp": 269,
-            "tp": 549,
-            "fn": 247,
-            "f1": 0.6802973977695167,
+            "fp": 257,
+            "tp": 561,
+            "fn": 235,
+            "f1": 0.6951672862453532,
             "support": 796
           },
           "B-ANSWER": {
-            "fn": 134,
-            "fp": 216,
-            "tp": 430,
-            "f1": 0.7107438016528925,
+            "fn": 117,
+            "fp": 193,
+            "tp": 447,
+            "f1": 0.7425249169435216,
             "support": 564
           },
           "I-ANSWER": {
-            "fp": 464,
-            "tp": 1452,
-            "fn": 186,
-            "f1": 0.8171074845244795,
+            "fp": 423,
+            "tp": 1410,
+            "fn": 228,
+            "f1": 0.8124459809853068,
             "support": 1638
-          },
-          "B-TABLE_CELL": {
-            "fp": 2,
-            "f1": 0.0,
-            "support": 0
           }
         },
         "entity_counts": {
-          "tp": 4565,
-          "fp": 1499,
-          "fn": 1042
+          "tp": 4625,
+          "fp": 1351,
+          "fn": 982
         },
-        "canonical_evidence_token_f1": 0.8243123336291038,
-        "canonical_macro_f1": 0.7907584082364689,
+        "canonical_evidence_token_f1": 0.8526504941599281,
+        "canonical_macro_f1": 0.832972142094651,
         "canonical_per_class": {
           "organization_name": {
-            "tp": 140,
-            "fp": 50,
-            "fn": 18,
-            "f1": 0.8045977011494253,
+            "tp": 144,
+            "fp": 37,
+            "fn": 14,
+            "f1": 0.8495575221238938,
             "support": 158
           },
           "date": {
-            "tp": 55,
-            "fp": 29,
-            "fn": 24,
-            "f1": 0.6748466257668712,
+            "tp": 62,
+            "fp": 22,
+            "fn": 17,
+            "f1": 0.7607361963190185,
             "support": 79
           },
           "total_amount": {
-            "tp": 342,
-            "fp": 127,
-            "fn": 53,
-            "f1": 0.7916666666666666,
+            "tp": 343,
+            "fn": 52,
+            "fp": 101,
+            "f1": 0.8176400476758046,
             "support": 395
           },
           "address": {
-            "fp": 40,
-            "fn": 55,
-            "tp": 392,
-            "f1": 0.8919226393629124,
+            "fp": 38,
+            "fn": 47,
+            "tp": 400,
+            "f1": 0.903954802259887,
             "support": 447
           }
         },
         "canonical_counts": {
-          "tp": 929,
-          "fp": 246,
-          "fn": 150
+          "tp": 949,
+          "fp": 198,
+          "fn": 130
         },
-        "relation_f1": 0.4667681380010147,
-        "relation_macro_f1": 0.562000222774599,
+        "relation_f1": 0.5725853094274147,
+        "relation_macro_f1": 0.6886774354448836,
         "relation_per_class": {
           "QUESTION_ANSWER": {
-            "fn": 300,
-            "tp": 295,
-            "fp": 633,
-            "f1": 0.38739330269205513,
+            "fn": 275,
+            "tp": 320,
+            "fp": 425,
+            "f1": 0.47761194029850745,
             "support": 595
           },
           "OTHER_RELATION": {
-            "fp": 100,
-            "tp": 165,
-            "fn": 18,
-            "f1": 0.7366071428571429,
+            "tp": 175,
+            "fp": 31,
+            "fn": 8,
+            "f1": 0.8997429305912596,
             "support": 183
           }
         },
         "relation_counts": {
-          "fp": 733,
-          "fn": 318,
-          "tp": 460
+          "fn": 283,
+          "tp": 495,
+          "fp": 456
         },
         "document_macro_f1": 1.0,
         "document_accuracy": 1.0,
-        "composite_score": 0.735682464750131,
+        "composite_score": 0.7757426036638218,
         "evaluated_windows": 177,
-        "entity_calibrated_f1": 0.764461612747465,
-        "entity_calibrated_macro_f1": 0.6246279798836971,
+        "entity_calibrated_f1": 0.7933420609687676,
+        "entity_calibrated_macro_f1": 0.6947871844523913,
         "entity_calibrated_per_class": {
           "B-HEADER": {
-            "fn": 85,
-            "f1": 0.0,
+            "tp": 16,
+            "fn": 69,
+            "fp": 10,
+            "f1": 0.2882882882882883,
             "support": 85
           },
           "I-HEADER": {
-            "tp": 60,
-            "fn": 113,
-            "fp": 26,
-            "f1": 0.46332046332046334,
+            "tp": 76,
+            "fn": 97,
+            "fp": 43,
+            "f1": 0.5205479452054794,
             "support": 173
           },
           "B-VALUE": {
-            "tp": 1169,
-            "fp": 195,
-            "fn": 159,
-            "f1": 0.8684992570579495,
+            "tp": 1208,
+            "fp": 156,
+            "fn": 120,
+            "f1": 0.8974739970282318,
             "support": 1328
           },
           "I-VALUE": {
-            "fp": 35,
-            "fn": 70,
-            "tp": 340,
-            "f1": 0.8662420382165605,
+            "fp": 27,
+            "fn": 61,
+            "tp": 349,
+            "f1": 0.8880407124681934,
             "support": 410
           },
           "B-QUESTION": {
-            "tp": 394,
-            "fp": 56,
-            "fn": 219,
-            "f1": 0.7412982126058325,
+            "fn": 172,
+            "fp": 85,
+            "tp": 441,
+            "f1": 0.7743634767339772,
             "support": 613
           },
           "I-QUESTION": {
-            "tp": 395,
-            "fp": 116,
-            "fn": 401,
-            "f1": 0.6044376434583014,
+            "fp": 131,
+            "tp": 460,
+            "fn": 336,
+            "f1": 0.6633020908435472,
             "support": 796
           },
           "B-ANSWER": {
-            "fn": 245,
-            "tp": 319,
-            "fp": 103,
-            "f1": 0.6470588235294118,
+            "fn": 191,
+            "tp": 373,
+            "fp": 111,
+            "f1": 0.7118320610687023,
             "support": 564
           },
           "I-ANSWER": {
-            "fp": 259,
-            "tp": 1281,
-            "fn": 357,
-            "f1": 0.8061674008810573,
+            "fp": 282,
+            "tp": 1319,
+            "fn": 319,
+            "f1": 0.8144489039827107,
             "support": 1638
           }
         },
         "entity_calibrated_counts": {
-          "tp": 3958,
-          "fp": 790,
-          "fn": 1649
+          "tp": 4242,
+          "fp": 845,
+          "fn": 1365
         },
-        "canonical_calibrated_f1": 0.8099173553719008,
-        "canonical_calibrated_macro_f1": 0.6784521763713646,
+        "canonical_calibrated_f1": 0.8507386653082017,
+        "canonical_calibrated_macro_f1": 0.7983047550215352,
         "canonical_calibrated_per_class": {
           "organization_name": {
-            "tp": 86,
-            "fn": 72,
-            "fp": 10,
-            "f1": 0.6771653543307087,
+            "tp": 118,
+            "fp": 14,
+            "fn": 40,
+            "f1": 0.8137931034482758,
             "support": 158
           },
           "date": {
-            "fn": 64,
-            "tp": 15,
-            "f1": 0.3191489361702128,
+            "tp": 37,
+            "fn": 42,
+            "f1": 0.6379310344827587,
             "support": 79
           },
           "total_amount": {
-            "tp": 313,
-            "fn": 82,
-            "fp": 47,
-            "f1": 0.8291390728476821,
+            "tp": 300,
+            "fn": 95,
+            "fp": 23,
+            "f1": 0.8356545961002786,
             "support": 395
           },
           "address": {
-            "fp": 16,
-            "fn": 77,
-            "tp": 370,
-            "f1": 0.8883553421368547,
+            "fp": 12,
+            "fn": 67,
+            "tp": 380,
+            "f1": 0.9058402860548271,
             "support": 447
           }
         },
         "canonical_calibrated_counts": {
-          "tp": 784,
-          "fp": 73,
-          "fn": 295
+          "tp": 835,
+          "fp": 49,
+          "fn": 244
         },
-        "relation_calibrated_f1": 0.46324007807417045,
-        "relation_calibrated_macro_f1": 0.5740908228588067,
+        "relation_calibrated_f1": 0.5602787456445993,
+        "relation_calibrated_macro_f1": 0.6770394067180456,
         "relation_calibrated_per_class": {
           "QUESTION_ANSWER": {
-            "fn": 399,
-            "tp": 196,
-            "fp": 348,
-            "f1": 0.34416154521510095,
+            "fn": 367,
+            "tp": 228,
+            "fp": 235,
+            "f1": 0.43100189035916825,
             "support": 595
           },
           "OTHER_RELATION": {
-            "tp": 160,
-            "fp": 55,
-            "fn": 23,
-            "f1": 0.8040201005025126,
+            "tp": 174,
+            "fn": 9,
+            "fp": 20,
+            "f1": 0.9230769230769231,
             "support": 183
           }
         },
         "relation_calibrated_counts": {
-          "fn": 422,
-          "tp": 356,
-          "fp": 403
+          "fn": 376,
+          "tp": 402,
+          "fp": 255
         },
-        "document_calibrated_coverage": 0.7570621468926554,
+        "document_calibrated_coverage": 1.0,
         "document_calibrated_selective_accuracy": 1.0,
-        "calibrated_composite_score": 0.7240740034605039
+        "calibrated_composite_score": 0.7700911771257073
       }
     },
     "tr": {
       "example_count": 1584,
       "window_count": 1584,
       "metrics": {
-        "loss": 0.031139654345353315,
-        "entity_token_f1": 0.9994639811581255,
-        "entity_macro_f1": 0.9997768264724382,
+        "loss": 0.030423772786494423,
+        "entity_token_f1": 1.0,
+        "entity_macro_f1": 1.0,
         "entity_per_class": {
           "B-VALUE": {
             "tp": 10692,
@@ -864,8 +855,7 @@
           },
           "I-VALUE": {
             "tp": 49256,
-            "fp": 66,
-            "f1": 0.9993304794173142,
+            "f1": 1.0,
             "support": 49256
           },
           "B-TABLE_CELL": {
@@ -875,80 +865,79 @@
           }
         },
         "entity_counts": {
-          "tp": 61532,
-          "fp": 66
+          "tp": 61532
         },
-        "canonical_evidence_token_f1": 0.9841247580848737,
-        "canonical_macro_f1": 0.9796716213759284,
+        "canonical_evidence_token_f1": 0.9834768704238785,
+        "canonical_macro_f1": 0.9774856266287321,
         "canonical_per_class": {
           "organization_name": {
-            "tp": 3657,
-            "fn": 87,
-            "fp": 130,
-            "f1": 0.9711857655025893,
+            "tp": 3660,
+            "fn": 84,
+            "fp": 180,
+            "f1": 0.9651898734177216,
             "support": 3744
           },
           "document_title": {
-            "tp": 729,
-            "fp": 96,
-            "fn": 1,
-            "f1": 0.9376205787781351,
+            "tp": 728,
+            "fp": 127,
+            "fn": 2,
+            "f1": 0.9186119873817035,
             "support": 730
           },
           "date": {
-            "tp": 4244,
-            "fp": 40,
-            "fn": 27,
-            "f1": 0.9921683226183519,
+            "tp": 4209,
+            "fp": 32,
+            "fn": 62,
+            "f1": 0.9889567669172933,
             "support": 4271
           },
           "invoice_number": {
-            "tp": 3059,
-            "fn": 39,
-            "fp": 60,
-            "f1": 0.9840759208621521,
+            "tp": 3027,
+            "fn": 71,
+            "fp": 67,
+            "f1": 0.9777131782945736,
             "support": 3098
           },
           "subtotal": {
             "tp": 2571,
+            "fp": 23,
             "fn": 10,
-            "fp": 15,
-            "f1": 0.9951616024772595,
+            "f1": 0.9936231884057971,
             "support": 2581
           },
           "tax": {
             "tp": 2187,
-            "fp": 18,
+            "fp": 17,
             "fn": 5,
-            "f1": 0.9947691607914487,
+            "f1": 0.9949954504094631,
             "support": 2192
           },
           "total_amount": {
             "tp": 2611,
-            "fp": 61,
             "fn": 32,
-            "f1": 0.9825023518344309,
+            "fp": 39,
+            "f1": 0.9865860570564897,
             "support": 2643
           },
           "address": {
-            "tp": 14236,
-            "fn": 158,
-            "fp": 257,
-            "f1": 0.9856336760480493,
+            "tp": 14254,
+            "fn": 140,
+            "fp": 230,
+            "f1": 0.987187478357227,
             "support": 14394
           },
           "email": {
-            "tp": 1793,
-            "fp": 35,
-            "fn": 61,
-            "f1": 0.9739272134709397,
+            "tp": 1811,
+            "fp": 14,
+            "fn": 43,
+            "f1": 0.9845066594183202,
             "support": 1854
           }
         },
         "canonical_counts": {
-          "tp": 35087,
-          "fn": 420,
-          "fp": 712
+          "tp": 35058,
+          "fn": 449,
+          "fp": 729
         },
         "relation_f1": 0.0,
         "relation_macro_f1": 0.0,
@@ -956,10 +945,10 @@
         "relation_counts": {},
         "document_macro_f1": 1.0,
         "document_accuracy": 1.0,
-        "composite_score": 0.7458167819844687,
+        "composite_score": 0.7458692176059697,
         "evaluated_windows": 1584,
-        "entity_calibrated_f1": 0.9995045685279188,
-        "entity_calibrated_macro_f1": 0.9997937230952356,
+        "entity_calibrated_f1": 1.0,
+        "entity_calibrated_macro_f1": 1.0,
         "entity_calibrated_per_class": {
           "B-VALUE": {
             "tp": 10692,
@@ -968,8 +957,7 @@
           },
           "I-VALUE": {
             "tp": 49256,
-            "fp": 61,
-            "f1": 0.9993811692857071,
+            "f1": 1.0,
             "support": 49256
           },
           "B-TABLE_CELL": {
@@ -979,23 +967,23 @@
           }
         },
         "entity_calibrated_counts": {
-          "tp": 61532,
-          "fp": 61
+          "tp": 61532
         },
-        "canonical_calibrated_f1": 0.9861576403837655,
-        "canonical_calibrated_macro_f1": 0.9804116028442995,
+        "canonical_calibrated_f1": 0.9898094060461349,
+        "canonical_calibrated_macro_f1": 0.9886368527053173,
         "canonical_calibrated_per_class": {
           "organization_name": {
-            "tp": 3643,
-            "fn": 101,
-            "fp": 4,
-            "f1": 0.9857935326748748,
+            "tp": 3649,
+            "fn": 95,
+            "fp": 3,
+            "f1": 0.986749594375338,
             "support": 3744
           },
           "document_title": {
-            "tp": 717,
-            "fn": 13,
-            "f1": 0.9910158949550795,
+            "tp": 708,
+            "fn": 22,
+            "fp": 4,
+            "f1": 0.9819694868238558,
             "support": 730
           },
           "date": {
@@ -1005,10 +993,10 @@
             "support": 4271
           },
           "invoice_number": {
-            "tp": 3037,
-            "fn": 61,
-            "fp": 4,
-            "f1": 0.9894119563446816,
+            "tp": 2995,
+            "fn": 103,
+            "fp": 14,
+            "f1": 0.9808416571147863,
             "support": 3098
           },
           "subtotal": {
@@ -1024,30 +1012,30 @@
             "support": 2192
           },
           "total_amount": {
-            "tp": 2589,
-            "fn": 54,
-            "fp": 8,
-            "f1": 0.9881679389312977,
+            "tp": 2579,
+            "fn": 64,
+            "f1": 0.9877441593259287,
             "support": 2643
           },
           "address": {
-            "tp": 14191,
-            "fn": 203,
-            "fp": 36,
-            "f1": 0.9916494881380804,
+            "tp": 14176,
+            "fn": 218,
+            "fp": 7,
+            "f1": 0.9921265353256115,
             "support": 14394
           },
           "email": {
-            "tp": 1503,
-            "fn": 351,
-            "f1": 0.8954423592493298,
+            "tp": 1806,
+            "fn": 48,
+            "fp": 3,
+            "f1": 0.9860769860769861,
             "support": 1854
           }
         },
         "canonical_calibrated_counts": {
-          "tp": 34588,
-          "fn": 919,
-          "fp": 52
+          "tp": 34821,
+          "fn": 686,
+          "fp": 31
         },
         "relation_calibrated_f1": 0.0,
         "relation_calibrated_macro_f1": 0.0,
@@ -1055,7 +1043,7 @@
         "relation_calibrated_counts": {},
         "document_calibrated_coverage": 1.0,
         "document_calibrated_selective_accuracy": 1.0,
-        "calibrated_composite_score": 0.7463412375071089
+        "calibrated_composite_score": 0.7474523515115338
       }
     }
   }

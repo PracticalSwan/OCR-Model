@@ -22,6 +22,26 @@ def main(argv: list[str] | None = None) -> int:
         default="auto",
     )
     parser.add_argument("--device", choices=("cpu", "gpu:0"))
+    parser.add_argument(
+        "--ocr-profile",
+        choices=("original", "custom", "adaptive", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--detector-model",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--general-recognizer",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
+    parser.add_argument(
+        "--thai-recognizer",
+        choices=("original", "custom", "auto"),
+        default="auto",
+    )
     parser.add_argument("--max-pages", type=int)
     parser.add_argument("--no-visualization", action="store_true")
     parser.add_argument("--quiet", action="store_true")
@@ -37,6 +57,10 @@ def main(argv: list[str] | None = None) -> int:
             max_pages=args.max_pages,
             save_visualization=not args.no_visualization,
             on_log=None if args.quiet else lambda line: print(line, file=sys.stderr),
+            ocr_profile=args.ocr_profile,
+            detector_model=args.detector_model,
+            general_recognizer=args.general_recognizer,
+            thai_recognizer=args.thai_recognizer,
         )
     except (ExtractionError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

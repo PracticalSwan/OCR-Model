@@ -1,9 +1,9 @@
 {
   "schema_version": "2.0",
   "profile": "final",
-  "build_id": "final-6be3e0b46b0a4e4c",
-  "manifest_path": "C:\\Assumption University\\CSX4201\\Project\\data\\metadata\\final_model_dataset_manifest.csv",
-  "manifest_sha256": "448582175cc832f336ee5e2654b7f1f1d417f8d47d8c6a08b2a91cd03334d200",
+  "build_id": "final-8bfcf79fed04e375",
+  "manifest_path": "C:\\Assumption University\\CSX4201\\Project\\data\\metadata\\final_model_dataset_manifest_ocr_v2_b_noise.csv",
+  "manifest_sha256": "02d173cfcadeb6e7f0c061cba099568949423243c0b9f29a6628ce7750554133",
   "public_only": true,
   "gmail_fit_rows": 0,
   "source_checkpoint": "microsoft/layoutxlm-base",
@@ -15,18 +15,19 @@
   "token_sources": [
     "ground_truth",
     "hybrid",
+    "ocr_noise",
     "paddleocr"
   ],
-  "train_examples": 7782,
-  "validation_examples": 1243,
-  "train_windows": 7810,
-  "validation_windows": 1250,
-  "rotated_validation_windows": 1250,
+  "train_examples": 12455,
+  "validation_examples": 1913,
+  "train_windows": 12553,
+  "validation_windows": 1921,
+  "rotated_validation_windows": 1921,
   "training_target_counts": {
-    "entity_tokens": 514220,
-    "canonical_tokens": 152875,
-    "relation_pairs": 40954,
-    "relation_positives": 4545
+    "entity_tokens": 783680,
+    "canonical_tokens": 216063,
+    "relation_pairs": 78095,
+    "relation_positives": 10535
   },
   "dynamic_rotation": {
     "enabled": true,
@@ -37,118 +38,422 @@
     "epoch_summaries": [
       {
         "epoch": 1,
-        "example_count": 7782,
-        "upright_count": 4658,
+        "example_count": 12455,
+        "upright_count": 7484,
         "cardinal_count": 0,
-        "arbitrary_angle_count": 3124,
-        "mean_angle_degrees": 71.99876202934881
+        "arbitrary_angle_count": 4971,
+        "mean_angle_degrees": 72.34086440531061
       },
       {
         "epoch": 2,
-        "example_count": 7782,
-        "upright_count": 4643,
+        "example_count": 12455,
+        "upright_count": 7426,
         "cardinal_count": 0,
-        "arbitrary_angle_count": 3139,
-        "mean_angle_degrees": 71.9430454243684
+        "arbitrary_angle_count": 5029,
+        "mean_angle_degrees": 71.63821879749658
       },
       {
         "epoch": 3,
-        "example_count": 7782,
-        "upright_count": 4713,
+        "example_count": 12455,
+        "upright_count": 7521,
         "cardinal_count": 0,
-        "arbitrary_angle_count": 3069,
-        "mean_angle_degrees": 70.82112555346684
+        "arbitrary_angle_count": 4934,
+        "mean_angle_degrees": 71.46903158537924
       },
       {
         "epoch": 4,
-        "example_count": 7782,
-        "upright_count": 4721,
+        "example_count": 12455,
+        "upright_count": 7587,
         "cardinal_count": 0,
-        "arbitrary_angle_count": 3061,
-        "mean_angle_degrees": 71.64015637665655
+        "arbitrary_angle_count": 4868,
+        "mean_angle_degrees": 70.818531337646
       }
     ],
     "geometry_targets_rotated_together": true
   },
   "mean_task_losses": {
-    "entity": 0.27821258359917816,
-    "document": 0.07060648420021873,
-    "canonical": 0.34601135905826297,
-    "relation": 0.0582902430837081
+    "entity": 0.32131255162857575,
+    "document": 0.08299195497461233,
+    "canonical": 0.35505607005539,
+    "relation": 0.05805934018047929
   },
-  "optimizer_steps": 7812,
-  "micro_steps": 31240,
+  "optimizer_steps": 12556,
+  "micro_steps": 50212,
   "requested_epochs": 4,
   "completed_epochs": 4,
   "early_stopping_patience": 2,
   "stopped_early": false,
   "stop_reason": "completed_requested_epochs",
   "best_epoch": 4,
-  "best_composite_score": 0.8241600322529928,
+  "best_composite_score": 0.8433429260632851,
   "checkpoint_selection": {
     "upright_weight": 0.7,
     "rotated_37_weight": 0.3,
     "split": "dev_select"
   },
   "validation": {
-    "loss": 0.20870461211565416,
-    "entity_token_f1": 0.9439501435690097,
+    "loss": 0.2196224086943329,
+    "entity_token_f1": 0.9532097364106444,
+    "entity_macro_f1": 0.7450066752019135,
+    "entity_per_class": {
+      "B-HEADER": {
+        "tp": 50,
+        "fn": 100,
+        "fp": 55,
+        "f1": 0.39215686274509803,
+        "support": 150
+      },
+      "I-HEADER": {
+        "tp": 169,
+        "fp": 137,
+        "fn": 153,
+        "f1": 0.5382165605095541,
+        "support": 322
+      },
+      "B-VALUE": {
+        "tp": 11462,
+        "fp": 768,
+        "fn": 307,
+        "f1": 0.9552064669361223,
+        "support": 11769
+      },
+      "I-VALUE": {
+        "tp": 32329,
+        "fp": 122,
+        "fn": 149,
+        "f1": 0.9958262101680297,
+        "support": 32478
+      },
+      "B-QUESTION": {
+        "tp": 829,
+        "fp": 306,
+        "fn": 189,
+        "f1": 0.7700882489549465,
+        "support": 1018
+      },
+      "I-QUESTION": {
+        "fp": 493,
+        "tp": 641,
+        "fn": 246,
+        "f1": 0.6343394359228105,
+        "support": 887
+      },
+      "B-ANSWER": {
+        "tp": 881,
+        "fn": 199,
+        "fp": 372,
+        "f1": 0.7552507501071581,
+        "support": 1080
+      },
+      "I-ANSWER": {
+        "fp": 627,
+        "tp": 1434,
+        "fn": 381,
+        "f1": 0.739938080495356,
+        "support": 1815
+      },
+      "B-TABLE_CELL": {
+        "tp": 1332,
+        "fp": 130,
+        "fn": 89,
+        "f1": 0.9240374609781478,
+        "support": 1421
+      }
+    },
     "entity_counts": {
-      "tp": 36655,
-      "fp": 2649,
-      "fn": 1704
+      "tp": 49127,
+      "fp": 3010,
+      "fn": 1813
     },
-    "canonical_evidence_token_f1": 0.9628756629345905,
+    "canonical_evidence_token_f1": 0.9562443166931246,
+    "canonical_macro_f1": 0.9471547928436598,
+    "canonical_per_class": {
+      "organization_name": {
+        "fp": 199,
+        "tp": 1129,
+        "fn": 33,
+        "f1": 0.9068273092369478,
+        "support": 1162
+      },
+      "document_title": {
+        "tp": 351,
+        "fp": 101,
+        "fn": 1,
+        "f1": 0.8731343283582089,
+        "support": 352
+      },
+      "date": {
+        "tp": 4324,
+        "fn": 94,
+        "fp": 109,
+        "f1": 0.9770647384476331,
+        "support": 4418
+      },
+      "invoice_number": {
+        "tp": 3271,
+        "fn": 80,
+        "fp": 97,
+        "f1": 0.9736567941657985,
+        "support": 3351
+      },
+      "subtotal": {
+        "tp": 2251,
+        "fp": 18,
+        "fn": 30,
+        "f1": 0.9894505494505494,
+        "support": 2281
+      },
+      "tax": {
+        "fp": 112,
+        "tp": 1049,
+        "fn": 12,
+        "f1": 0.9441944194419442,
+        "support": 1061
+      },
+      "total_amount": {
+        "tp": 3760,
+        "fp": 260,
+        "fn": 139,
+        "f1": 0.9496148503598939,
+        "support": 3899
+      },
+      "address": {
+        "tp": 11347,
+        "fn": 682,
+        "fp": 610,
+        "f1": 0.9461352455599099,
+        "support": 12029
+      },
+      "email": {
+        "tp": 3540,
+        "fp": 139,
+        "fn": 123,
+        "f1": 0.9643149005720512,
+        "support": 3663
+      }
+    },
     "canonical_counts": {
-      "tp": 22876,
-      "fp": 992,
-      "fn": 772
+      "tp": 31022,
+      "fp": 1645,
+      "fn": 1194
     },
-    "relation_f1": 0.43874643874643876,
+    "relation_f1": 0.5386138613861386,
+    "relation_macro_f1": 0.6806122816495588,
+    "relation_per_class": {
+      "QUESTION_ANSWER": {
+        "tp": 756,
+        "fn": 551,
+        "fp": 1022,
+        "f1": 0.4901134521880065,
+        "support": 1307
+      },
+      "OTHER_RELATION": {
+        "fn": 50,
+        "tp": 196,
+        "fp": 8,
+        "f1": 0.8711111111111111,
+        "support": 246
+      }
+    },
     "relation_counts": {
-      "tp": 847,
-      "fn": 706,
-      "fp": 1461
+      "tp": 952,
+      "fn": 601,
+      "fp": 1030
     },
-    "document_macro_f1": 0.9949697960396678,
-    "document_accuracy": 0.9984,
-    "composite_score": 0.8274825624518279,
-    "evaluated_windows": 1250,
+    "document_macro_f1": 0.993883323110475,
+    "document_accuracy": 0.9989588755856325,
+    "composite_score": 0.8543867713951211,
+    "evaluated_windows": 1921,
     "rotated_37": {
-      "loss": 0.21521654330160236,
-      "entity_token_f1": 0.9394723627795589,
+      "loss": 0.22748184264353005,
+      "entity_token_f1": 0.9497280369210483,
+      "entity_macro_f1": 0.7287812236089697,
+      "entity_per_class": {
+        "B-HEADER": {
+          "tp": 42,
+          "fn": 108,
+          "fp": 53,
+          "f1": 0.34285714285714286,
+          "support": 150
+        },
+        "I-HEADER": {
+          "tp": 170,
+          "fp": 150,
+          "fn": 152,
+          "f1": 0.5295950155763239,
+          "support": 322
+        },
+        "B-VALUE": {
+          "tp": 11394,
+          "fp": 751,
+          "fn": 375,
+          "f1": 0.9529146106882997,
+          "support": 11769
+        },
+        "I-VALUE": {
+          "tp": 32314,
+          "fp": 186,
+          "fn": 164,
+          "f1": 0.9946135615131275,
+          "support": 32478
+        },
+        "B-QUESTION": {
+          "tp": 778,
+          "fn": 240,
+          "fp": 296,
+          "f1": 0.7437858508604207,
+          "support": 1018
+        },
+        "I-QUESTION": {
+          "fp": 478,
+          "tp": 613,
+          "fn": 274,
+          "f1": 0.6198179979777553,
+          "support": 887
+        },
+        "B-ANSWER": {
+          "tp": 849,
+          "fn": 231,
+          "fp": 442,
+          "f1": 0.7161535217207929,
+          "support": 1080
+        },
+        "I-ANSWER": {
+          "fp": 718,
+          "tp": 1450,
+          "fn": 365,
+          "f1": 0.7280944012051218,
+          "support": 1815
+        },
+        "B-TABLE_CELL": {
+          "tp": 1367,
+          "fp": 148,
+          "fn": 54,
+          "f1": 0.9311989100817438,
+          "support": 1421
+        }
+      },
       "entity_counts": {
-        "tp": 36483,
-        "fp": 2825,
-        "fn": 1876
+        "tp": 48977,
+        "fp": 3222,
+        "fn": 1963
       },
-      "canonical_evidence_token_f1": 0.9640330188679245,
+      "canonical_evidence_token_f1": 0.9544887107960237,
+      "canonical_macro_f1": 0.9458068759530166,
+      "canonical_per_class": {
+        "organization_name": {
+          "fp": 224,
+          "tp": 1119,
+          "fn": 43,
+          "f1": 0.8934131736526946,
+          "support": 1162
+        },
+        "document_title": {
+          "tp": 351,
+          "fp": 101,
+          "fn": 1,
+          "f1": 0.8731343283582089,
+          "support": 352
+        },
+        "date": {
+          "tp": 4325,
+          "fn": 93,
+          "fp": 154,
+          "f1": 0.9722378329774081,
+          "support": 4418
+        },
+        "invoice_number": {
+          "tp": 3271,
+          "fp": 89,
+          "fn": 80,
+          "f1": 0.9748174638652958,
+          "support": 3351
+        },
+        "subtotal": {
+          "tp": 2249,
+          "fp": 14,
+          "fn": 32,
+          "f1": 0.9898767605633803,
+          "support": 2281
+        },
+        "tax": {
+          "fp": 84,
+          "tp": 1047,
+          "fn": 14,
+          "f1": 0.9552919708029197,
+          "support": 1061
+        },
+        "total_amount": {
+          "tp": 3743,
+          "fp": 264,
+          "fn": 156,
+          "f1": 0.9468757905388313,
+          "support": 3899
+        },
+        "address": {
+          "tp": 11322,
+          "fn": 707,
+          "fp": 616,
+          "f1": 0.944799098760796,
+          "support": 12029
+        },
+        "email": {
+          "tp": 3539,
+          "fp": 157,
+          "fn": 124,
+          "f1": 0.9618154640576165,
+          "support": 3663
+        }
+      },
       "canonical_counts": {
-        "tp": 22890,
-        "fp": 950,
-        "fn": 758
+        "tp": 30966,
+        "fp": 1703,
+        "fn": 1250
       },
-      "relation_f1": 0.40045312942509204,
+      "relation_f1": 0.398688915375447,
+      "relation_macro_f1": 0.6011586415347803,
+      "relation_per_class": {
+        "QUESTION_ANSWER": {
+          "tp": 471,
+          "fn": 836,
+          "fp": 1127,
+          "f1": 0.3242685025817556,
+          "support": 1307
+        },
+        "OTHER_RELATION": {
+          "fn": 48,
+          "tp": 198,
+          "fp": 7,
+          "f1": 0.8780487804878049,
+          "support": 246
+        }
+      },
       "relation_counts": {
-        "tp": 707,
-        "fn": 846,
-        "fp": 1271
+        "tp": 669,
+        "fn": 884,
+        "fp": 1134
       },
-      "document_macro_f1": 0.9949697960396678,
-      "document_accuracy": 0.9984,
-      "composite_score": 0.8164074617890446,
-      "evaluated_windows": 1250
+      "document_macro_f1": 0.993883323110475,
+      "document_accuracy": 0.9989588755856325,
+      "composite_score": 0.8175739536223345,
+      "evaluated_windows": 1921
     },
-    "selection_composite_score": 0.8241600322529928
+    "selection_composite_score": 0.8433429260632851
   },
-  "checkpoint": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\final",
+  "checkpoint": "D:\\CSX4201\\vision-info-extraction-assets\\checkpoints\\layoutxlm_multitask\\ocr_upgrade_fresh_b_noise",
   "checkpoint_reload_passed": true,
   "checkpoint_reload_max_difference": 0.0,
-  "duration_seconds": 3198.2959524000034,
+  "duration_seconds": 2752.753401899943,
   "limitations": [
     "This is a multilingual text-plus-2D-layout model initialized from LayoutXLM-compatible weights; the visual backbone is unavailable on this Windows runtime.",
     "Canonical supervision trains evidence-token field labels; final value generation and abstention are evaluated separately."
   ],
   "bounded_development_trial_count": 4,
-  "selected_development_trial": "trial_4_balanced_rotation"
+  "selected_development_trial": "trial_4_balanced_rotation",
+  "bounded_adaptation_trial_count": 5,
+  "selected_adaptation_trial": "fresh_b_noise",
+  "adaptation_selection_score": 0.8004008658980533,
+  "adaptation_ledger": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\layout_adaptation_trials.csv",
+  "adaptation_ledger_sha256": "1a9f97ba7cb0aafef6d183cb5fe0ca0a246ec778253b05b4478225002c963301",
+  "canonical_promotion_source": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\layout_training\\fresh_b_noise.json"
 }
