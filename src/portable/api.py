@@ -115,18 +115,25 @@ def redact_private_payload(value, source: Path, private_root: Path):
     return value
 
 
-def _redact_private_artifacts(destination: Path, source: Path, private_root: Path) -> None:
-    """Remove source/root identifiers from text artifacts written by the worker."""
-    if not destination.exists():
-        return
-    for path in destination.rglob("*"):
+def _redact_private_text_outputs(
+    destination: Path,
+    source: Path,
+    private_root: Path,
+) -> None:
+    """Redact the fixed set of text outputs written by the extraction worker."""
+    paths = [
+        destination / "document_result.json",
+        destination / "portable_run.log",
+        destination / "logs" / "inference.log",
+    ]
+    pages = destination / "pages"
+    if pages.is_dir():
+        paths.extend(sorted(pages.glob("page_*.json")))
+    for path in paths:
         if not path.is_file():
             continue
         try:
-            raw = path.read_bytes()
-            if b"\x00" in raw:
-                continue
-            text = raw.decode("utf-8")
+            text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
         redacted = _redact_text(text, source, private_root)
@@ -341,7 +348,7 @@ def run_extraction(
                 encoding="utf-8",
             )
             if private_document:
-                _redact_private_artifacts(
+                _redact_private_text_outputs(
                     destination,
                     source,
                     _private_root(runtime),

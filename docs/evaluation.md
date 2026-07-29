@@ -229,11 +229,11 @@ Release asset agree. The complete verifier recomputes every ledger
 `evidence_sha256`, rejects a JSON report whose embedded source commit disagrees
 with the ledger, and requires portable evidence to carry the exact source
 commit, candidate-tree SHA-256, candidate count, and clean-build flag. Those
-values must agree with the installed package's `BUILD_INFO.json`, the portable
-report, each ledger row, and the ledger's top-level portable-generation
-binding; a self-consistent older report is not accepted as the current local
+values must agree between the independently selected installed package's
+`BUILD_INFO.json` and the portable report. Ledger rows bind to the exact report
+by a recomputed evidence SHA-256 instead of duplicating those generation
+fields. A self-consistent older report is not accepted as the current local
 generation. The report cannot choose that trust anchor: complete mode
-independently designates `D:\OCR_Model` (or an explicit
-`--portable-package`) and the `v1.1.0-ocr-upgrade` Git tag, requires the
-report's package directory to match, and requires `BUILD_INFO.json` to name
-the tag's exact commit.
+independently designates `D:\OCR_Model` (or an explicit `--portable-package`)
+and the `v1.1.0-ocr-upgrade` Git tag, requires the report's package directory
+to match, and requires `BUILD_INFO.json` to name the tag's exact commit.

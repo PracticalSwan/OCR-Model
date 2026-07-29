@@ -165,14 +165,14 @@ both that copy and the private session upload cache are removed afterward.
 
 Portable release construction uses isolated staging below
 `D:\CSX4201\vision-info-extraction-assets` and rejects the installed
-`D:\OCR_Model` working copy as a build target. Forced staging deletion requires
-an exact builder-owned parent sentinel. Copying never follows reparse points,
-verifies source stability and destination hashes, and binds the synthetic
-sample to integration evidence. A clean Git candidate-tree hash and commit are
-written to `BUILD_INFO.json`; a streaming all-file privacy scan and complete
-payload SHA-256 manifest precede archiving. The archive is built from the
-frozen manifest list and every ZIP entry is stream-hashed back against it
-before sidecar generation, in addition to CRC, root, duplicate-name,
+`D:\OCR_Model` working copy as a build target. The builder never deletes an
+existing target; each build uses a new isolated staging path. Copying never
+follows reparse points, verifies source stability and destination hashes, and
+binds the synthetic sample to integration evidence. A clean Git candidate-tree
+hash and commit are written to `BUILD_INFO.json`; a streaming all-file privacy
+scan and complete payload SHA-256 manifest precede archiving. The archive is
+built from the frozen manifest list and every ZIP entry is stream-hashed back
+against it before sidecar generation, in addition to CRC, root, duplicate-name,
 absolute-path, and traversal validation.
 
 ## Evaluation boundaries

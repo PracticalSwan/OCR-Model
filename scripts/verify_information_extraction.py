@@ -749,11 +749,6 @@ def _load_execution_evidence(
     normalized: list[dict[str, Any]] = []
     seen: set[str] = set()
     required = set(required_names)
-    portable_ledger_generation = (
-        payload.get("portable_generation")
-        if isinstance(payload, dict)
-        else None
-    )
     for index, raw in enumerate(raw_checks):
         if not isinstance(raw, dict):
             errors.append(f"row_{index}:not_an_object")
@@ -843,30 +838,11 @@ def _load_execution_evidence(
                                 row_errors.append(
                                     f"portable_evidence_missing_{field}"
                                 )
-                            if not str(hashes.get(field, "")).strip():
-                                row_errors.append(
-                                    f"ledger_missing_{field}"
-                                )
-                            elif str(hashes.get(field)) != str(
-                                evidence_generation.get(field)
-                            ):
-                                row_errors.append(
-                                    f"portable_{field}_mismatch"
-                                )
                         if evidence_generation[
                             "source_tree_dirty_at_build"
                         ] is not False:
                             row_errors.append(
                                 "portable_source_tree_not_clean"
-                            )
-                        if str(
-                            hashes.get(
-                                "source_tree_dirty_at_build",
-                                "",
-                            )
-                        ).casefold() != "false":
-                            row_errors.append(
-                                "ledger_source_tree_not_clean"
                             )
                         if not isinstance(
                             expected_portable_provenance,
@@ -884,25 +860,6 @@ def _load_execution_evidence(
                                 ) != str(expected_value):
                                     row_errors.append(
                                         f"portable_expected_{field}_mismatch"
-                                    )
-                                if str(hashes.get(field)) != str(
-                                    expected_value
-                                ):
-                                    row_errors.append(
-                                        f"ledger_expected_{field}_mismatch"
-                                    )
-                                if (
-                                    not isinstance(
-                                        portable_ledger_generation,
-                                        dict,
-                                    )
-                                    or str(
-                                        portable_ledger_generation.get(field)
-                                    )
-                                    != str(expected_value)
-                                ):
-                                    row_errors.append(
-                                        f"ledger_generation_{field}_mismatch"
                                     )
         if row_errors:
             errors.append(f"row_{index}:{name}:" + ",".join(row_errors))

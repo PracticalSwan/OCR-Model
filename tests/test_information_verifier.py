@@ -337,7 +337,7 @@ def test_execution_evidence_rejects_hash_or_source_commit_drift(
     assert any("evidence_source_commit_mismatch" in error for error in errors)
 
 
-def test_portable_execution_evidence_rejects_generation_mismatch(
+def test_portable_execution_evidence_rejects_report_generation_mismatch(
     tmp_path: Path,
 ) -> None:
     artifact = tmp_path / "portable_verification.json"
@@ -355,16 +355,12 @@ def test_portable_execution_evidence_rejects_generation_mismatch(
     artifact_sha256 = hashlib.sha256(artifact.read_bytes()).hexdigest()
     row_hashes = {
         "source_commit": "a" * 40,
-        "source_tree_sha256": "c" * 64,
-        "source_candidate_file_count": 11,
-        "source_tree_dirty_at_build": "false",
         "evidence_sha256": artifact_sha256,
     }
     evidence = tmp_path / "ledger.json"
     evidence.write_text(
         json.dumps(
             {
-                "portable_generation": dict(row_hashes),
                 "checks": [
                     {
                         "name": "portable_package_verification",
@@ -385,16 +381,19 @@ def test_portable_execution_evidence_rejects_generation_mismatch(
         required_names=("portable_package_verification",),
         expected_portable_provenance={
             "source_commit": "a" * 40,
-            "source_tree_sha256": "b" * 64,
-            "source_candidate_file_count": 10,
+            "source_tree_sha256": "c" * 64,
+            "source_candidate_file_count": 11,
             "source_tree_dirty_at_build": False,
         },
     )
 
     assert checks[0]["passed"] is False
-    assert any("portable_source_tree_sha256_mismatch" in error for error in errors)
     assert any(
-        "portable_source_candidate_file_count_mismatch" in error
+        "portable_expected_source_tree_sha256_mismatch" in error
+        for error in errors
+    )
+    assert any(
+        "portable_expected_source_candidate_file_count_mismatch" in error
         for error in errors
     )
 

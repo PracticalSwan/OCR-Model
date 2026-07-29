@@ -80,10 +80,10 @@ published under `v1.1.0-ocr-upgrade`; its live Release asset and
 `OCR_Model.zip.sha256` sidecar are the authoritative current size and digest.
 Each corrected build is produced from isolated staging, refuses a dirty Git
 candidate tree, records the exact source commit/tree hash in `BUILD_INFO.json`,
-requires a builder-owned deletion sentinel, refuses all installed-working-copy
-targets and source reparse points, binds the safe sample to integration
-evidence, scans every payload byte, emits a complete SHA-256 payload manifest,
-and validates ZIP integrity before publication.
+refuses every existing target and all installed-working-copy targets, rejects
+source reparse points, binds the safe sample to integration evidence, scans
+every payload byte, emits a complete SHA-256 payload manifest, and validates
+ZIP integrity before publication.
 The historical `v1.0.0-build-week` Release remains available.
 
 Calibrated layout inference now validates the calibration's OCR-stack binding

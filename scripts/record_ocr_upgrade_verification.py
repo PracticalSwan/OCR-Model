@@ -18,10 +18,7 @@ from src.rotation_common import atomic_write_json, sha256_file  # noqa: E402
 
 RESERVED_HASH_KEYS = {
     "evidence_sha256",
-    "source_candidate_file_count",
     "source_commit",
-    "source_missing_candidate_paths",
-    "source_tree_dirty_at_build",
     "source_tree_dirty_at_record_start",
     "source_tree_sha256",
 }
@@ -80,10 +77,9 @@ def main() -> int:
     }
     if evidence_path.is_file():
         hashes["evidence_sha256"] = sha256_file(evidence_path)
-    portable_generation = None
     if evidence_path.name == "portable_verification.json":
         evidence_payload = json.loads(evidence_path.read_text(encoding="utf-8"))
-        portable_generation = {
+        portable_provenance = {
             "source_commit": evidence_payload.get("source_commit"),
             "source_tree_sha256": evidence_payload.get(
                 "source_tree_sha256"
@@ -98,15 +94,14 @@ def main() -> int:
         if (
             any(
                 value in (None, "")
-                for key, value in portable_generation.items()
+                for key, value in portable_provenance.items()
                 if key != "source_tree_dirty_at_build"
             )
-            or portable_generation["source_tree_dirty_at_build"] is not False
+            or portable_provenance["source_tree_dirty_at_build"] is not False
         ):
             raise ValueError(
                 "portable verification lacks clean generation provenance"
             )
-        hashes.update(portable_generation)
     try:
         additional_hashes = _parse_additional_hashes(
             args.hash,
@@ -152,8 +147,7 @@ def main() -> int:
             "checks": records,
         }
     )
-    if portable_generation is not None:
-        payload["portable_generation"] = portable_generation
+    payload.pop("portable_generation", None)
     atomic_write_json(ledger_path, payload)
     print(
         json.dumps(

@@ -29,8 +29,6 @@ INSTALLED_TARGET = Path("D:/OCR_Model")
 DEFAULT_TARGET = (
     DEFAULT_ASSET_ROOT / "release-staging" / "v1.1.0-in-place" / "OCR_Model"
 )
-STAGING_SENTINEL_NAME = ".ocr-model-release-staging.json"
-STAGING_SENTINEL_PURPOSE = "csx4201-portable-release-staging-v1"
 PORTABLE_LAYOUT_CHECKPOINT = "assets/checkpoints/layoutxlm_multitask/final"
 OCR_MODEL_NAMES = (
     "PP-OCRv6_medium_det",
@@ -190,60 +188,18 @@ def require_unchanged_provenance(
         )
 
 
-def prepare_target(target: Path, *, force: bool) -> None:
+def prepare_target(target: Path) -> None:
     resolved = Path(os.path.abspath(target))
     if resolved.name != "OCR_Model":
         raise ValueError("portable target directory must be named exactly OCR_Model")
     resolved.parent.mkdir(parents=True, exist_ok=True)
     _assert_no_reparse_components(resolved.parent)
     if resolved.exists():
-        if not force:
-            raise FileExistsError(
-                f"target exists: {resolved}; pass --force to rebuild it"
-            )
-        if (resolved / ".runtime").exists() or (
-            resolved / "runtime.local.json"
-        ).exists():
-            raise ValueError(
-                "refusing to delete an installed OCR_Model working copy; "
-                "build under the external-assets release-staging directory"
-            )
-        _require_staging_sentinel(resolved)
-        if _is_reparse_point(resolved):
-            raise ValueError(
-                f"refusing to delete a reparse-point target: {resolved}"
-            )
-        shutil.rmtree(resolved)
-    else:
-        sentinel = resolved.parent / STAGING_SENTINEL_NAME
-        if sentinel.exists():
-            _require_staging_sentinel(resolved)
-        else:
-            write_json(sentinel, _staging_sentinel_payload(resolved))
-    resolved.mkdir(parents=True)
-
-
-def _staging_sentinel_payload(target: Path) -> dict[str, str]:
-    return {
-        "schema_version": "1.0",
-        "purpose": STAGING_SENTINEL_PURPOSE,
-        "target": str(Path(os.path.abspath(target))),
-    }
-
-
-def _require_staging_sentinel(target: Path) -> None:
-    sentinel = target.parent / STAGING_SENTINEL_NAME
-    if not sentinel.is_file() or _is_reparse_point(sentinel):
-        raise ValueError(
-            "refusing to delete unmarked release staging; the builder-owned "
-            f"{STAGING_SENTINEL_NAME} sentinel is missing"
+        raise FileExistsError(
+            f"target already exists: {resolved}; choose a new isolated "
+            "release-staging target"
         )
-    try:
-        payload = json.loads(sentinel.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ValueError("release-staging sentinel is invalid") from exc
-    if payload != _staging_sentinel_payload(target):
-        raise ValueError("release-staging sentinel does not match this target")
+    resolved.mkdir(parents=True)
 
 
 def copy_application(target: Path) -> None:
@@ -989,7 +945,6 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", type=Path, default=DEFAULT_TARGET)
     parser.add_argument("--asset-root", type=Path, default=DEFAULT_ASSET_ROOT)
-    parser.add_argument("--force", action="store_true")
     parser.add_argument("--zip", action="store_true", dest="create_zip")
     args = parser.parse_args()
 
@@ -997,7 +952,7 @@ def main() -> int:
     asset_root = Path(os.path.abspath(args.asset_root.expanduser()))
     provenance = require_clean_git_worktree(PROJECT_ROOT)
     validate_build_location(target, asset_root)
-    prepare_target(target, force=args.force)
+    prepare_target(target)
     copy_application(target)
     portable_config(target)
     model_records = copy_models(target, asset_root)

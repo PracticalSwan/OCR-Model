@@ -40,9 +40,8 @@ preprocessing on the loopback-only GUI. Before the child process starts, the
 source is copied to an opaque short-lived input path so the original path is
 not present in child-process arguments. That copy and any upload-cache copy
 are removed after the run. Private mode is selected by default in the GUI.
-Public preview/gallery/download artifacts use a separate per-session cache
-under the allowed public output root, and both session caches are removed on
-GUI shutdown.
+Public preview/gallery/download artifacts use the same Gradio session cache,
+which is removed on GUI shutdown.
 These containment controls do not make the result publishable.
 
 ## Before staging or pushing

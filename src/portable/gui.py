@@ -274,36 +274,6 @@ def _remove_gradio_temp_root(root: Path, settings: RuntimeSettings) -> None:
         shutil.rmtree(root_absolute)
 
 
-def _public_component_cache(
-    settings: RuntimeSettings,
-    gradio_temp_root: Path,
-) -> Path:
-    return (
-        settings.output_root
-        / ".gradio_public_cache"
-        / gradio_temp_root.name
-    ).absolute()
-
-
-def _remove_public_component_cache(
-    root: Path,
-    settings: RuntimeSettings,
-) -> None:
-    root_absolute = Path(root).absolute()
-    expected_parent = (
-        settings.output_root / ".gradio_public_cache"
-    ).absolute()
-    if (
-        root_absolute.parent != expected_parent
-        or not root_absolute.name.startswith("session_")
-    ):
-        raise RuntimeError(
-            "refusing to remove an unexpected public component cache path"
-        )
-    if root_absolute.exists():
-        shutil.rmtree(root_absolute)
-
-
 def _gradio_blocked_paths(settings: RuntimeSettings) -> list[str]:
     """Block private data/output roots without blocking Gradio uploads."""
     blocked = [
@@ -403,10 +373,6 @@ def build_app(
     else:
         os.environ["GRADIO_TEMP_DIR"] = str(gradio_temp_root)
     import gradio as gr
-    public_component_cache = _public_component_cache(
-        runtime,
-        gradio_temp_root,
-    )
 
     with gr.Blocks(
         title="OCR Model — Local Document Extraction",
@@ -445,7 +411,6 @@ def build_app(
                     placeholder="Upload an image or PDF to preview it here.",
                     elem_id="document-preview",
                 )
-                preview.GRADIO_CACHE = str(public_component_cache)
                 preview_note = gr.Markdown(
                     "Upload an image or PDF to preview it here.",
                     elem_id="document-preview-note",
@@ -500,7 +465,6 @@ def build_app(
                     object_fit="contain",
                     height=600,
                 )
-                gallery.GRADIO_CACHE = str(public_component_cache)
             with gr.Tab("Run log"):
                 log = gr.Textbox(
                     label="Run log",
@@ -515,7 +479,6 @@ def build_app(
             interactive=False,
             height=90,
         )
-        archive.GRADIO_CACHE = str(public_component_cache)
 
         def run_handler(
             uploaded_value: str | None,
@@ -619,10 +582,6 @@ def main(argv: list[str] | None = None) -> int:
     settings = RuntimeSettings.load()
     settings.output_root.mkdir(parents=True, exist_ok=True)
     gradio_temp_root = _prepare_gradio_temp_root(settings)
-    public_component_cache = _public_component_cache(
-        settings,
-        gradio_temp_root,
-    )
     blocked = _gradio_blocked_paths(settings)
     try:
         build_app(
@@ -642,11 +601,5 @@ def main(argv: list[str] | None = None) -> int:
             css=APP_CSS,
         )
     finally:
-        try:
-            _remove_gradio_temp_root(gradio_temp_root, settings)
-        finally:
-            _remove_public_component_cache(
-                public_component_cache,
-                settings,
-            )
+        _remove_gradio_temp_root(gradio_temp_root, settings)
     return 0

@@ -11,8 +11,6 @@ from src.portable.gui import (
     _gradio_blocked_paths,
     _on_document_change,
     _preview_document,
-    _public_component_cache,
-    _remove_public_component_cache,
     _remove_uploaded_private_cache,
 )
 from src.portable.api import ExtractionRun
@@ -142,26 +140,6 @@ def test_private_gui_removes_only_its_opaque_upload_cache(
     assert _remove_uploaded_private_cache(str(cached), cache_root) is True
     assert not cached.exists()
     assert cache_root.is_dir()
-
-
-def test_public_component_cache_is_session_scoped_and_safely_removed(
-    tmp_path: Path,
-) -> None:
-    settings = object.__new__(RuntimeSettings)
-    object.__setattr__(settings, "output_root", tmp_path / "outputs")
-    session_root = tmp_path / "runtime" / "session_opaque"
-    cache = _public_component_cache(settings, session_root)
-    (cache / "preview.webp").parent.mkdir(parents=True)
-    (cache / "preview.webp").write_bytes(b"public-preview")
-
-    _remove_public_component_cache(cache, settings)
-
-    assert not cache.exists()
-    outside = tmp_path / "outside"
-    outside.mkdir()
-    with pytest.raises(RuntimeError, match="unexpected public"):
-        _remove_public_component_cache(outside, settings)
-    assert outside.is_dir()
 
 
 def test_gradio_upload_cache_is_not_blocked(tmp_path: Path) -> None:

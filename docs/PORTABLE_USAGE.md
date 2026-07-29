@@ -58,9 +58,8 @@ the input is copied to an opaque short-lived path and removed after the run.
 The session upload cache is also removed after a private run. The private
 output root is blocked from Gradio file serving, and the GUI remains
 loopback-only outside its container.
-Public previews, galleries, and result downloads use a separate per-session
-cache below the allowed public output root. Both session caches are removed
-when the GUI shuts down.
+Public previews, galleries, and result downloads use the same Gradio session
+cache, which is removed when the GUI shuts down.
 
 Or with the lightweight app Python:
 
@@ -163,8 +162,8 @@ archive size and digest. `BUILD_INFO.json` records the clean source commit,
 exact Git candidate-tree SHA-256, candidate count, and clean-state flag. The
 release build runs only from isolated staging below
 `D:\CSX4201\vision-info-extraction-assets`; it rejects `D:\OCR_Model` as a
-build target unconditionally. Rebuilding an existing staging target also
-requires the exact builder-owned sentinel in that target's parent.
+build target unconditionally. The builder never deletes or replaces an
+existing target; each build must use a new isolated staging path.
 
 Before publication, the completed payload is scanned for prohibited data
 paths, reparse points, secret patterns, and live private-filename inventory

@@ -28,12 +28,12 @@ historical model/evaluation reports.
 
 The complete execution verifier does not accept a portable report merely
 because it is internally self-consistent. Its commit, candidate-tree SHA-256,
-candidate count, and clean-build flag must agree across the installed
-`BUILD_INFO.json`, portable report, every ledger row that cites that report,
-and the ledger's top-level portable-generation binding. Each evidence file's
-SHA-256 is recomputed. The report does not select its own package path:
-complete mode independently anchors to `D:\OCR_Model` (or an explicit
-verifier override) and the current release tag commit.
+candidate count, and clean-build flag must agree between the independently
+selected installed `BUILD_INFO.json` and the portable report. Each ledger row
+is bound to its evidence file by a recomputed SHA-256, so these generation
+fields are not duplicated in the ledger. The report does not select its own
+package path: complete mode independently anchors to `D:\OCR_Model` (or an
+explicit verifier override) and the current release tag commit.
 
 The frozen July 28 rotation report is also historical evidence. It recorded
 20/20 when all bounded derived sources existed. The July 30 rerun reaches

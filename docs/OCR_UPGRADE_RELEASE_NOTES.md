@@ -439,8 +439,8 @@ changes are:
   27-field schema output contract;
 - the rotation-stage 10 GiB reserve is named separately from the 15 GiB
   OCR/model/setup reserve; and
-- release construction uses a clean Git candidate-tree hash, isolated D:
-  staging with a builder-owned deletion sentinel, no-follow verified copies,
+- release construction uses a clean Git candidate-tree hash, a new isolated
+  D: staging target that the builder never deletes, no-follow verified copies,
   sample-evidence binding, an all-file completed-payload privacy scan, a full
   payload manifest, and ZIP-integrity validation.
 

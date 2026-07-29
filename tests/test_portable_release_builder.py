@@ -272,30 +272,12 @@ def test_privacy_audit_fails_closed_on_empty_private_inventory(
         builder.privacy_audit(target)
 
 
-def test_prepare_target_refuses_installed_runtime_deletion(
-    tmp_path: Path,
-) -> None:
+def test_prepare_target_refuses_every_existing_target(tmp_path: Path) -> None:
     target = tmp_path / "OCR_Model"
     (target / ".runtime").mkdir(parents=True)
 
-    with pytest.raises(ValueError, match="installed OCR_Model"):
-        builder.prepare_target(target, force=True)
-
-
-def test_prepare_target_requires_builder_owned_sentinel_before_deletion(
-    tmp_path: Path,
-) -> None:
-    target = tmp_path / "OCR_Model"
-    target.mkdir()
-
-    with pytest.raises(ValueError, match="unmarked release staging"):
-        builder.prepare_target(target, force=True)
-
-    builder.write_json(
-        target.parent / builder.STAGING_SENTINEL_NAME,
-        builder._staging_sentinel_payload(target),
-    )
-    builder.prepare_target(target, force=True)
+    with pytest.raises(FileExistsError, match="choose a new isolated"):
+        builder.prepare_target(target)
 
     assert target.is_dir()
 
