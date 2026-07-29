@@ -49,11 +49,13 @@
   `c6303f6843de9af1c7c97fde1ef6ff43e01de553`. The initial
   `v1.1.0-ocr-upgrade` asset targeted
   `fcae32edc193ff6574bf99362da0e2368d5ef464`; its size and digest remain
-  historical evidence in the release notes. For the July 30 in-place
-  correction, use the live Release asset and sidecar, and require agreement
-  with the tag, `BUILD_INFO.json`, exact source candidate-tree hash, and
-  generation-specific portable verification. The historical
-  `v1.0.0-build-week` Release remains available.
+  historical evidence in the release notes. The July 30 in-place correction
+  targets clean commit `36ca41ee48dabd42bbb26f33cd490410a7f00c57`;
+  the live 1,159,079,957-byte archive and sidecar have SHA-256
+  `4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a`.
+  Require agreement with the tag, `BUILD_INFO.json`, exact source
+  candidate-tree hash, and generation-specific portable verification. The
+  historical `v1.0.0-build-week` Release remains available.
 - The workspace is a public Git repository with an existing GitHub remote.
   Recheck live visibility and staged privacy before every push.
 
@@ -381,6 +383,13 @@
   14 learned fields and 27 schema-supported fields are distinguished; and the
   release builder uses isolated D: staging, exact clean candidate-tree
   provenance, a completed-payload privacy scan, and ZIP-integrity validation.
-  The live `v1.1.0-ocr-upgrade` asset and sidecar will supersede the initial
-  July 29 package identity only after the pending in-place replacement and
-  live generation verification complete.
+  Simplification removed 177 net lines: Gradio now uses one session cache,
+  private cleanup targets fixed outputs, the builder never deletes existing
+  targets, and portable generation facts live in one report/`BUILD_INFO`
+  comparison. The existing `v1.1.0-ocr-upgrade` tag and two stable assets were
+  replaced in place and re-downloaded successfully. The live archive is
+  1,159,079,957 bytes with SHA-256
+  `4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a`.
+  Windows CPU, installed doctor, public/private Gradio, Docker Linux/AMD64 CPU,
+  manifest, sidecar, and live-download checks pass; physical Mac remains
+  untested.

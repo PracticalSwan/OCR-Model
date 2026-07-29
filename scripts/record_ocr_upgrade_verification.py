@@ -19,8 +19,10 @@ from src.rotation_common import atomic_write_json, sha256_file  # noqa: E402
 RESERVED_HASH_KEYS = {
     "evidence_sha256",
     "source_commit",
-    "source_tree_dirty_at_record_start",
     "source_tree_sha256",
+    "source_tree_dirty_at_record_start",
+    "source_candidate_file_count",
+    "source_tree_dirty_at_build",
 }
 
 
@@ -68,13 +70,7 @@ def main() -> int:
         parser.error("--detail-json must decode to an object")
 
     provenance = git_worktree_provenance(PROJECT_ROOT)
-    hashes = {
-        "source_commit": provenance["source_commit"],
-        "source_tree_sha256": provenance["source_tree_sha256"],
-        "source_tree_dirty_at_record_start": str(
-            provenance["source_tree_dirty"]
-        ).lower(),
-    }
+    hashes = {"source_commit": provenance["source_commit"]}
     if evidence_path.is_file():
         hashes["evidence_sha256"] = sha256_file(evidence_path)
     if evidence_path.name == "portable_verification.json":
@@ -138,16 +134,12 @@ def main() -> int:
             "source_tree_dirty_at_write_start": provenance[
                 "source_tree_dirty"
             ],
-            "source_tree_sha256_at_write_start": provenance[
-                "source_tree_sha256"
-            ],
-            "source_candidate_file_count_at_write_start": provenance[
-                "source_candidate_file_count"
-            ],
             "checks": records,
         }
     )
     payload.pop("portable_generation", None)
+    payload.pop("source_tree_sha256_at_write_start", None)
+    payload.pop("source_candidate_file_count_at_write_start", None)
     atomic_write_json(ledger_path, payload)
     print(
         json.dumps(

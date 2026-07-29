@@ -194,11 +194,11 @@ OCR text, image, or per-document prediction. There is no private ground truth
 and no accuracy claim.
 
 The synthetic integration runner covers upright image, 45° image,
-general-to-Thai two-page PDF, and Thai metadata routing. Its report hashes the
-runner, verifier, config, schema, model registry, final training/calibration,
-pipeline sources, 1.1 GB checkpoint artifacts, fixtures, and full ignored
-outputs. Complete verification re-hashes 11 artifacts, validates every output
-schema, and independently checks semantics.
+general-to-Thai two-page PDF, and Thai metadata routing. The durable report
+records the four case assertions. Complete verification checks that summary
+without requiring generated fixtures and outputs to remain on disk. Checkpoint,
+calibration, model, and release provenance are verified by their dedicated
+checks instead of being duplicated in the smoke-test report.
 
 ## Authoritative artifacts
 

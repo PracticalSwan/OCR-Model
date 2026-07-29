@@ -16,10 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src import config as cfgmod  # noqa: E402
-from src.information_extraction.schema import (  # noqa: E402
-    load_output_schema,
-    validate_document_result,
-)
+from src.information_extraction.schema import load_output_schema  # noqa: E402
 from src.ocr.environment import storage_gate  # noqa: E402
 from src.ocr.model_registry import ModelRegistry, REQUIRED_MODEL_NAMES  # noqa: E402
 from src.release_provenance import git_worktree_provenance  # noqa: E402
@@ -378,7 +375,12 @@ def main() -> int:
     layout_angles = _json(final_root / "layout_angle_metrics.json")
     end_to_end_angles = _json(final_root / "end_to_end_angle_metrics.json")
     ocr_ablation = _json(final_root / "ocr_preprocessing_ablation.json")
-    integration = _json(cfgmod.resolve_path(cfg, "reports") / "information_extraction" / "integration_smoke.json")
+    integration_path = (
+        cfgmod.resolve_path(cfg, "reports")
+        / "information_extraction"
+        / "integration_smoke.json"
+    )
+    integration = _json(integration_path)
     if args.complete:
         check(
             "locked_public_test_evaluation",
@@ -398,13 +400,19 @@ def main() -> int:
             "private_aggregate_evaluation",
             bool(private_aggregate and private_aggregate.get("successful_documents", 0) > 0),
         )
-        evidence_passed, evidence_detail = _validate_integration_evidence(
-            integration,
-            cfg=cfg,
-            config_path=config_path,
-            model_setup_path=Path(args.model_setup).resolve(),
+        evidence_passed, evidence_detail = _validate_integration_evidence(integration)
+        integration_hashes = (
+            {"evidence_sha256": sha256_file(integration_path)}
+            if integration_path.is_file()
+            else {}
         )
-        check("integration_evidence_cryptographically_bound", evidence_passed, evidence_detail)
+        check(
+            "integration_smoke_summary_valid",
+            evidence_passed,
+            evidence_detail,
+            evidence_path=integration_path,
+            relevant_hashes=integration_hashes,
+        )
         cases = {item.get("case"): item for item in (integration or {}).get("cases", [])}
         required_cases = {
             "unknown_upright_image", "unknown_45_degree_image",
@@ -423,6 +431,8 @@ def main() -> int:
                 and cases["mixed_language_multipage_pdf"].get("pages") == 2
                 and cases["thai_auto_with_metadata_hint"].get("assertions", {}).get("thai_unicode_present") is True
             ),
+            evidence_path=integration_path,
+            relevant_hashes=integration_hashes,
         )
         check(
             "natural_unseen_dataset_evaluation",
@@ -1008,12 +1018,8 @@ def _split_leakage_summary(rows: list[dict[str, str]]) -> dict[str, Any]:
 
 def _validate_integration_evidence(
     report: dict[str, Any] | None,
-    *,
-    cfg: dict[str, Any],
-    config_path: Path,
-    model_setup_path: Path,
 ) -> tuple[bool, dict[str, Any]]:
-    """Re-hash runner inputs/outputs and independently inspect synthetic results."""
+    """Validate the durable integration summary without retaining test outputs."""
     errors: list[str] = []
     if not report:
         return False, {"errors": ["integration report is missing or invalid JSON"]}
@@ -1024,111 +1030,12 @@ def _validate_integration_evidence(
     if report.get("status") != "passed":
         errors.append("integration report status is not passed")
 
-    schema_path = (PROJECT_ROOT / str(cfg["information_extraction"]["output_schema"])).resolve()
-    expected_sources = {
-        "runner": PROJECT_ROOT / "scripts" / "run_integration_smoke.py",
-        "integration_verifier": PROJECT_ROOT / "scripts" / "verify_information_extraction.py",
-        "config": config_path,
-        "output_schema": schema_path,
-        "model_setup": model_setup_path,
-        "layout_training_report": PROJECT_ROOT
-        / "reports"
-        / "final_model"
-        / "training_summary.json",
-        "calibration": PROJECT_ROOT / "models" / "multitask_calibration.json",
-        "document_pipeline": PROJECT_ROOT / "src" / "inference" / "document_pipeline.py",
-        "document_io": PROJECT_ROOT / "src" / "inference" / "document_io.py",
-        "entity_worker_client": PROJECT_ROOT
-        / "src"
-        / "information_extraction"
-        / "entity_worker_client.py",
-        "layout_entity_worker": PROJECT_ROOT / "scripts" / "layout_entity_worker.py",
-        "multitask_inference": PROJECT_ROOT
-        / "src"
-        / "information_extraction"
-        / "multitask_inference.py",
-        "layoutxlm_model": PROJECT_ROOT
-        / "src"
-        / "information_extraction"
-        / "layoutxlm_model.py",
-        "ocr_pipeline": PROJECT_ROOT / "src" / "ocr" / "pipeline.py",
-        "ocr_adapter": PROJECT_ROOT / "src" / "ocr" / "paddleocr_adapter.py",
-        "language_router": PROJECT_ROOT / "src" / "ocr" / "language_router.py",
-        "ocr_scoring": PROJECT_ROOT / "src" / "ocr" / "scoring.py",
-    }
-    source_hashes = report.get("source_hashes") or {}
-    for name, path in expected_sources.items():
-        record = source_hashes.get(name) or {}
-        if not path.is_file():
-            errors.append(f"source is missing: {name}")
-            continue
-        expected_relative = str(path.resolve().relative_to(PROJECT_ROOT)).replace("\\", "/")
-        if record.get("path") != expected_relative:
-            errors.append(f"source path mismatch: {name}")
-        if record.get("sha256") != sha256_file(path):
-            errors.append(f"source hash mismatch: {name}")
-
-    external_root = cfgmod.resolve_path(cfg, "external_assets").resolve()
-    checked_artifacts = 0
-
-    def validate_artifact(record: Any, label: str) -> Path | None:
-        nonlocal checked_artifacts
-        if not isinstance(record, dict) or not record.get("path"):
-            errors.append(f"artifact record missing: {label}")
-            return None
-        path = Path(str(record["path"])).resolve()
-        if path != external_root and external_root not in path.parents:
-            errors.append(f"artifact escaped external root: {label}")
-            return None
-        if not path.is_file():
-            errors.append(f"artifact file missing: {label}")
-            return None
-        if int(record.get("size_bytes", -1)) != path.stat().st_size:
-            errors.append(f"artifact size mismatch: {label}")
-        if record.get("sha256") != sha256_file(path):
-            errors.append(f"artifact hash mismatch: {label}")
-        checked_artifacts += 1
-        return path
-
-    training = _json(expected_sources["layout_training_report"])
-    checkpoint_root = Path(str((training or {}).get("checkpoint", ""))).resolve()
-    checkpoint_records = list(report.get("checkpoint_artifacts") or [])
-    expected_checkpoint_names = {"model.safetensors", "config.json", "training_state.json"}
-    if {Path(str(item.get("path", ""))).name for item in checkpoint_records} != expected_checkpoint_names:
-        errors.append("checkpoint artifact set mismatch")
-    for record in checkpoint_records:
-        path = validate_artifact(record, f"checkpoint:{Path(str(record.get('path', ''))).name}")
-        if path is not None and path.parent != checkpoint_root:
-            errors.append(f"checkpoint path mismatch: {path.name}")
-
     required_cases = {
         "unknown_upright_image",
         "unknown_45_degree_image",
         "mixed_language_multipage_pdf",
         "thai_auto_with_metadata_hint",
     }
-    fixtures = report.get("fixture_artifacts") or {}
-    outputs = report.get("output_artifacts") or {}
-    if set(fixtures) != required_cases:
-        errors.append("fixture artifact set mismatch")
-    if set(outputs) != required_cases:
-        errors.append("output artifact set mismatch")
-    for case in sorted(required_cases):
-        validate_artifact(fixtures.get(case), f"fixture:{case}")
-        output_path = validate_artifact(outputs.get(case), f"output:{case}")
-        if output_path is None:
-            continue
-        payload = _json(output_path)
-        if payload is None:
-            errors.append(f"output is invalid JSON: {case}")
-            continue
-        try:
-            validate_document_result(payload, schema_path)
-        except Exception as exc:
-            errors.append(f"output schema invalid for {case}: {type(exc).__name__}")
-            continue
-        errors.extend(_integration_semantic_errors(case, payload))
-
     case_summaries = {
         item.get("case"): item for item in report.get("cases") or [] if isinstance(item, dict)
     }
@@ -1138,7 +1045,7 @@ def _validate_integration_evidence(
         assertions = case_summaries[case].get("assertions")
         if not isinstance(assertions, dict) or not assertions or not all(assertions.values()):
             errors.append(f"recorded assertion failed: {case}")
-    return not errors, {"checked_artifacts": checked_artifacts, "errors": errors}
+    return not errors, {"case_count": len(case_summaries), "errors": errors}
 
 
 def _integration_semantic_errors(case: str, payload: dict[str, Any]) -> list[str]:

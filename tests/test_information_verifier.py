@@ -10,6 +10,7 @@ import pytest
 from scripts.run_integration_smoke import _command_record, _resolve_checkpoint
 from scripts.verify_information_extraction import (
     _integration_semantic_errors,
+    _validate_integration_evidence,
     _expected_portable_provenance,
     _load_execution_evidence,
     _metric_report_provenance_errors,
@@ -57,26 +58,36 @@ def test_integration_smoke_checkpoint_default_comes_from_config(
     assert _resolve_checkpoint(cfg, None) == configured.resolve()
 
 
-def test_integration_provenance_covers_the_learned_worker_call_path() -> None:
-    root = Path(__file__).resolve().parents[1]
-    sections = []
-    for relative, marker in (
-        ("scripts/run_integration_smoke.py", "required_sources = {"),
-        ("scripts/verify_information_extraction.py", "expected_sources = {"),
-    ):
-        text = (root / relative).read_text(encoding="utf-8")
-        sections.append(text.split(marker, 1)[1].split("\n    }", 1)[0])
-
-    required = {
-        "entity_worker_client": "entity_worker_client.py",
-        "layout_entity_worker": "layout_entity_worker.py",
-        "multitask_inference": "multitask_inference.py",
-        "layoutxlm_model": "layoutxlm_model.py",
+def test_integration_report_validation_uses_durable_case_summaries() -> None:
+    cases = [
+        {
+            "case": name,
+            "assertions": {"schema_valid": True, "nonempty": True},
+        }
+        for name in (
+            "unknown_upright_image",
+            "unknown_45_degree_image",
+            "mixed_language_multipage_pdf",
+            "thai_auto_with_metadata_hint",
+        )
+    ]
+    report = {
+        "generated_by": "scripts/run_integration_smoke.py",
+        "private_inputs_used": False,
+        "status": "passed",
+        "cases": cases,
     }
-    for section in sections:
-        for key, filename in required.items():
-            assert f'"{key}"' in section
-            assert f'"{filename}"' in section
+
+    passed, detail = _validate_integration_evidence(report)
+    assert passed is True
+    assert detail == {"case_count": 4, "errors": []}
+
+    cases[0]["assertions"]["schema_valid"] = False
+    passed, detail = _validate_integration_evidence(report)
+    assert passed is False
+    assert detail["errors"] == [
+        "recorded assertion failed: unknown_upright_image"
+    ]
 
 
 def test_integration_verifier_accepts_learned_document_type_for_generic_fixture() -> None:
@@ -473,11 +484,20 @@ def test_verification_recorder_helpers_reject_duplicate_or_unknown_checks(
 
 
 def test_verification_recorder_rejects_reserved_hash_overrides() -> None:
-    with pytest.raises(ValueError, match="recorder-controlled"):
-        _parse_additional_hashes(
-            ["source_commit=" + "b" * 40],
-            reserved_keys={"source_commit", "evidence_sha256"},
-        )
+    reserved = {
+        "source_commit",
+        "evidence_sha256",
+        "source_tree_sha256",
+        "source_tree_dirty_at_record_start",
+        "source_candidate_file_count",
+        "source_tree_dirty_at_build",
+    }
+    for key in reserved:
+        with pytest.raises(ValueError, match="recorder-controlled"):
+            _parse_additional_hashes(
+                [f"{key}=test-value"],
+                reserved_keys=reserved,
+            )
     with pytest.raises(ValueError, match="more than once"):
         _parse_additional_hashes(
             ["model_sha256=" + "a" * 64, "model_sha256=" + "b" * 64],

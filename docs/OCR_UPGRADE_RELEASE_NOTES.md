@@ -7,12 +7,12 @@ into `main` at `c6303f6843de9af1c7c97fde1ef6ff43e01de553` on 2026-07-29
 
 **Release:** [`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
 The July 29 initial asset targeted
-`fcae32edc193ff6574bf99362da0e2368d5ef464`; the live tag, Release asset, and
-sidecar still identify that initial generation while the in-place correction
-is being built and verified. They identify the corrected generation only
-after the fail-closed replacement sequence below completes.
+`fcae32edc193ff6574bf99362da0e2368d5ef464`. The same release and asset names
+now identify the corrected clean build from
+`36ca41ee48dabd42bbb26f33cd490410a7f00c57`; the live ZIP and sidecar agree on
+SHA-256 `4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a`.
 
-**Evidence window:** 2026-07-24 through 2026-07-28
+**Evidence window:** 2026-07-24 through 2026-07-30
 
 **Status:** implemented and evaluated; not production-ready
 
@@ -450,16 +450,12 @@ byte-identical final-model manifest aliases are retained deliberately for
 historical command/provenance compatibility. Report authority and supersession
 rules are documented in [`../reports/README.md`](../reports/README.md).
 
-Because the owner requires the same release version and stable asset names,
-the replacement is fail-closed rather than atomic. Generation-stamped
-temporary ZIP and sidecar assets are uploaded and independently verified
-first. The tag/release target is then verified, the stable ZIP is replaced and
-freshly re-hashed, and the stable sidecar is replaced last as the generation
-commit marker. Any ZIP/sidecar disagreement is a failed or in-progress
-publication and must be retried, never accepted. Old local assets remain
-available for rollback until the stable ZIP, sidecar, tag, `BUILD_INFO.json`,
-payload manifest, and live API digest all agree; temporary assets are removed
-only after that verification.
+The correction kept the same release and stable asset names. The two assets
+were replaced in place, the existing tag was moved to the clean build commit,
+and both live assets were downloaded and re-hashed. The local archive,
+sidecar, live digest, tag, `BUILD_INFO.json`, and payload manifest now agree.
+No patch version, temporary release assets, deletion sentinel, or custom
+release-state protocol is used.
 
 ## Remaining limitations
 
@@ -504,17 +500,33 @@ Those historical custom/adaptive probes established OCR routing and
 schema-valid degraded output; they did not prove calibrated LayoutXLM
 inference. The corrected portable CLI therefore narrows calibrated choices to
 original/auto.
-That archive and matching sidecar were published under
+That initial archive and matching sidecar were published under
 [`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade);
-the live Release asset and sidecar supersede this historical package identity
-after an in-place replacement. The historical public
+the current live assets supersede this historical package identity. The
+historical public
 [`v1.0.0-build-week`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
 Release remains available.
 
-After fresh setup, C: had 23.71 GiB free and D: had 391.685 GiB free, both
-above the 15 GiB reserve. The first clean dependency installation exceeded the
-30-minute command window after writing its runtime config; a direct doctor
-probe and exact setup-command rerun both passed.
+The corrected clean archive has 183 ZIP entries and a 182-file payload
+manifest:
+
+```text
+D:\OCR_Model.zip
+size: 1,159,079,957 bytes
+SHA-256: 4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a
+```
+
+A fresh Windows CPU setup, doctor probe, public image extraction, private-mode
+extraction, and public/private Gradio lifecycle passed. The exact Linux/AMD64
+Docker image passed HTTP readiness, doctor, and one-page CPU extraction; its
+test container, image, and network were then removed. The installed
+`D:\OCR_Model` manifest matches all 182 records. Current-generation evidence is
+in `portable_verification.json`; the initial package's broader custom,
+adaptive, PDF, and GPU probes remain clearly labeled in
+`portable_verification_initial_fcae32e.json`.
+
+After current verification, C: had 54.834 GiB free and D: had 393.254 GiB
+free, both above the 15 GiB reserve.
 
 Authoritative machine-readable evidence is under `reports/ocr_upgrade/`,
 `reports/final_model/`, and `reports/information_extraction/`. Portable

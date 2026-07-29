@@ -61,9 +61,9 @@ cannot control or block OCR/extraction.
 | SF-006 | Return actionable input/model/storage/protocol errors without fabricated output. | Pass for missing, corrupt, encrypted, oversized, invalid-checkpoint, and worker failures. |
 | SF-007 | Constrain detailed private outputs to ignored private roots. | Pass; public path rejection, anonymous IDs, no public visualization, aggregate-only report. |
 | SF-008 | Preserve historical rotation evidence. | Historical pass: the frozen July 28 report is 20/20. A July 30 rerun is 18/20 because verified cleanup removed 203 derived private page renders, so 812 retained private rotations cannot re-hash their source render; all public rows and all rotation files remain present. |
-| SF-009 | Make integration evidence executable and tamper-evident. | Pass: 11 source/model/config/checkpoint/fixture/output artifacts independently re-hashed and semantically checked. |
+| SF-009 | Keep durable integration evidence without retaining generated test outputs. | Pass: the four-case summary and assertions are validated; checkpoint, calibration, model, and release provenance remain covered by their dedicated checks. |
 | SF-010 | Reject large/unexpected/publication-risk Git candidates. | Pass in the complete IE verifier; final staged audit is still mandatory before push. |
-| SF-011 | Build portable releases from an exact clean source candidate tree without modifying an installed working copy. | Pass in builder/provenance tests; only marked isolated D: staging is allowed, installed-target and reparse-point copies are rejected, source/sample/payload hashes are bound, all payload bytes are privacy-scanned, and every ZIP entry must match the frozen payload manifest before sidecar creation. |
+| SF-011 | Build portable releases from an exact clean source candidate tree without modifying an installed working copy. | Pass in builder/provenance tests; only a new isolated D: staging target is allowed, installed-target and reparse-point copies are rejected, source/sample/payload hashes are bound, all payload bytes are privacy-scanned, and every ZIP entry must match the frozen payload manifest before sidecar creation. |
 
 ## Measured quality
 

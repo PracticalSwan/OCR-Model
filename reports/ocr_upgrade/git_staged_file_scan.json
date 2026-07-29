@@ -1,52 +1,41 @@
 {
   "schema_version": "1.0",
   "status": "passed",
-  "generated_at_utc": "2026-07-28T11:16:25Z",
-  "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+  "generated_at_utc": "2026-07-29T22:44:00Z",
+  "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
   "repository": {
     "name": "PracticalSwan/csx4201-vision-info-extraction",
     "visibility": "PUBLIC",
-    "branch": "feat/domain-adapted-ocr"
+    "branch": "main"
   },
   "commands": [
     "git status --short --ignored",
     "git diff --cached --name-status",
     "git diff --cached --check",
-    "git diff --cached --stat",
     "inspect every staged code, test, documentation, and report path",
-    "inspect staged working-tree file sizes with a 50 MiB ceiling",
-    "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr/Scripts/python.exe scripts/verify_information_extraction.py"
+    "inspect staged file sizes with a 50 MiB ceiling",
+    "scan Git candidates for obvious secrets and private filenames"
   ],
-  "staged_file_count": 28,
+  "staged_file_count": 18,
   "staged_files": [
     "AGENTS.md",
     "AGENT_MEMORY.md",
-    "LESSONS.md",
-    "README.md",
     "SUMMARY.md",
     "docs/OCR_UPGRADE_RELEASE_NOTES.md",
-    "docs/PORTABLE_USAGE.md",
     "docs/evaluation.md",
-    "docs/information_extraction.md",
     "docs/requirements.md",
-    "reports/information_extraction/integration_smoke.json",
-    "reports/ocr/model_verification.json",
+    "reports/README.md",
     "reports/ocr_upgrade/final_verification_tests.json",
     "reports/ocr_upgrade/git_staged_file_scan.json",
-    "reports/ocr_upgrade/model_registry.json",
     "reports/ocr_upgrade/portable_verification.json",
-    "reports/ocr_upgrade/recognizer_acceptance.json",
-    "reports/ocr_upgrade/training_environment.json",
+    "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
     "reports/ocr_upgrade/verification.json",
     "reports/ocr_upgrade/verification_executions.json",
     "reports/verification/information_extraction_verification.json",
-    "reports/verification/rotation_verification.json",
-    "scripts/build_ocr_model_registry.py",
-    "scripts/compile_ocr_trial_reports.py",
-    "scripts/run_integration_smoke.py",
-    "src/ocr/model_registry.py",
+    "scripts/record_ocr_upgrade_verification.py",
+    "scripts/verify_information_extraction.py",
     "tests/test_information_verifier.py",
-    "tests/test_ocr_components.py"
+    "tests/test_portable_release_builder.py"
   ],
   "checks": {
     "staged_diff_check": "passed",
@@ -62,6 +51,6 @@
   },
   "notes": [
     "Ignored raw data, Gmail/private manifests, private outputs, caches, and the demo video are not staged.",
-    "The complete verifier passed all 81 checks and its generated report is included in this final staged inventory."
+    "The scan covers the final publication file set; verifier outputs are regenerated from this exact evidence file."
   ]
 }

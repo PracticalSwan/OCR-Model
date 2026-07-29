@@ -6,22 +6,22 @@
       "command": "python -m pytest -q",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
-      "timestamp": "2026-07-28T11:13:55.971256+00:00",
+      "timestamp": "2026-07-29T22:54:24.738053+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "af05b39d7d8ce88cb3f68fc86163b0bdac7944719d2966fa550b014d106db6b2"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
       },
       "detail": {}
     },
     {
       "name": "all_new_ocr_tests",
-      "command": "$changedTests = git diff --name-only af0816b -- tests; python -m pytest -q @changedTests",
+      "command": "python -m pytest -q tests/test_information_verifier.py tests/test_portable_gui.py tests/test_portable_release_builder.py",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
-      "timestamp": "2026-07-28T11:13:56.372514+00:00",
+      "timestamp": "2026-07-29T22:54:26.231252+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "af05b39d7d8ce88cb3f68fc86163b0bdac7944719d2966fa550b014d106db6b2"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
       },
       "detail": {}
     },
@@ -30,10 +30,10 @@
       "command": "python -m compileall -q src scripts tests",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
-      "timestamp": "2026-07-28T11:13:56.845514+00:00",
+      "timestamp": "2026-07-29T22:54:27.742629+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "af05b39d7d8ce88cb3f68fc86163b0bdac7944719d2966fa550b014d106db6b2"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
       },
       "detail": {}
     },
@@ -89,11 +89,11 @@
       "name": "thai_model_verification",
       "command": "D:/OCR_Model/run.cmd --input <safe-thai-image> --output <output> --device cpu --ocr-profile custom",
       "status": "passed",
-      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "evidence_path": "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
       "timestamp": "2026-07-28T10:39:46.709341+00:00",
       "relevant_hashes": {
         "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "evidence_sha256": "3cf790ffbc643ee3d4453fdb1238905b2005d5480fc1f21ca88d78866dfd9deb"
       },
       "detail": {}
     },
@@ -104,7 +104,7 @@
       "evidence_path": "reports/ocr_upgrade/benchmark_summary.json",
       "timestamp": "2026-07-28T10:39:47.338645+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "source_commit": "28df2a4b7ae6f0fa35b922eddc85b0ce3dab878e",
         "evidence_sha256": "536db7f7af86e133d909200e235bacc0d83f91281735f794a38ee32c6c914532"
       },
       "detail": {}
@@ -117,19 +117,19 @@
       "timestamp": "2026-07-28T10:39:47.825099+00:00",
       "relevant_hashes": {
         "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "ba03b8681ebc417eed42a3a5a44697f904a66d1d42db93e22e90b87d41631096"
+        "evidence_sha256": "a39d6f1ace10e328c72aa7f69da0379ad9e18e33a7b9a305833e2e23bc317c37"
       },
       "detail": {}
     },
     {
       "name": "storage_verification",
-      "command": "verify_information_extraction.py storage reserve; portable post-setup storage check",
+      "command": "Get-PSDrive C,D; verify 15 GiB reserve",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/portable_verification.json",
-      "timestamp": "2026-07-28T11:17:37.935282+00:00",
+      "timestamp": "2026-07-29T22:43:20.130279+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
       },
       "detail": {}
     },
@@ -147,13 +147,13 @@
     },
     {
       "name": "original_profile_inference",
-      "command": "D:/OCR_Model/run.cmd --input <safe-image> --output <output> --device cpu --ocr-profile original",
+      "command": "run_cli.bat samples/unknown_upright.png --device cpu --ocr-profile original -o outputs/verification_public_final",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/portable_verification.json",
-      "timestamp": "2026-07-28T10:39:50.212336+00:00",
+      "timestamp": "2026-07-29T22:43:21.729613+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
       },
       "detail": {}
     },
@@ -161,11 +161,11 @@
       "name": "custom_profile_inference",
       "command": "D:/OCR_Model/run.cmd --input <safe-thai-image> --output <output> --device cpu --ocr-profile custom",
       "status": "passed",
-      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "evidence_path": "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
       "timestamp": "2026-07-28T10:39:50.778151+00:00",
       "relevant_hashes": {
         "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "evidence_sha256": "3cf790ffbc643ee3d4453fdb1238905b2005d5480fc1f21ca88d78866dfd9deb"
       },
       "detail": {}
     },
@@ -173,23 +173,23 @@
       "name": "adaptive_profile_inference",
       "command": "D:/OCR_Model/run.cmd --input <safe-image> --output <output> --device cpu --ocr-profile adaptive",
       "status": "passed",
-      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "evidence_path": "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
       "timestamp": "2026-07-28T10:39:51.364556+00:00",
       "relevant_hashes": {
         "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "evidence_sha256": "3cf790ffbc643ee3d4453fdb1238905b2005d5480fc1f21ca88d78866dfd9deb"
       },
       "detail": {}
     },
     {
       "name": "image_inference",
-      "command": "D:/OCR_Model/run.cmd --input <safe-image> --output <output> --device cpu --ocr-profile original --save-visualization",
+      "command": "run_cli.bat samples/unknown_upright.png --device cpu --ocr-profile original -o outputs/verification_public_final",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/portable_verification.json",
-      "timestamp": "2026-07-28T10:39:51.878223+00:00",
+      "timestamp": "2026-07-29T22:43:23.377442+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
       },
       "detail": {}
     },
@@ -197,11 +197,11 @@
       "name": "pdf_inference",
       "command": "D:/OCR_Model/run.cmd --input <safe-pdf> --output <output> --device cpu --ocr-profile original --save-visualization",
       "status": "passed",
-      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "evidence_path": "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
       "timestamp": "2026-07-28T10:39:52.379650+00:00",
       "relevant_hashes": {
         "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "evidence_sha256": "3cf790ffbc643ee3d4453fdb1238905b2005d5480fc1f21ca88d78866dfd9deb"
       },
       "detail": {}
     },
@@ -209,11 +209,11 @@
       "name": "multipage_inference",
       "command": "D:/OCR_Model/run.cmd --input <safe-two-page-pdf> --output <output> --device cpu --ocr-profile original --save-visualization",
       "status": "passed",
-      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "evidence_path": "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
       "timestamp": "2026-07-28T10:39:52.980267+00:00",
       "relevant_hashes": {
         "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "evidence_sha256": "3cf790ffbc643ee3d4453fdb1238905b2005d5480fc1f21ca88d78866dfd9deb"
       },
       "detail": {}
     },
@@ -221,11 +221,11 @@
       "name": "rotated_inference",
       "command": "D:/OCR_Model/run.cmd --input <safe-45-degree-image> --output <output> --device cpu --ocr-profile original --save-visualization",
       "status": "passed",
-      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "evidence_path": "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
       "timestamp": "2026-07-28T10:39:53.710419+00:00",
       "relevant_hashes": {
         "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "evidence_sha256": "3cf790ffbc643ee3d4453fdb1238905b2005d5480fc1f21ca88d78866dfd9deb"
       },
       "detail": {}
     },
@@ -233,11 +233,11 @@
       "name": "thai_integration_inference",
       "command": "D:/OCR_Model/run.cmd --input <safe-thai-image> --output <output> --device cpu --ocr-profile custom --save-visualization",
       "status": "passed",
-      "evidence_path": "reports/ocr_upgrade/portable_verification.json",
+      "evidence_path": "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
       "timestamp": "2026-07-28T10:39:54.530713+00:00",
       "relevant_hashes": {
         "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "evidence_sha256": "3cf790ffbc643ee3d4453fdb1238905b2005d5480fc1f21ca88d78866dfd9deb"
       },
       "detail": {}
     },
@@ -272,7 +272,7 @@
       "evidence_path": "reports/final_model/calibration_final.json",
       "timestamp": "2026-07-28T10:39:57.426779+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "source_commit": "3e9e8e98a5f27d97e89714f70814a1839eca6427",
         "evidence_sha256": "81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44"
       },
       "detail": {}
@@ -284,7 +284,7 @@
       "evidence_path": "reports/ocr_upgrade/locked_test_run.json",
       "timestamp": "2026-07-28T10:39:58.151641+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "source_commit": "6a1ee46d3cb6ab9edff869463dd70d11bd2673e6",
         "evidence_sha256": "4b9322a7324153d5cec41cfc6122fc2bd80cabd75e3a79e4fdd37095b0519be3"
       },
       "detail": {}
@@ -296,7 +296,7 @@
       "evidence_path": "reports/ocr_upgrade/unseen_coru_metrics.json",
       "timestamp": "2026-07-28T10:39:58.861968+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "source_commit": "e05c9e88832e8e67aadf4e808966366e53f63086",
         "evidence_sha256": "6cd7402ffc5c2cdfcb9429edd122f8ae4d8e07fe845a8ae1dd0ff56bd9aa0adf"
       },
       "detail": {}
@@ -308,7 +308,7 @@
       "evidence_path": "reports/ocr_upgrade/private_aggregate.json",
       "timestamp": "2026-07-28T10:39:59.602429+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
+        "source_commit": "561f0d44053467811f69a44cf3f1a3800f83247f",
         "evidence_sha256": "9f908dde6e8a84c291939bf4565571fc976be0e63967f810a20382b0d2ef248e"
       },
       "detail": {}
@@ -327,40 +327,44 @@
     },
     {
       "name": "privacy_scan",
-      "command": "verify_information_extraction.py publication scan; inspect all staged files and ignored private boundaries",
+      "command": "scan Git candidates for obvious secrets, private filenames, private OCR text/predictions, and ignored boundary violations",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/git_staged_file_scan.json",
-      "timestamp": "2026-07-28T11:17:38.284390+00:00",
+      "timestamp": "2026-07-29T22:44:44.557782+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "be44f09c72b5622595f1e368f6e244a4fd64c6b4c9dc0750bd814973cd94fed1"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "313f245066b410798787bdbc143aeabc8a99ff1eb1555e554f95aa3d42262030"
       },
       "detail": {}
     },
     {
       "name": "git_staged_file_scan",
-      "command": "git status --short --ignored; git diff --cached --name-status; git diff --cached --check; inspect all 28 staged files, sizes, secrets, and private boundaries",
+      "command": "git status --short --ignored; git diff --cached --name-status; git diff --cached --check; inspect 18 staged files and sizes",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/git_staged_file_scan.json",
-      "timestamp": "2026-07-28T11:16:42.853540+00:00",
+      "timestamp": "2026-07-29T22:44:46.334879+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "be44f09c72b5622595f1e368f6e244a4fd64c6b4c9dc0750bd814973cd94fed1"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "313f245066b410798787bdbc143aeabc8a99ff1eb1555e554f95aa3d42262030"
       },
       "detail": {}
     },
     {
       "name": "portable_package_verification",
-      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File D:/OCR_Model/setup_windows.ps1 -Device cpu; D:/OCR_Model/run.cmd <safe fixtures>",
+      "command": "fresh Windows CPU setup/doctor/public-private inference/Gradio lifecycle; Docker linux/amd64 doctor and inference; live release download/hash verification",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/portable_verification.json",
-      "timestamp": "2026-07-28T10:40:02.173925+00:00",
+      "timestamp": "2026-07-29T22:43:26.034181+00:00",
       "relevant_hashes": {
-        "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
-        "evidence_sha256": "3871be9f75abdba1effcd4c75322a333322a482f575d8a4fa6d591d87da64201"
+        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921",
+        "archive_sha256": "4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a",
+        "release_tag": "v1.1.0-ocr-upgrade"
       },
       "detail": {}
     }
   ],
-  "generated_at_utc": "2026-07-28T11:17:38.284411+00:00"
+  "generated_at_utc": "2026-07-29T22:54:27.742652+00:00",
+  "source_commit_at_write_start": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+  "source_tree_dirty_at_write_start": true
 }

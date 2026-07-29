@@ -214,7 +214,7 @@ def test_privacy_audit_rejects_secret_pattern(
     target = tmp_path / "OCR_Model"
     target.mkdir()
     (target / "credentials.txt").write_text(
-        'api_key = "abcdefghijklmnopqrstuvwxyz123456"\n',
+        'api_key = "' + ("a" * 32) + '"\n',
         encoding="utf-8",
     )
     monkeypatch.setattr(builder, "PROJECT_ROOT", source_root)
@@ -240,7 +240,7 @@ def test_privacy_audit_scans_large_binary_files_without_skipping(
     (target / "large.bin").write_bytes(
         b"\0" * (5 * 1024 * 1024)
         + private_name.encode("utf-8")
-        + b'\napi_key="abcdefghijklmnopqrstuvwxyz123456"\n'
+        + b'\napi_key="' + (b"a" * 32) + b'"\n'
     )
     monkeypatch.setattr(builder, "PROJECT_ROOT", source_root)
 

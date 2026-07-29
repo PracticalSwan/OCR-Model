@@ -43,9 +43,12 @@
   `main` at `c6303f6843de9af1c7c97fde1ef6ff43e01de553` on 2026-07-29.
   The July 29 initial `v1.1.0-ocr-upgrade` archive was built from clean commit
   `fcae32edc193ff6574bf99362da0e2368d5ef464`; its historical size and digest
-  remain in the release notes. For the current in-place correction, the live
-  Release asset and sidecar are authoritative and must agree with the tag,
-  `BUILD_INFO.json`, source candidate-tree hash, and generation-specific
+  remain in the release notes. The completed in-place correction is built from
+  clean commit `36ca41ee48dabd42bbb26f33cd490410a7f00c57`; its live
+  1,159,079,957-byte asset and sidecar use SHA-256
+  `4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a`.
+  The live Release asset and sidecar are authoritative and must agree with the
+  tag, `BUILD_INFO.json`, source candidate-tree hash, and generation-specific
   portable verification. Calibrated layout inference now fails closed on an
   OCR-stack binding mismatch or required worker error; generic/rule fallback
   is explicit. Portable private-document mode uses opaque output IDs and

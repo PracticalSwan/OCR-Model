@@ -26,6 +26,12 @@ sidecar, Git tag, and live Release asset all agree. Rebuilding or replacing an
 asset supersedes the prior portable-verification record without changing the
 historical model/evaluation reports.
 
+`ocr_upgrade/portable_verification_initial_fcae32e.json` preserves the initial
+July 29 package's custom/adaptive/PDF/GPU compatibility probes. Those rows stay
+historical; they are not relabeled as executions against the corrected package.
+The current portable report contains only checks actually run for the current
+generation.
+
 The complete execution verifier does not accept a portable report merely
 because it is internally self-consistent. Its commit, candidate-tree SHA-256,
 candidate count, and clean-build flag must agree between the independently
@@ -34,6 +40,12 @@ is bound to its evidence file by a recomputed SHA-256, so these generation
 fields are not duplicated in the ledger. The report does not select its own
 package path: complete mode independently anchors to `D:\OCR_Model` (or an
 explicit verifier override) and the current release tag commit.
+
+Synthetic integration outputs are disposable. The complete verifier validates
+the durable four-case summary and its recorded assertions; it does not require
+ignored fixtures, generated JSON outputs, or duplicate source-file hashes to
+remain after cleanup. Model, calibration, and package provenance remain
+independent checks.
 
 The frozen July 28 rotation report is also historical evidence. It recorded
 20/20 when all bounded derived sources existed. The July 30 rerun reaches

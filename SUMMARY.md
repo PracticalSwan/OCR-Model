@@ -150,7 +150,8 @@ Complete:
   fields with their different scopes stated explicitly;
 - fail-closed calibration/OCR-stack binding plus explicit generic-only
   fallback, and an opaque portable private-document workflow;
-- cryptographically bound integration evidence and final report bundle;
+- durable four-case integration evidence plus separately verified model and
+  release provenance;
 - preserved, failure-isolated K-Means display baseline.
 
 Still open research/product decisions:
