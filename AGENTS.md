@@ -37,16 +37,17 @@
   on every document. The 100-page CORU run remains wholly unseen, and the
   current private operation is a two-document/page aggregate-only check with
   zero Gmail fit rows. K-Means remains display-only and the failed exact-angle
-  estimator remains disabled. The locally verified branch archive was built
-  from clean commit `fcae32edc193ff6574bf99362da0e2368d5ef464`; it is
+  estimator remains disabled. PR #2 merged `feat/domain-adapted-ocr` into
+  `main` at `c6303f6843de9af1c7c97fde1ef6ff43e01de553` on 2026-07-29.
+  The `v1.1.0-ocr-upgrade` archive was built from clean commit
+  `fcae32edc193ff6574bf99362da0e2368d5ef464`; it is
   1,159,061,897 bytes with SHA-256
   `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`
   and passed fresh CPU setup, CPU/GPU inference, schema, visualization,
-  fallback, privacy, archive, and GUI probes. The public
+  fallback, privacy, archive, and GUI probes. GitHub reports the same archive
+  size and digest for the published `v1.1.0-ocr-upgrade` asset. The public
   `v1.0.0-build-week` package and Devpost submission `1102544` remain
-  historical July 21 publication evidence; do not imply that the newer branch
-  package replaced that Release unless a new publication is explicitly
-  verified.
+  historical July 21 publication evidence.
 
 ## Project goal and model requirements (confirmed by professor, 2026-07-13)
 

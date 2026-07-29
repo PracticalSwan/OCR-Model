@@ -1,6 +1,13 @@
 # Domain-adapted OCR upgrade release notes
 
-**Branch:** `feat/domain-adapted-ocr`
+**Source branch:** `feat/domain-adapted-ocr`
+
+**Merged:** [PR #2](https://github.com/PracticalSwan/csx4201-vision-info-extraction/pull/2)
+into `main` at `c6303f6843de9af1c7c97fde1ef6ff43e01de553` on 2026-07-29
+
+**Release:** [`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade),
+targeting the exact package-build commit
+`fcae32edc193ff6574bf99362da0e2368d5ef464`
 
 **Evidence window:** 2026-07-24 through 2026-07-28
 
@@ -418,7 +425,7 @@ registry-construction refusal and runtime refusal/fallback.
 - Human review is required for financial, legal, identity, medical, or other
   consequential use.
 
-## Portable branch package
+## Portable release package
 
 The clean package was built from commit
 `fcae32edc193ff6574bf99362da0e2368d5ef464`:
@@ -437,7 +444,11 @@ nonempty, schema-valid, and had one visualization per page. An additional GPU
 run had stable semantic parity with CPU, custom English correctly fell back to
 the selected original general recognizer, and the loopback GUI returned HTTP
 200. The clean archive excludes `.runtime`, `runtime.local.json`, and outputs.
-It has not replaced the historical public `v1.0.0-build-week` Release.
+The archive and matching sidecar are published under
+[`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade);
+GitHub reports the expected archive size and SHA-256. The historical public
+[`v1.0.0-build-week`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
+Release remains available.
 
 After fresh setup, C: had 23.71 GiB free and D: had 391.685 GiB free, both
 above the 15 GiB reserve. The first clean dependency installation exceeded the

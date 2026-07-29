@@ -7,17 +7,20 @@ GUI. Extraction uses no OpenAI API key and does not upload the document.
 
 [Watch the 2:54 demo](https://youtu.be/8BV8LnbK1GI) ·
 [View the OpenAI Build Week submission](https://devpost.com/software/ocr-model-local-document-intelligence) ·
-[Download the portable release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week) ·
+[Download the current portable release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade) ·
 [Read the model card](reports/final_model/final_model_card.md)
 
 ![OCR Model showing extracted fields, OCR text, and a document preview](docs/devpost/assets/ocr-model-complete.png)
 
-## Current OCR-upgrade branch
+## Current OCR upgrade
 
-The public `v1.0.0-build-week` Release linked above remains the historical
-July 21 package. The current `feat/domain-adapted-ocr` branch contains a newer,
-locally verified OCR-selection and LayoutXLM-adaptation lifecycle. Its selected
-checkpoint is
+The OCR upgrade merged into `main` through
+[PR #2](https://github.com/PracticalSwan/csx4201-vision-info-extraction/pull/2)
+on 2026-07-29. Its weights-included package is published as
+[`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
+The public
+[`v1.0.0-build-week`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
+Release remains the historical July 21 package. The selected checkpoint is
 `D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`,
 with `model.safetensors` SHA-256
 `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`.
@@ -30,13 +33,13 @@ documented without post-test tuning. See the
 [OCR upgrade release notes](docs/OCR_UPGRADE_RELEASE_NOTES.md) and
 [current OCR model card](reports/ocr_upgrade/final_ocr_model_card.md).
 
-The locally verified branch package is `D:\OCR_Model.zip`, built from clean
+The published package is `D:\OCR_Model.zip`, built from clean
 commit `fcae32edc193ff6574bf99362da0e2368d5ef464`. It is 1,159,061,897 bytes
 with SHA-256
 `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
 Fresh CPU setup, CPU/GPU inference, image/PDF/rotation/Thai profiles, schema,
 visualization, fallback, privacy, archive-integrity, and loopback GUI checks
-pass. This local artifact has not replaced the historical public Release.
+pass. The GitHub Release asset reports the same size and SHA-256.
 
 ## What it does
 
@@ -69,7 +72,7 @@ access for the one-time dependency install, and approximately 20 GB of free
 disk space.
 
 1. Download `OCR_Model.zip` and its `.sha256` sidecar from the
-   [Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week).
+   [`v1.1.0-ocr-upgrade` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
 2. Extract the ZIP to a normal writable folder.
 3. Run `setup_windows.bat` once.
 4. Run `launch_windows.bat`, select a document, and choose **Extract

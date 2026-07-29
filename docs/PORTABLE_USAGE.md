@@ -126,19 +126,21 @@ Get-Content .\OCR_Model.zip.sha256
 ```
 
 Users and judges can download the archive and checksum from the public
-[`v1.0.0-build-week` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week).
-That Release is the historical July 21 package. The current
-`feat/domain-adapted-ocr` branch rebuilds `D:\OCR_Model` and
-`D:\OCR_Model.zip` from the selected OCR-upgrade checkpoint; it is not
-silently substituted for the published asset.
+[`v1.1.0-ocr-upgrade` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
+The earlier
+[`v1.0.0-build-week` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
+remains the historical July 21 package.
 
-The locally verified branch archive was built from clean commit
+The published archive was built from clean commit
 `fcae32edc193ff6574bf99362da0e2368d5ef464`. It is 1,159,061,897 bytes
 with SHA-256:
 
 ```text
 d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746
 ```
+
+The GitHub Release asset reports the same size and SHA-256, and the published
+sidecar content matches the locally verified sidecar.
 
 Its sidecar matches, its 181 ZIP entries contain no duplicate or traversal
 path, and its package privacy audit passes. A fresh package-local CPU setup

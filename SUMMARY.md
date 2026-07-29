@@ -1,7 +1,7 @@
 # Summary — Domain-Adapted OCR and Information-Extraction Pre-Model
 
 **Project:** CSX4201 vision-info-extraction
-**Verified through:** 2026-07-28
+**Verified through:** 2026-07-29
 
 ## Outcome
 
@@ -70,15 +70,16 @@ submission docs, the empty legacy directory tree, and staging copies. Raw
 data, final model assets, the local runtime, runtime configuration, canonical
 ZIP, and demo MP4 were preserved.
 
-The current OCR-upgrade branch also has a new locally verified portable
-archive. It was built from clean commit
-`fcae32edc193ff6574bf99362da0e2368d5ef464`, is 1,159,061,897 bytes, and has
-SHA-256
+The OCR upgrade merged into `main` through PR #2 at
+`c6303f6843de9af1c7c97fde1ef6ff43e01de553`. The current portable archive is
+published under `v1.1.0-ocr-upgrade`. Its tag targets clean package-build
+commit `fcae32edc193ff6574bf99362da0e2368d5ef464`; the archive is
+1,159,061,897 bytes and has SHA-256
 `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
 Fresh CPU setup and real CPU/GPU image, rotated-image, two-page PDF, custom
 Thai, adaptive, schema, visualization, fallback, archive-integrity, privacy,
-and loopback GUI checks pass. It is not silently substituted for the
-historical published Release.
+and loopback GUI checks pass. GitHub reports the same archive size and digest;
+the historical `v1.0.0-build-week` Release remains available.
 
 ## Current model and runtime
 

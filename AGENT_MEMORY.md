@@ -45,6 +45,15 @@
   source commit above; its remote asset digest matches the local archive.
   Devpost submission `1102544` is `Submitted` with the public 2:54 video and
   `/feedback` Session ID `019f7669-11fd-7923-ad68-ea1a09bd7d74`.
+- On 2026-07-29, PR #2 merged `feat/domain-adapted-ocr` into `main` at
+  `c6303f6843de9af1c7c97fde1ef6ff43e01de553`. GitHub Release
+  `v1.1.0-ocr-upgrade` targets exact package-build commit
+  `fcae32edc193ff6574bf99362da0e2368d5ef464` and publishes the
+  1,159,061,897-byte `OCR_Model.zip` with SHA-256
+  `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
+  The remote asset size and digest match the verified local archive, and the
+  published sidecar content matches the local sidecar. The historical
+  `v1.0.0-build-week` Release remains available.
 - The workspace is a public Git repository with an existing GitHub remote.
   Recheck live visibility and staged privacy before every push.
 
@@ -354,3 +363,9 @@
   acceptance-control defect; registry construction and runtime selection now
   refuse the rejected custom general recognizer before path/hash loading using
   hash-bound acceptance evidence and focused regression tests.
+- 2026-07-29 - Created and reviewed PR #2, refreshed the complete verifier to
+  81/81 passing checks, merged the OCR upgrade into `main`, and published
+  `v1.1.0-ocr-upgrade` from the exact verified package-build commit. GitHub
+  reports the expected archive size and SHA-256, the published sidecar matches
+  the local sidecar, and the historical `v1.0.0-build-week` Release remains
+  intact.
