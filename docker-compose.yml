@@ -16,8 +16,10 @@ services:
       OCR_MODEL_LAYOUT_CHECKPOINT: /workspace/assets/checkpoints/layoutxlm_multitask/final
       OCR_MODEL_ASSET_ROOT: /workspace/assets
       OCR_MODEL_OUTPUT_ROOT: /workspace/outputs
+      OCR_MODEL_PRIVATE_OUTPUT_ROOT: /workspace/outputs/private
       OCR_MODEL_DEVICE: cpu
       OCR_MODEL_HOST: 0.0.0.0
+      OCR_MODEL_CONTAINER_ONLY: "1"
       OCR_MODEL_PORT: "7860"
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"

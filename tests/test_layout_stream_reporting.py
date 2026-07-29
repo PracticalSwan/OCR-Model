@@ -5,7 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from scripts.compile_layout_stream_trials import summarize_stream_manifest
+from scripts.compile_layout_stream_trials import (
+    resolve_layout_checkpoint,
+    summarize_stream_manifest,
+)
 
 
 def _write_manifest(path: Path, rows: list[dict[str, str]]) -> None:
@@ -119,3 +122,13 @@ def test_stream_trial_refuses_ocr_variants_outside_train_and_dev_select(
             device="cpu",
             duration_seconds=0.0,
         )
+
+
+def test_layout_stream_checkpoint_default_comes_from_config(tmp_path: Path) -> None:
+    configured = tmp_path / "configured-checkpoint"
+    cfg = {
+        "paths": {"project_root": str(tmp_path)},
+        "layout_model": {"inference_checkpoint": str(configured)},
+    }
+
+    assert resolve_layout_checkpoint(cfg, None) == configured.resolve()

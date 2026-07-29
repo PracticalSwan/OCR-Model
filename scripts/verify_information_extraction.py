@@ -22,6 +22,7 @@ from src.information_extraction.schema import (  # noqa: E402
 )
 from src.ocr.environment import storage_gate  # noqa: E402
 from src.ocr.model_registry import ModelRegistry, REQUIRED_MODEL_NAMES  # noqa: E402
+from src.release_provenance import git_worktree_provenance  # noqa: E402
 from src.rotation_common import atomic_write_json, read_csv_rows, sha256_file  # noqa: E402
 
 
@@ -152,7 +153,21 @@ def main() -> int:
             "artifact-backed record for every mandated verification surface."
         ),
     )
+    parser.add_argument(
+        "--portable-package",
+        default="D:/OCR_Model",
+        help=(
+            "independently designated installed portable package whose "
+            "BUILD_INFO.json anchors complete-mode release provenance"
+        ),
+    )
+    parser.add_argument(
+        "--portable-release-tag",
+        default="v1.1.0-ocr-upgrade",
+        help="independently designated Git tag for the current portable generation",
+    )
     args = parser.parse_args()
+    source_provenance = git_worktree_provenance(PROJECT_ROOT)
     config_path = Path(args.config).resolve()
     cfg = cfgmod.load_config(config_path)
     checks: list[dict[str, Any]] = []
@@ -564,10 +579,29 @@ def main() -> int:
             },
         )
         execution_path = Path(args.execution_evidence).resolve()
+        portable_report_path = (
+            upgrade_root / "portable_verification.json"
+        )
+        portable_provenance, portable_provenance_errors = (
+            _expected_portable_provenance(
+                portable_report_path,
+                package_directory=Path(
+                    args.portable_package
+                ).expanduser().resolve(),
+                expected_source_commit=_git_commit_for_ref(
+                    args.portable_release_tag
+                ),
+            )
+        )
         execution_checks, execution_errors = _load_execution_evidence(
             execution_path,
             required_names=FINAL_EXECUTION_CHECKS,
+            expected_portable_provenance=portable_provenance,
         )
+        execution_errors = [
+            *portable_provenance_errors,
+            *execution_errors,
+        ]
         checks.extend(execution_checks)
         check(
             "final_execution_evidence_complete",
@@ -587,7 +621,16 @@ def main() -> int:
         "status": "passed" if not failed else "failed",
         "generated_at_utc": verification_timestamp,
         "command": verification_command,
-        "source_commit": _git_commit(),
+        "source_commit": source_provenance["source_commit"],
+        "source_tree_dirty_at_start": source_provenance[
+            "source_tree_dirty"
+        ],
+        "source_tree_sha256_at_start": source_provenance[
+            "source_tree_sha256"
+        ],
+        "source_candidate_file_count_at_start": source_provenance[
+            "source_candidate_file_count"
+        ],
         "complete_mode": args.complete,
         "checks_passed": len(checks) - len(failed),
         "checks_total": len(checks),
@@ -691,6 +734,7 @@ def _load_execution_evidence(
     path: Path,
     *,
     required_names: tuple[str, ...] = FINAL_EXECUTION_CHECKS,
+    expected_portable_provenance: dict[str, Any] | None = None,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Validate the final command ledger and normalize it for verification."""
     try:
@@ -705,6 +749,11 @@ def _load_execution_evidence(
     normalized: list[dict[str, Any]] = []
     seen: set[str] = set()
     required = set(required_names)
+    portable_ledger_generation = (
+        payload.get("portable_generation")
+        if isinstance(payload, dict)
+        else None
+    )
     for index, raw in enumerate(raw_checks):
         if not isinstance(raw, dict):
             errors.append(f"row_{index}:not_an_object")
@@ -748,6 +797,113 @@ def _load_execution_evidence(
             for key, value in hashes.items()
         ):
             row_errors.append("empty_relevant_hash")
+        if evidence_path is not None and evidence_path.is_file():
+            expected_evidence_hash = str(
+                hashes.get("evidence_sha256", "")
+            ).strip()
+            if not expected_evidence_hash:
+                row_errors.append("missing_evidence_sha256")
+            elif expected_evidence_hash != sha256_file(evidence_path):
+                row_errors.append("evidence_sha256_mismatch")
+            if evidence_path.suffix.casefold() == ".json":
+                evidence_payload = _json(evidence_path)
+                if evidence_payload is not None:
+                    evidence_source_commit = str(
+                        evidence_payload.get("source_commit", "")
+                    ).strip()
+                    ledger_source_commit = str(
+                        hashes.get("source_commit", "")
+                    ).strip()
+                    if (
+                        evidence_source_commit
+                        and evidence_source_commit != ledger_source_commit
+                    ):
+                        row_errors.append("evidence_source_commit_mismatch")
+                    if evidence_path.name == "portable_verification.json":
+                        evidence_generation = {
+                            "source_commit": evidence_payload.get(
+                                "source_commit"
+                            ),
+                            "source_tree_sha256": evidence_payload.get(
+                                "source_tree_sha256"
+                            ),
+                            "source_candidate_file_count": evidence_payload.get(
+                                "source_candidate_file_count"
+                            ),
+                            "source_tree_dirty_at_build": evidence_payload.get(
+                                "source_tree_dirty_at_build"
+                            ),
+                        }
+                        for field in (
+                            "source_commit",
+                            "source_tree_sha256",
+                            "source_candidate_file_count",
+                        ):
+                            if not str(evidence_payload.get(field, "")).strip():
+                                row_errors.append(
+                                    f"portable_evidence_missing_{field}"
+                                )
+                            if not str(hashes.get(field, "")).strip():
+                                row_errors.append(
+                                    f"ledger_missing_{field}"
+                                )
+                            elif str(hashes.get(field)) != str(
+                                evidence_generation.get(field)
+                            ):
+                                row_errors.append(
+                                    f"portable_{field}_mismatch"
+                                )
+                        if evidence_generation[
+                            "source_tree_dirty_at_build"
+                        ] is not False:
+                            row_errors.append(
+                                "portable_source_tree_not_clean"
+                            )
+                        if str(
+                            hashes.get(
+                                "source_tree_dirty_at_build",
+                                "",
+                            )
+                        ).casefold() != "false":
+                            row_errors.append(
+                                "ledger_source_tree_not_clean"
+                            )
+                        if not isinstance(
+                            expected_portable_provenance,
+                            dict,
+                        ):
+                            row_errors.append(
+                                "missing_expected_portable_provenance"
+                            )
+                        else:
+                            for field, expected_value in (
+                                expected_portable_provenance.items()
+                            ):
+                                if str(
+                                    evidence_generation.get(field)
+                                ) != str(expected_value):
+                                    row_errors.append(
+                                        f"portable_expected_{field}_mismatch"
+                                    )
+                                if str(hashes.get(field)) != str(
+                                    expected_value
+                                ):
+                                    row_errors.append(
+                                        f"ledger_expected_{field}_mismatch"
+                                    )
+                                if (
+                                    not isinstance(
+                                        portable_ledger_generation,
+                                        dict,
+                                    )
+                                    or str(
+                                        portable_ledger_generation.get(field)
+                                    )
+                                    != str(expected_value)
+                                ):
+                                    row_errors.append(
+                                        f"ledger_generation_{field}_mismatch"
+                                    )
         if row_errors:
             errors.append(f"row_{index}:{name}:" + ",".join(row_errors))
         normalized.append(
@@ -774,6 +930,69 @@ def _load_execution_evidence(
     return normalized, errors
 
 
+def _expected_portable_provenance(
+    report_path: Path,
+    *,
+    package_directory: Path,
+    expected_source_commit: str,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    report = _json(report_path)
+    if report is None:
+        return None, ["portable_verification_report_missing"]
+    package = report.get("package")
+    if not isinstance(package, dict):
+        return None, ["portable_verification_package_missing"]
+    directory_value = str(package.get("directory", "")).strip()
+    if not directory_value:
+        return None, ["portable_verification_directory_missing"]
+    report_directory = Path(directory_value).expanduser().resolve()
+    designated_directory = package_directory.expanduser().resolve()
+    if report_directory != designated_directory:
+        return None, ["portable_verification_directory_not_designated"]
+    build_info = _json(designated_directory / "BUILD_INFO.json")
+    if build_info is None:
+        return None, ["portable_build_info_missing"]
+    if build_info.get("source_commit") != expected_source_commit:
+        return None, ["portable_build_source_commit_not_release_tag"]
+    expected = {
+        "source_commit": build_info.get("source_commit"),
+        "source_tree_sha256": build_info.get("source_tree_sha256"),
+        "source_candidate_file_count": build_info.get(
+            "source_candidate_file_count"
+        ),
+        "source_tree_dirty_at_build": build_info.get(
+            "source_tree_dirty_at_build"
+        ),
+    }
+    errors = []
+    for field, value in expected.items():
+        if field == "source_tree_dirty_at_build":
+            if value is not False:
+                errors.append("portable_build_source_tree_not_clean")
+        elif value in (None, ""):
+            errors.append(f"portable_build_info_missing_{field}")
+        if str(report.get(field)) != str(value):
+            errors.append(f"portable_report_build_info_{field}_mismatch")
+    return (expected if not errors else None), errors
+
+
+def _git_commit_for_ref(ref: str) -> str:
+    completed = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{ref}^{{commit}}"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"could not resolve portable release tag {ref!r}: "
+            f"{completed.stderr.strip()}"
+        )
+    return completed.stdout.strip()
+
+
 def _valid_locked_test_run(
     report: dict[str, Any] | None,
     root: Path,
@@ -797,14 +1016,6 @@ def _valid_locked_test_run(
         ):
             return False
     return int(report.get("private_row_count", -1)) == 0
-
-
-def _git_commit() -> str:
-    return subprocess.check_output(
-        ["git", "rev-parse", "HEAD"],
-        cwd=PROJECT_ROOT,
-        text=True,
-    ).strip()
 
 
 def _json(path: Path) -> dict[str, Any] | None:

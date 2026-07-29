@@ -123,7 +123,7 @@ def make_rotation_config(root: Path) -> dict[str, Any]:
         "runtime": {
             "random_seed": 42,
             "workers": 1,
-            "minimum_free_space_gb": 0,
+            "rotation_minimum_free_space_gib": 0,
             "maximum_disk_usage_fraction": 1.0,
             "disk_estimate_safety_multiplier": 1.0,
         },

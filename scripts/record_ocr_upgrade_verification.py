@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,7 +13,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.verify_information_extraction import FINAL_EXECUTION_CHECKS  # noqa: E402
+from src.release_provenance import git_worktree_provenance  # noqa: E402
 from src.rotation_common import atomic_write_json, sha256_file  # noqa: E402
+
+RESERVED_HASH_KEYS = {
+    "evidence_sha256",
+    "source_candidate_file_count",
+    "source_commit",
+    "source_missing_candidate_paths",
+    "source_tree_dirty_at_build",
+    "source_tree_dirty_at_record_start",
+    "source_tree_sha256",
+}
 
 
 def main() -> int:
@@ -60,21 +70,51 @@ def main() -> int:
     if not isinstance(detail, dict):
         parser.error("--detail-json must decode to an object")
 
+    provenance = git_worktree_provenance(PROJECT_ROOT)
     hashes = {
-        "source_commit": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"],
-            cwd=PROJECT_ROOT,
-            text=True,
-        ).strip(),
+        "source_commit": provenance["source_commit"],
+        "source_tree_sha256": provenance["source_tree_sha256"],
+        "source_tree_dirty_at_record_start": str(
+            provenance["source_tree_dirty"]
+        ).lower(),
     }
     if evidence_path.is_file():
         hashes["evidence_sha256"] = sha256_file(evidence_path)
-    for value in args.hash:
-        key, separator, raw = value.partition("=")
-        key = key.strip()
-        raw = raw.strip()
-        if not separator or not key or not raw:
-            parser.error("--hash values must use nonempty NAME=VALUE")
+    portable_generation = None
+    if evidence_path.name == "portable_verification.json":
+        evidence_payload = json.loads(evidence_path.read_text(encoding="utf-8"))
+        portable_generation = {
+            "source_commit": evidence_payload.get("source_commit"),
+            "source_tree_sha256": evidence_payload.get(
+                "source_tree_sha256"
+            ),
+            "source_candidate_file_count": evidence_payload.get(
+                "source_candidate_file_count"
+            ),
+            "source_tree_dirty_at_build": evidence_payload.get(
+                "source_tree_dirty_at_build"
+            ),
+        }
+        if (
+            any(
+                value in (None, "")
+                for key, value in portable_generation.items()
+                if key != "source_tree_dirty_at_build"
+            )
+            or portable_generation["source_tree_dirty_at_build"] is not False
+        ):
+            raise ValueError(
+                "portable verification lacks clean generation provenance"
+            )
+        hashes.update(portable_generation)
+    try:
+        additional_hashes = _parse_additional_hashes(
+            args.hash,
+            reserved_keys=set(hashes) | RESERVED_HASH_KEYS,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
+    for key, raw in additional_hashes.items():
         hashes[key] = raw
 
     payload = _load_ledger(ledger_path)
@@ -99,9 +139,21 @@ def main() -> int:
         {
             "schema_version": "1.0",
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "source_commit_at_write_start": provenance["source_commit"],
+            "source_tree_dirty_at_write_start": provenance[
+                "source_tree_dirty"
+            ],
+            "source_tree_sha256_at_write_start": provenance[
+                "source_tree_sha256"
+            ],
+            "source_candidate_file_count_at_write_start": provenance[
+                "source_candidate_file_count"
+            ],
             "checks": records,
         }
     )
+    if portable_generation is not None:
+        payload["portable_generation"] = portable_generation
     atomic_write_json(ledger_path, payload)
     print(
         json.dumps(
@@ -115,6 +167,28 @@ def main() -> int:
         )
     )
     return 0
+
+
+def _parse_additional_hashes(
+    values: list[str],
+    *,
+    reserved_keys: set[str],
+) -> dict[str, str]:
+    parsed: dict[str, str] = {}
+    for value in values:
+        key, separator, raw = value.partition("=")
+        key = key.strip()
+        raw = raw.strip()
+        if not separator or not key or not raw:
+            raise ValueError("--hash values must use nonempty NAME=VALUE")
+        if key in reserved_keys:
+            raise ValueError(
+                f"--hash cannot override recorder-controlled key: {key}"
+            )
+        if key in parsed:
+            raise ValueError(f"--hash key was provided more than once: {key}")
+        parsed[key] = raw
+    return parsed
 
 
 def _load_ledger(path: Path) -> dict[str, Any]:

@@ -166,6 +166,7 @@
     },
     "canonicalFields": {
       "type": "object",
+      "description": "The 27 supported output fields populated from learned canonical evidence, validated rules, or their hybrid. The configured learned model directly supervises a 14-field subset.",
       "additionalProperties": false,
       "required": [
         "organization_name", "vendor_name", "customer_name", "person_name",

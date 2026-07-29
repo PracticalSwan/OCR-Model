@@ -8,7 +8,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -57,6 +57,24 @@ def _command_record(
     ]
 
 
+def _resolve_checkpoint(
+    cfg: Mapping[str, Any],
+    override: str | Path | None,
+) -> Path:
+    if override is not None:
+        return Path(override).expanduser().resolve()
+    configured = cfg.get("layout_model", {}).get("inference_checkpoint")
+    if not configured:
+        raise ValueError(
+            "layout_model.inference_checkpoint must be configured when "
+            "--model-checkpoint is omitted"
+        )
+    checkpoint = Path(str(configured)).expanduser()
+    if not checkpoint.is_absolute():
+        checkpoint = cfgmod.project_root(cfg) / checkpoint
+    return checkpoint.resolve()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=str(PROJECT_ROOT / "config.yaml"))
@@ -89,11 +107,10 @@ def main() -> int:
     output_root.mkdir(parents=True, exist_ok=True)
     fixtures = _write_fixtures(fixture_root)
 
-    checkpoint = (
-        Path(args.model_checkpoint).resolve()
-        if args.model_checkpoint
-        else (cfgmod.resolve_path(cfg, "ie_checkpoints") / "layoutxlm_multitask" / "final").resolve()
-    )
+    try:
+        checkpoint = _resolve_checkpoint(cfg, args.model_checkpoint)
+    except ValueError as exc:
+        parser.error(str(exc))
     pipeline = DocumentPipeline.from_config(
         cfg,
         device=args.device,

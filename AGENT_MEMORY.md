@@ -46,13 +46,13 @@
   Devpost submission `1102544` is `Submitted` with the public 2:54 video and
   `/feedback` Session ID `019f7669-11fd-7923-ad68-ea1a09bd7d74`.
 - On 2026-07-29, PR #2 merged `feat/domain-adapted-ocr` into `main` at
-  `c6303f6843de9af1c7c97fde1ef6ff43e01de553`. GitHub Release
-  `v1.1.0-ocr-upgrade` targets exact package-build commit
-  `fcae32edc193ff6574bf99362da0e2368d5ef464` and publishes the
-  1,159,061,897-byte `OCR_Model.zip` with SHA-256
-  `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
-  The remote asset size and digest match the verified local archive, and the
-  published sidecar content matches the local sidecar. The historical
+  `c6303f6843de9af1c7c97fde1ef6ff43e01de553`. The initial
+  `v1.1.0-ocr-upgrade` asset targeted
+  `fcae32edc193ff6574bf99362da0e2368d5ef464`; its size and digest remain
+  historical evidence in the release notes. For the July 30 in-place
+  correction, use the live Release asset and sidecar, and require agreement
+  with the tag, `BUILD_INFO.json`, exact source candidate-tree hash, and
+  generation-specific portable verification. The historical
   `v1.0.0-build-week` Release remains available.
 - The workspace is a public Git repository with an existing GitHub remote.
   Recheck live visibility and staged privacy before every push.
@@ -99,10 +99,14 @@
 - Each of the four zones contains exactly 2,083 rotations.
 - Public sources remain read-only references. Private PDFs render at 200 DPI
   to anonymous page IDs in ignored processed storage.
-- Rotation verification: 20/20 checks pass, including raw integrity, page and
-  rotation PNG provenance, manifest
-  consistency, boundary coverage, split isolation, private-name scan, and no
-  generated files under raw.
+- The frozen July 28 rotation verification passed 20/20 checks, including raw
+  integrity, page and rotation PNG provenance, manifest consistency, boundary
+  coverage, split isolation, private-name scan, and no generated files under
+  raw. A July 30 rerun is 18/20 because prior verified cleanup removed 203
+  derived private page renders, leaving 812 retained private rotations without
+  their re-hashable source render. All 8,332 rotation files and the 7,520
+  public rows remain present; do not regenerate private derived material only
+  to refresh historical evidence.
 
 ## Verified feature and model facts
 
@@ -343,7 +347,8 @@
 - 2026-07-28 - Completed the public-only domain-adapted OCR training and
   selection lifecycle. The selected global OCR profile remains original; a
   synthetic-only custom Thai model is available to explicit custom/adaptive
-  profiles. Fresh LayoutXLM checkpoint
+  OCR experiments, which require generic-layout fallback because the shipped
+  calibration is original-stack-bound. Fresh LayoutXLM checkpoint
   `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`
   and calibration
   `81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`
@@ -369,3 +374,13 @@
   reports the expected archive size and SHA-256, the published sidecar matches
   the local sidecar, and the historical `v1.0.0-build-week` Release remains
   intact.
+- 2026-07-30 - Corrected the release boundary without changing the version:
+  calibrated layout inference validates its OCR-stack binding and fails closed
+  on required worker errors; generic/rule fallback is explicit; portable
+  private-document mode uses opaque IDs and redacted/no-archive output; the
+  14 learned fields and 27 schema-supported fields are distinguished; and the
+  release builder uses isolated D: staging, exact clean candidate-tree
+  provenance, a completed-payload privacy scan, and ZIP-integrity validation.
+  The live `v1.1.0-ocr-upgrade` asset and sidecar will supersede the initial
+  July 29 package identity only after the pending in-place replacement and
+  live generation verification complete.

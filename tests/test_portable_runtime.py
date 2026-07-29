@@ -9,7 +9,8 @@ import pytest
 import yaml
 
 from src.ocr.model_registry import REQUIRED_MODEL_NAMES, ModelRegistry
-from src.portable.api import build_command
+from src.portable.api import build_command, run_extraction
+from src.portable import cli as portable_cli
 from src.portable.results import field_rows
 from src.portable.review import (
     ReviewPayloadError,
@@ -95,6 +96,9 @@ def test_runtime_settings_resolve_relative_bundle_and_ignore_stale_local_paths(
     assert settings.ocr_python == (
         tmp_path / ".runtime/ocr/Scripts/python.exe"
     ).resolve()
+    assert settings.private_output_root == (
+        tmp_path / "outputs" / "private"
+    ).resolve()
     assert settings.device == "cpu"
     assert settings.environment()["OCR_MODEL_HOME"] == str(tmp_path.resolve())
     assert "OPENAI_API_KEY" not in {
@@ -131,6 +135,113 @@ def test_build_command_uses_existing_worker_and_no_openai_argument(tmp_path: Pat
     assert "--save-visualization" in command
     assert "api" not in joined.casefold()
     assert "key" not in joined.casefold()
+
+
+def test_private_command_is_opaque_and_disables_all_visualization(tmp_path: Path) -> None:
+    _write_portable_config(tmp_path)
+    _touch_runtime(tmp_path)
+    settings = RuntimeSettings.load(tmp_path)
+    source = tmp_path / "Sensitive Private Invoice.pdf"
+    source.write_bytes(b"pdf")
+
+    command = build_command(
+        settings,
+        source,
+        tmp_path / "outputs" / "source-stem",
+        save_visualization=True,
+        private_document=True,
+    )
+
+    assert "--private-output" in command
+    assert "--disable-kmeans-display" in command
+    assert "--save-visualization" not in command
+
+
+@pytest.mark.parametrize(
+    ("argument", "value"),
+    [
+        ("--ocr-profile", "custom"),
+        ("--ocr-profile", "adaptive"),
+        ("--detector-model", "custom"),
+        ("--general-recognizer", "custom"),
+        ("--thai-recognizer", "custom"),
+    ],
+)
+def test_portable_cli_rejects_uncalibrated_profile_choices(
+    argument: str,
+    value: str,
+) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        portable_cli.main(["sample.png", argument, value])
+
+    assert exc_info.value.code == 2
+
+
+def test_private_run_uses_opaque_destination_and_redacts_worker_artifacts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_portable_config(tmp_path)
+    _touch_runtime(tmp_path)
+    settings = RuntimeSettings.load(tmp_path)
+    source = tmp_path / "Sensitive Private Invoice.pdf"
+    source.write_bytes(b"pdf")
+
+    payload = {
+        "document_id": source.stem,
+        "fields": {},
+        "pages": [],
+        "processing": {"private_output": True},
+    }
+
+    class FakeProcess:
+        stdout = iter(
+            [
+                f"input={source} output={settings.private_output_root / 'run_secret'}\n",
+            ]
+        )
+
+        def wait(self):
+            return 0
+
+    def fake_popen(command, **_kwargs):
+        assert str(source) not in command
+        staged_source = Path(command[command.index("--input") + 1])
+        assert staged_source.name == "document.pdf"
+        assert staged_source.is_file()
+        destination = Path(command[command.index("--output") + 1])
+        destination.mkdir(parents=True, exist_ok=True)
+        (destination / "document_result.json").write_text(
+            json.dumps(payload), encoding="utf-8"
+        )
+        log_root = destination / "logs"
+        log_root.mkdir()
+        (log_root / "inference.log").write_text(
+            f"{source} {settings.private_output_root}\n", encoding="utf-8"
+        )
+        return FakeProcess()
+
+    monkeypatch.setattr("src.portable.api.subprocess.Popen", fake_popen)
+    run = run_extraction(
+        source,
+        settings=settings,
+        output_dir=tmp_path / "public" / source.stem,
+        private_document=True,
+    )
+
+    assert run.output_dir.parent == settings.private_output_root.resolve()
+    assert run.output_dir.name.startswith("run_")
+    assert source.stem not in run.output_dir.name
+    assert str(source) not in " ".join(run.command)
+    assert source.name not in json.dumps(run.payload)
+    assert source.stem not in json.dumps(run.payload)
+    assert not (run.output_dir / ".private_input").exists()
+    persisted = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in run.output_dir.rglob("*")
+        if path.is_file()
+    )
+    assert str(source) not in persisted
+    assert str(settings.private_output_root) not in persisted
 
 
 def test_registry_resolves_portable_model_paths_relative_to_manifest(

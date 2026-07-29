@@ -47,9 +47,9 @@ def main() -> int:
     )
     parser.add_argument(
         "--checkpoint",
-        default=(
-            "D:/CSX4201/vision-info-extraction-assets/checkpoints/"
-            "layoutxlm_multitask/final"
+        help=(
+            "layout checkpoint override; defaults to "
+            "layout_model.inference_checkpoint from --config"
         ),
     )
     parser.add_argument("--device", default="gpu:0")
@@ -69,7 +69,10 @@ def main() -> int:
         parser.error("--selected-profile must match a supplied trial label")
 
     cfg = cfgmod.load_config(args.config)
-    checkpoint = Path(args.checkpoint).resolve()
+    try:
+        checkpoint = resolve_layout_checkpoint(cfg, args.checkpoint)
+    except ValueError as exc:
+        parser.error(str(exc))
     checkpoint_model = checkpoint / "model.safetensors"
     if not checkpoint_model.is_file():
         raise SystemExit(f"checkpoint model is missing: {checkpoint_model}")
@@ -112,6 +115,24 @@ def main() -> int:
         )
     )
     return 0
+
+
+def resolve_layout_checkpoint(
+    cfg: Mapping[str, Any],
+    override: str | Path | None,
+) -> Path:
+    if override is not None:
+        return Path(override).expanduser().resolve()
+    configured = cfg.get("layout_model", {}).get("inference_checkpoint")
+    if not configured:
+        raise ValueError(
+            "layout_model.inference_checkpoint must be configured when "
+            "--checkpoint is omitted"
+        )
+    checkpoint = Path(str(configured)).expanduser()
+    if not checkpoint.is_absolute():
+        checkpoint = cfgmod.project_root(cfg) / checkpoint
+    return checkpoint.resolve()
 
 
 def summarize_stream_manifest(

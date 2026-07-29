@@ -67,7 +67,8 @@ def extract_rule_fields(
         website = WEBSITE_RE.search(text)
         if website:
             value = website.group(0).rstrip(".,;)")
-            candidates["website"].append(_evidence(value, value, line, confidence, "rule:website", page_number, "validated"))
+            if "@" not in value:
+                candidates["website"].append(_evidence(value, value, line, confidence, "rule:website", page_number, "validated"))
         phone = PHONE_RE.search(text)
         if phone:
             normalized_phone = re.sub(r"[^+\d]", "", phone.group(0))

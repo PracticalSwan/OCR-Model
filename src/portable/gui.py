@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import math
 import os
 import re
+import shutil
+import uuid
 from pathlib import Path
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from .api import ExtractionError, run_extraction
+from .api import ExtractionError, redact_private_payload, run_extraction
 from .results import (
     create_result_archive,
     field_rows,
@@ -105,6 +108,16 @@ APP_CSS = """
 """
 
 
+def _is_loopback_host(host: str) -> bool:
+    normalized = host.strip().lower().strip("[]")
+    if normalized == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(normalized).is_loopback
+    except ValueError:
+        return False
+
+
 def _normalize_preview_image(image: Image.Image) -> Image.Image:
     image = ImageOps.exif_transpose(image)
     if image.width < 2 or image.height < 2:
@@ -184,20 +197,111 @@ def _preview_document(uploaded: str | None):
     return preview, f"**{source.name}** · Previewing the {preview_kind} locally."
 
 
-def _on_document_change(uploaded: str | None):
-    preview, preview_note = _preview_document(uploaded)
-    if uploaded:
+def _on_document_change(uploaded: str | None, private_document: bool = False):
+    if uploaded and private_document:
+        # Do not open or render private uploads in the browser-facing UI.
+        preview = None
+        preview_note = (
+            "Private preview is disabled. The document filename is hidden."
+        )
+        status = (
+            "Ready to extract the private document. "
+            "Select **Extract document** to run the local model."
+        )
+    else:
+        preview, preview_note = _preview_document(uploaded)
+    if uploaded and not private_document:
         status = (
             f"Ready to extract **{Path(uploaded).name}**. "
             "Select **Extract document** to run the local model."
         )
-    else:
+    elif not uploaded:
         status = "Choose a document, then select **Extract document**."
     return preview, preview_note, status, [], "", None, [], None, ""
 
 
 def _clean_log_line(line: str) -> str:
     return ANSI_ESCAPE_RE.sub("", line)
+
+
+def _prepare_gradio_temp_root(settings: RuntimeSettings) -> Path:
+    root = (
+        settings.home
+        / ".runtime"
+        / "gradio"
+        / f"session_{uuid.uuid4().hex}"
+    ).absolute()
+    root.mkdir(parents=True, exist_ok=False)
+    os.environ["GRADIO_TEMP_DIR"] = str(root)
+    return root
+
+
+def _remove_uploaded_private_cache(
+    uploaded: str | None,
+    gradio_temp_root: Path | None,
+) -> bool:
+    """Remove a private upload only when it is inside this GUI session cache."""
+    if not uploaded or gradio_temp_root is None:
+        return False
+    source = Path(uploaded).absolute()
+    root = Path(gradio_temp_root).absolute()
+    if source == root or root not in source.parents:
+        return False
+    if source.is_symlink() or source.is_file():
+        source.unlink(missing_ok=True)
+    elif source.exists():
+        return False
+    parent = source.parent
+    while parent != root and root in parent.parents:
+        try:
+            parent.rmdir()
+        except OSError:
+            break
+        parent = parent.parent
+    return True
+
+
+def _remove_gradio_temp_root(root: Path, settings: RuntimeSettings) -> None:
+    """Remove only the UUID session root created below this package runtime."""
+    root_absolute = Path(root).absolute()
+    expected_parent = (settings.home / ".runtime" / "gradio").absolute()
+    if (
+        root_absolute.parent != expected_parent
+        or not root_absolute.name.startswith("session_")
+    ):
+        raise RuntimeError("refusing to remove an unexpected Gradio cache path")
+    if root_absolute.exists():
+        shutil.rmtree(root_absolute)
+
+
+def _public_component_cache(
+    settings: RuntimeSettings,
+    gradio_temp_root: Path,
+) -> Path:
+    return (
+        settings.output_root
+        / ".gradio_public_cache"
+        / gradio_temp_root.name
+    ).absolute()
+
+
+def _remove_public_component_cache(
+    root: Path,
+    settings: RuntimeSettings,
+) -> None:
+    root_absolute = Path(root).absolute()
+    expected_parent = (
+        settings.output_root / ".gradio_public_cache"
+    ).absolute()
+    if (
+        root_absolute.parent != expected_parent
+        or not root_absolute.name.startswith("session_")
+    ):
+        raise RuntimeError(
+            "refusing to remove an unexpected public component cache path"
+        )
+    if root_absolute.exists():
+        shutil.rmtree(root_absolute)
 
 
 def _run_gui(
@@ -207,6 +311,8 @@ def _run_gui(
     max_pages: float | None,
     *,
     settings: RuntimeSettings,
+    private_document: bool = False,
+    gradio_temp_root: Path | None = None,
 ):
     if not uploaded:
         raise ValueError("Choose an image or PDF first.")
@@ -217,41 +323,74 @@ def _run_gui(
         del log_tail[:-200]
 
     try:
-        run = run_extraction(
-            uploaded,
-            settings=settings,
-            language=language,
-            device=device,
-            max_pages=int(max_pages) if max_pages else None,
-            on_log=on_log,
-        )
-    except ExtractionError as exc:
-        raise RuntimeError(str(exc)) from exc
-    archive = create_result_archive(run.output_dir)
+        try:
+            run = run_extraction(
+                uploaded,
+                settings=settings,
+                language=language,
+                device=device,
+                max_pages=int(max_pages) if max_pages else None,
+                on_log=on_log,
+                private_document=private_document,
+            )
+        except ExtractionError as exc:
+            raise RuntimeError(str(exc)) from exc
+    finally:
+        if private_document:
+            _remove_uploaded_private_cache(uploaded, gradio_temp_root)
     pages = len(run.payload.get("pages") or [])
-    display_output = (
-        Path(settings.output_root.name or "outputs") / run.output_dir.name
-    ).as_posix()
-    status = (
-        f"### Complete\n"
-        f"Processed **{pages} page{'s' if pages != 1 else ''}** locally. "
-        f"Results are stored locally under `{display_output}`."
-    )
+    if private_document:
+        display_payload = redact_private_payload(
+            run.payload,
+            Path(uploaded).expanduser().resolve(),
+            settings.private_output_root or (settings.output_root / "private"),
+        )
+        archive = None
+        status = (
+            "### Complete\n"
+            f"Processed **{pages} page{'s' if pages != 1 else ''}** locally. "
+            "Private results were stored locally under a protected opaque run ID."
+        )
+        overlays = []
+    else:
+        archive = create_result_archive(run.output_dir)
+        display_output = (
+            Path(settings.output_root.name or "outputs") / run.output_dir.name
+        ).as_posix()
+        status = (
+            f"### Complete\n"
+            f"Processed **{pages} page{'s' if pages != 1 else ''}** locally. "
+            f"Results are stored locally under `{display_output}`."
+        )
+        overlays = visualization_files(run.output_dir)
+        display_payload = run.payload
     return (
         status,
-        field_rows(run.payload),
-        ocr_text(run.payload),
-        run.payload,
-        visualization_files(run.output_dir),
-        str(archive),
+        field_rows(display_payload),
+        ocr_text(display_payload),
+        display_payload,
+        overlays,
+        str(archive) if archive is not None else None,
         "\n".join(log_tail),
     )
 
 
-def build_app(settings: RuntimeSettings | None = None):
-    import gradio as gr
-
+def build_app(
+    settings: RuntimeSettings | None = None,
+    *,
+    gradio_temp_root: Path | None = None,
+):
     runtime = settings or RuntimeSettings.load()
+    if gradio_temp_root is None:
+        gradio_temp_root = _prepare_gradio_temp_root(runtime)
+    else:
+        os.environ["GRADIO_TEMP_DIR"] = str(gradio_temp_root)
+    import gradio as gr
+    public_component_cache = _public_component_cache(
+        runtime,
+        gradio_temp_root,
+    )
+
     with gr.Blocks(
         title="OCR Model — Local Document Extraction",
         analytics_enabled=False,
@@ -289,6 +428,7 @@ def build_app(settings: RuntimeSettings | None = None):
                     placeholder="Upload an image or PDF to preview it here.",
                     elem_id="document-preview",
                 )
+                preview.GRADIO_CACHE = str(public_component_cache)
                 preview_note = gr.Markdown(
                     "Upload an image or PDF to preview it here.",
                     elem_id="document-preview-note",
@@ -309,6 +449,10 @@ def build_app(settings: RuntimeSettings | None = None):
                     minimum=0,
                     precision=0,
                     label="Maximum PDF pages (0 = all)",
+                )
+                private_document = gr.Checkbox(
+                    label="Private document (hide filename and output paths)",
+                    value=True,
                 )
                 run_button = gr.Button("Extract document", variant="primary")
         status = gr.Markdown("Choose a document, then select **Extract document**.")
@@ -339,6 +483,7 @@ def build_app(settings: RuntimeSettings | None = None):
                     object_fit="contain",
                     height=600,
                 )
+                gallery.GRADIO_CACHE = str(public_component_cache)
             with gr.Tab("Run log"):
                 log = gr.Textbox(
                     label="Run log",
@@ -353,24 +498,50 @@ def build_app(settings: RuntimeSettings | None = None):
             interactive=False,
             height=90,
         )
+        archive.GRADIO_CACHE = str(public_component_cache)
 
         def run_handler(
             uploaded_value: str | None,
             language_value: str,
             device_value: str,
             max_pages_value: float | None,
+            private_document_value: bool,
         ):
-            return _run_gui(
+            result = _run_gui(
                 uploaded_value,
                 language_value,
                 device_value,
                 max_pages_value,
                 settings=runtime,
+                private_document=bool(private_document_value),
+                gradio_temp_root=gradio_temp_root,
+            )
+            return (
+                *result,
+                None if private_document_value else uploaded_value,
             )
 
         uploaded.change(
             _on_document_change,
-            inputs=uploaded,
+            inputs=[uploaded, private_document],
+            outputs=[
+                preview,
+                preview_note,
+                status,
+                fields,
+                text,
+                result_json,
+                gallery,
+                archive,
+                log,
+            ],
+            show_progress="hidden",
+            queue=False,
+            trigger_mode="always_last",
+        )
+        private_document.change(
+            _on_document_change,
+            inputs=[uploaded, private_document],
             outputs=[
                 preview,
                 preview_note,
@@ -388,8 +559,17 @@ def build_app(settings: RuntimeSettings | None = None):
         )
         run_button.click(
             run_handler,
-            inputs=[uploaded, language, device, max_pages],
-            outputs=[status, fields, text, result_json, gallery, archive, log],
+            inputs=[uploaded, language, device, max_pages, private_document],
+            outputs=[
+                status,
+                fields,
+                text,
+                result_json,
+                gallery,
+                archive,
+                log,
+                uploaded,
+            ],
             show_progress="minimal",
             concurrency_limit=1,
             trigger_mode="once",
@@ -411,8 +591,21 @@ def main(argv: list[str] | None = None) -> int:
         default=int(os.environ.get("OCR_MODEL_PORT", "7860")),
     )
     args = parser.parse_args(argv)
+    container_only = os.environ.get(
+        "OCR_MODEL_CONTAINER_ONLY", ""
+    ).strip().casefold() in {"1", "true", "yes", "on"}
+    if not _is_loopback_host(args.host) and not container_only:
+        parser.error(
+            "non-loopback GUI hosts require OCR_MODEL_CONTAINER_ONLY=1 "
+            "when the app is running inside its container"
+        )
     settings = RuntimeSettings.load()
     settings.output_root.mkdir(parents=True, exist_ok=True)
+    gradio_temp_root = _prepare_gradio_temp_root(settings)
+    public_component_cache = _public_component_cache(
+        settings,
+        gradio_temp_root,
+    )
     blocked = [
         str(path)
         for path in (
@@ -421,17 +614,35 @@ def main(argv: list[str] | None = None) -> int:
         )
         if path.exists()
     ]
-    build_app(settings).launch(
-        server_name=args.host,
-        server_port=args.port,
-        share=False,
-        inbrowser=args.host in {"127.0.0.1", "localhost"},
-        allowed_paths=[str(settings.output_root)],
-        blocked_paths=blocked,
-        show_error=True,
-        footer_links=["gradio", "settings"],
-        mcp_server=False,
-        max_file_size="100mb",
-        css=APP_CSS,
+    # Keep the configured private root blocked even before the first private
+    # run creates it; public output access remains explicitly allowed above.
+    blocked.append(
+        str(settings.private_output_root or (settings.output_root / "private"))
     )
+    blocked.append(str(gradio_temp_root))
+    try:
+        build_app(
+            settings,
+            gradio_temp_root=gradio_temp_root,
+        ).launch(
+            server_name=args.host,
+            server_port=args.port,
+            share=False,
+            inbrowser=args.host in {"127.0.0.1", "localhost"},
+            allowed_paths=[str(settings.output_root)],
+            blocked_paths=blocked,
+            show_error=True,
+            footer_links=["gradio", "settings"],
+            mcp_server=False,
+            max_file_size="100mb",
+            css=APP_CSS,
+        )
+    finally:
+        try:
+            _remove_gradio_temp_root(gradio_temp_root, settings)
+        finally:
+            _remove_public_component_cache(
+                public_component_cache,
+                settings,
+            )
     return 0

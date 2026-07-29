@@ -5,9 +5,12 @@
 **Merged:** [PR #2](https://github.com/PracticalSwan/csx4201-vision-info-extraction/pull/2)
 into `main` at `c6303f6843de9af1c7c97fde1ef6ff43e01de553` on 2026-07-29
 
-**Release:** [`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade),
-targeting the exact package-build commit
-`fcae32edc193ff6574bf99362da0e2368d5ef464`
+**Release:** [`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
+The July 29 initial asset targeted
+`fcae32edc193ff6574bf99362da0e2368d5ef464`; the live tag, Release asset, and
+sidecar still identify that initial generation while the in-place correction
+is being built and verified. They identify the corrected generation only
+after the fail-closed replacement sequence below completes.
 
 **Evidence window:** 2026-07-24 through 2026-07-28
 
@@ -164,7 +167,9 @@ All eligible comparisons used the same 400 public `DEV_SELECT` pages:
 Configuration E's 0.000588 score gain over A was below the declared material
 gain threshold. Configuration C contained the rejected general recognizer.
 The default is therefore A (`original`). Original, custom, and adaptive
-profiles remain independently invocable.
+OCR experiments remain independently invocable, but only `original` is bound
+to the shipped LayoutXLM calibration. Custom/adaptive runs require explicit
+generic-layout fallback and are not calibrated LayoutXLM extraction.
 
 OCR cache keys now include the selected model identities and hashes,
 preprocessing/configuration hashes, language route, source hash, transform, and
@@ -387,11 +392,18 @@ $output = 'D:\CSX4201\vision-info-extraction-assets\generated\example'
   --model-checkpoint $checkpoint --save-visualization
 & $ocr scripts\extract_document.py --input $input --output "$output-custom" `
   --language auto --device gpu:0 --ocr-profile custom `
-  --model-checkpoint $checkpoint --save-visualization
+  --model-checkpoint $checkpoint --allow-generic-layout-fallback `
+  --save-visualization
 & $ocr scripts\extract_document.py --input $input --output "$output-adaptive" `
   --language auto --device gpu:0 --ocr-profile adaptive `
-  --model-checkpoint $checkpoint --save-visualization
+  --model-checkpoint $checkpoint --allow-generic-layout-fallback `
+  --save-visualization
 ```
+
+The shipped calibration is bound to the original OCR stack. Therefore the
+portable one-command CLI offers only `original`/`auto` calibrated extraction.
+The two commands above are explicit OCR experiments using generic/rule-only
+layout fallback; they must not be reported as calibrated LayoutXLM inference.
 
 ## Independent review closure
 
@@ -404,6 +416,50 @@ and candidate report, requires every acceptance criterion to pass, and filters
 The permitted follow-up caught and closed that early-loading edge with a
 missing rejected-model fixture. Focused regression tests cover both
 registry-construction refusal and runtime refusal/fallback.
+
+## In-place release correction
+
+The July 30 correction retains the `v1.1.0-ocr-upgrade` version and replaces
+its asset in place rather than publishing a patch version. The behavioral
+changes are:
+
+- calibrated layout inference validates the calibration's OCR-stack binding
+  before worker startup and fails closed on a required runtime worker error;
+- generic/rule-only layout fallback requires explicit
+  `--allow-generic-layout-fallback` opt-in and is not labeled calibrated
+  LayoutXLM output;
+- runtime and report compilation resolve the selected checkpoint from
+  `config.yaml` rather than probing a legacy `final` sibling;
+- portable CLI/GUI private-document mode uses opaque private-root run IDs,
+  defaults on in the GUI, disables preview, uses and removes an opaque
+  short-lived worker input, removes the private session upload cache, redacts
+  source filenames/paths, and disables visualizations and downloadable
+  archives;
+- the learned 14-field canonical-evidence scope is distinguished from the
+  27-field schema output contract;
+- the rotation-stage 10 GiB reserve is named separately from the 15 GiB
+  OCR/model/setup reserve; and
+- release construction uses a clean Git candidate-tree hash, isolated D:
+  staging with a builder-owned deletion sentinel, no-follow verified copies,
+  sample-evidence binding, an all-file completed-payload privacy scan, a full
+  payload manifest, and ZIP-integrity validation.
+
+The external model-registry build stdout evidence was normalized from UTF-16LE
+with BOM to UTF-8 without BOM; its JSON content remains parse-valid. Three
+byte-identical final-model manifest aliases are retained deliberately for
+historical command/provenance compatibility. Report authority and supersession
+rules are documented in [`../reports/README.md`](../reports/README.md).
+
+Because the owner requires the same release version and stable asset names,
+the replacement is fail-closed rather than atomic. Generation-stamped
+temporary ZIP and sidecar assets are uploaded and independently verified
+first. The tag/release target is then verified, the stable ZIP is replaced and
+freshly re-hashed, and the stable sidecar is replaced last as the generation
+commit marker. Any ZIP/sidecar disagreement is a failed or in-progress
+publication and must be retried, never accepted. Old local assets remain
+available for rollback until the stable ZIP, sidecar, tag, `BUILD_INFO.json`,
+payload manifest, and live API digest all agree; temporary assets are removed
+only after that verification.
 
 ## Remaining limitations
 
@@ -427,7 +483,7 @@ registry-construction refusal and runtime refusal/fallback.
 
 ## Portable release package
 
-The clean package was built from commit
+The initial July 29 clean package was built from commit
 `fcae32edc193ff6574bf99362da0e2368d5ef464`:
 
 ```text
@@ -444,9 +500,14 @@ nonempty, schema-valid, and had one visualization per page. An additional GPU
 run had stable semantic parity with CPU, custom English correctly fell back to
 the selected original general recognizer, and the loopback GUI returned HTTP
 200. The clean archive excludes `.runtime`, `runtime.local.json`, and outputs.
-The archive and matching sidecar are published under
+Those historical custom/adaptive probes established OCR routing and
+schema-valid degraded output; they did not prove calibrated LayoutXLM
+inference. The corrected portable CLI therefore narrows calibrated choices to
+original/auto.
+That archive and matching sidecar were published under
 [`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade);
-GitHub reports the expected archive size and SHA-256. The historical public
+the live Release asset and sidecar supersede this historical package identity
+after an in-place replacement. The historical public
 [`v1.0.0-build-week`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
 Release remains available.
 
@@ -456,4 +517,7 @@ above the 15 GiB reserve. The first clean dependency installation exceeded the
 probe and exact setup-command rerun both passed.
 
 Authoritative machine-readable evidence is under `reports/ocr_upgrade/`,
-`reports/final_model/`, and `reports/information_extraction/`.
+`reports/final_model/`, and `reports/information_extraction/`. Portable
+verification is generation-specific: accept it as current only when its source
+commit/tree, `BUILD_INFO.json`, archive, sidecar, tag, and live Release asset
+all agree.

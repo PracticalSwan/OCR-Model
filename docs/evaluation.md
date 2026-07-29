@@ -13,7 +13,8 @@
 
 The final manifest build ID, manifest SHA-256, checkpoint SHA-256, and
 calibration SHA-256 are validated before evaluation. Every public evaluator
-rejects private/unmarked examples.
+rejects private/unmarked examples. Calibration is also checked against the
+resolved OCR-stack binding before calibrated layout inference begins.
 
 ## Commands
 
@@ -215,3 +216,24 @@ automated financial, legal, identity, or other high-stakes decisions.
 The complete data, detector, recognizer, adaptive-component, LayoutXLM trial,
 calibration, cache, and reproduction record is
 [`OCR_UPGRADE_RELEASE_NOTES.md`](OCR_UPGRADE_RELEASE_NOTES.md).
+
+The learned canonical-evidence metrics cover the 14 configured
+model-supervised fields. End-to-end canonical output may include any of the 27
+schema-supported fields after learned evidence, rules, and hybrid resolution;
+the two denominators must not be compared as if they were the same task.
+
+See [`../reports/README.md`](../reports/README.md) for report authority and
+lifecycle. Portable verification is generation-specific and is current only
+when its source tree, `BUILD_INFO.json`, archive, sidecar, tag, and live
+Release asset agree. The complete verifier recomputes every ledger
+`evidence_sha256`, rejects a JSON report whose embedded source commit disagrees
+with the ledger, and requires portable evidence to carry the exact source
+commit, candidate-tree SHA-256, candidate count, and clean-build flag. Those
+values must agree with the installed package's `BUILD_INFO.json`, the portable
+report, each ledger row, and the ledger's top-level portable-generation
+binding; a self-consistent older report is not accepted as the current local
+generation. The report cannot choose that trust anchor: complete mode
+independently designates `D:\OCR_Model` (or an explicit
+`--portable-package`) and the `v1.1.0-ocr-upgrade` Git tag, requires the
+report's package directory to match, and requires `BUILD_INFO.json` to name
+the tag's exact commit.

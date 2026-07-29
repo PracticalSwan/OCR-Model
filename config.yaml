@@ -86,6 +86,9 @@ information_extraction:
   normalized_annotations: "data/processed/normalized_ie_annotations"
   manifest: "data/metadata/information_extraction_manifest.csv"
   private_manifest: "data/metadata/private_information_extraction_manifest.csv"
+  # The 14 fields directly supervised by normalized public annotations and the
+  # learned canonical-evidence head. The output schema supports 27 total
+  # fields after learned, rule-based, and generic evidence are merged.
   canonical_fields:
     - organization_name
     - document_title
@@ -304,7 +307,9 @@ angle_estimation:
 
 runtime:
   workers: 2
-  minimum_free_space_gb: 10
+  # Bounded rotation materialization only. OCR setup/training/package commands
+  # independently preserve the documented 15 GiB C: reserve.
+  rotation_minimum_free_space_gib: 10
   disk_estimate_safety_multiplier: 1.35
   maximum_disk_usage_fraction: 0.98
   random_seed: 42

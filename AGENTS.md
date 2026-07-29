@@ -25,7 +25,9 @@
   and executed bounded detector, general-recognizer, and Thai-recognizer
   trials. The global default remains the original detector/general recognizer;
   the custom Thai recognizer is synthetic-only and limited to explicit
-  custom/adaptive profiles. The selected fresh four-epoch LayoutXLM checkpoint
+  custom/adaptive OCR experiments with explicit generic-layout fallback; only
+  the original stack is bound to the shipped calibration. The selected fresh
+  four-epoch LayoutXLM checkpoint
   used 12,455 public TRAIN examples and has SHA-256
   `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`;
   its public-only calibration SHA-256 is
@@ -39,15 +41,16 @@
   zero Gmail fit rows. K-Means remains display-only and the failed exact-angle
   estimator remains disabled. PR #2 merged `feat/domain-adapted-ocr` into
   `main` at `c6303f6843de9af1c7c97fde1ef6ff43e01de553` on 2026-07-29.
-  The `v1.1.0-ocr-upgrade` archive was built from clean commit
-  `fcae32edc193ff6574bf99362da0e2368d5ef464`; it is
-  1,159,061,897 bytes with SHA-256
-  `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`
-  and passed fresh CPU setup, CPU/GPU inference, schema, visualization,
-  fallback, privacy, archive, and GUI probes. GitHub reports the same archive
-  size and digest for the published `v1.1.0-ocr-upgrade` asset. The public
-  `v1.0.0-build-week` package and Devpost submission `1102544` remain
-  historical July 21 publication evidence.
+  The July 29 initial `v1.1.0-ocr-upgrade` archive was built from clean commit
+  `fcae32edc193ff6574bf99362da0e2368d5ef464`; its historical size and digest
+  remain in the release notes. For the current in-place correction, the live
+  Release asset and sidecar are authoritative and must agree with the tag,
+  `BUILD_INFO.json`, source candidate-tree hash, and generation-specific
+  portable verification. Calibrated layout inference now fails closed on an
+  OCR-stack binding mismatch or required worker error; generic/rule fallback
+  is explicit. Portable private-document mode uses opaque output IDs and
+  redacts source paths/names. The public `v1.0.0-build-week` package and
+  Devpost submission `1102544` remain historical July 21 publication evidence.
 
 ## Project goal and model requirements (confirmed by professor, 2026-07-13)
 
@@ -91,7 +94,13 @@ Large OCR/layout assets live below
 `D:\CSX4201\vision-info-extraction-assets` in separate Python 3.10
 environments. Raw totals remain 128,793 files and 35,459,126,772 bytes. The
 bounded rotation run generated 8,332 rotations with 0 failures and 2,083 rows
-per zone. Rotation verification passes 20/20 checks. Use
+per zone. The July 28 frozen rotation evidence passed 20/20 checks. A July 30
+rerun currently reaches 18/20 because the earlier verified cleanup removed
+203 derived private page renders, so 812 retained private rotations can no
+longer re-hash their source render; all 8,332 rotation files and the public
+7,520-row surface remain present. This is historical-evidence drift, not a
+K-Means or inference change, and private renders must not be regenerated
+solely to make the old verifier green. Use
 `reports/ocr_upgrade/verification_executions.json` for the current host,
 OCR-runtime, layout-runtime, compilation, schema, privacy, storage, cache,
 profile, and portable verification evidence rather than copying an older test

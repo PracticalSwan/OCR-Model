@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
-from scripts.run_integration_smoke import _command_record
+from scripts.run_integration_smoke import _command_record, _resolve_checkpoint
 from scripts.verify_information_extraction import (
     _integration_semantic_errors,
+    _expected_portable_provenance,
     _load_execution_evidence,
     _metric_report_provenance_errors,
     _private_name_scan,
@@ -17,7 +19,11 @@ from scripts.verify_information_extraction import (
     _upgrade_report_inventory,
     _valid_locked_unseen_evaluation,
 )
-from scripts.record_ocr_upgrade_verification import _load_ledger, _portable_path
+from scripts.record_ocr_upgrade_verification import (
+    _load_ledger,
+    _parse_additional_hashes,
+    _portable_path,
+)
 
 
 def test_integration_command_records_effective_checkpoint_and_paths(
@@ -37,6 +43,18 @@ def test_integration_command_records_effective_checkpoint_and_paths(
     assert "--model-setup" in command
     assert "--artifact-root" in command
     assert "--output" in command
+
+
+def test_integration_smoke_checkpoint_default_comes_from_config(
+    tmp_path: Path,
+) -> None:
+    configured = tmp_path / "configured-checkpoint"
+    cfg = {
+        "paths": {"project_root": str(tmp_path)},
+        "layout_model": {"inference_checkpoint": str(configured)},
+    }
+
+    assert _resolve_checkpoint(cfg, None) == configured.resolve()
 
 
 def test_integration_provenance_covers_the_learned_worker_call_path() -> None:
@@ -225,7 +243,11 @@ def test_execution_evidence_requires_exact_passing_artifact_backed_matrix(
 ) -> None:
     evidence = tmp_path / "evidence.json"
     artifact = tmp_path / "artifact.json"
-    artifact.write_text("{}", encoding="utf-8")
+    artifact.write_text(
+        json.dumps({"source_commit": "a" * 40}),
+        encoding="utf-8",
+    )
+    artifact_sha256 = hashlib.sha256(artifact.read_bytes()).hexdigest()
     evidence.write_text(
         json.dumps(
             {
@@ -236,7 +258,10 @@ def test_execution_evidence_requires_exact_passing_artifact_backed_matrix(
                         "status": "passed",
                         "evidence_path": str(artifact),
                         "timestamp": "2026-07-26T12:00:00+00:00",
-                        "relevant_hashes": {"source_commit": "a" * 40},
+                        "relevant_hashes": {
+                            "source_commit": "a" * 40,
+                            "evidence_sha256": artifact_sha256,
+                        },
                         "detail": {"passed": 365, "skipped": 2},
                     }
                 ]
@@ -272,6 +297,156 @@ def test_execution_evidence_requires_exact_passing_artifact_backed_matrix(
     assert any("missing_checks:compileall" in error for error in errors)
 
 
+def test_execution_evidence_rejects_hash_or_source_commit_drift(
+    tmp_path: Path,
+) -> None:
+    evidence = tmp_path / "evidence.json"
+    artifact = tmp_path / "artifact.json"
+    artifact.write_text(
+        json.dumps({"source_commit": "b" * 40}),
+        encoding="utf-8",
+    )
+    evidence.write_text(
+        json.dumps(
+            {
+                "checks": [
+                    {
+                        "name": "host_tests",
+                        "command": "python -m pytest -q",
+                        "status": "passed",
+                        "evidence_path": str(artifact),
+                        "timestamp": "2026-07-30T12:00:00+00:00",
+                        "relevant_hashes": {
+                            "source_commit": "a" * 40,
+                            "evidence_sha256": "0" * 64,
+                        },
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    checks, errors = _load_execution_evidence(
+        evidence,
+        required_names=("host_tests",),
+    )
+
+    assert checks[0]["passed"] is False
+    assert any("evidence_sha256_mismatch" in error for error in errors)
+    assert any("evidence_source_commit_mismatch" in error for error in errors)
+
+
+def test_portable_execution_evidence_rejects_generation_mismatch(
+    tmp_path: Path,
+) -> None:
+    artifact = tmp_path / "portable_verification.json"
+    artifact.write_text(
+        json.dumps(
+            {
+                "source_commit": "a" * 40,
+                "source_tree_sha256": "b" * 64,
+                "source_candidate_file_count": 10,
+                "source_tree_dirty_at_build": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    artifact_sha256 = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    row_hashes = {
+        "source_commit": "a" * 40,
+        "source_tree_sha256": "c" * 64,
+        "source_candidate_file_count": 11,
+        "source_tree_dirty_at_build": "false",
+        "evidence_sha256": artifact_sha256,
+    }
+    evidence = tmp_path / "ledger.json"
+    evidence.write_text(
+        json.dumps(
+            {
+                "portable_generation": dict(row_hashes),
+                "checks": [
+                    {
+                        "name": "portable_package_verification",
+                        "command": "verify portable package",
+                        "status": "passed",
+                        "evidence_path": str(artifact),
+                        "timestamp": "2026-07-30T12:00:00+00:00",
+                        "relevant_hashes": row_hashes,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    checks, errors = _load_execution_evidence(
+        evidence,
+        required_names=("portable_package_verification",),
+        expected_portable_provenance={
+            "source_commit": "a" * 40,
+            "source_tree_sha256": "b" * 64,
+            "source_candidate_file_count": 10,
+            "source_tree_dirty_at_build": False,
+        },
+    )
+
+    assert checks[0]["passed"] is False
+    assert any("portable_source_tree_sha256_mismatch" in error for error in errors)
+    assert any(
+        "portable_source_candidate_file_count_mismatch" in error
+        for error in errors
+    )
+
+
+def test_portable_expected_provenance_rejects_report_selected_old_package(
+    tmp_path: Path,
+) -> None:
+    old_package = tmp_path / "old" / "OCR_Model"
+    current_package = tmp_path / "current" / "OCR_Model"
+    old_package.mkdir(parents=True)
+    current_package.mkdir(parents=True)
+    old_generation = {
+        "source_commit": "a" * 40,
+        "source_tree_sha256": "b" * 64,
+        "source_candidate_file_count": 10,
+        "source_tree_dirty_at_build": False,
+    }
+    current_generation = {
+        "source_commit": "c" * 40,
+        "source_tree_sha256": "d" * 64,
+        "source_candidate_file_count": 20,
+        "source_tree_dirty_at_build": False,
+    }
+    (old_package / "BUILD_INFO.json").write_text(
+        json.dumps(old_generation),
+        encoding="utf-8",
+    )
+    (current_package / "BUILD_INFO.json").write_text(
+        json.dumps(current_generation),
+        encoding="utf-8",
+    )
+    report = tmp_path / "portable_verification.json"
+    report.write_text(
+        json.dumps(
+            {
+                **old_generation,
+                "package": {"directory": str(old_package)},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    provenance, errors = _expected_portable_provenance(
+        report,
+        package_directory=current_package,
+        expected_source_commit=current_generation["source_commit"],
+    )
+
+    assert provenance is None
+    assert errors == ["portable_verification_directory_not_designated"]
+
+
 def test_verification_recorder_helpers_reject_duplicate_or_unknown_checks(
     tmp_path: Path,
 ) -> None:
@@ -296,6 +471,24 @@ def test_verification_recorder_helpers_reject_duplicate_or_unknown_checks(
     )
     with pytest.raises(ValueError, match="unknown"):
         _load_ledger(ledger)
+
+
+def test_verification_recorder_rejects_reserved_hash_overrides() -> None:
+    with pytest.raises(ValueError, match="recorder-controlled"):
+        _parse_additional_hashes(
+            ["source_commit=" + "b" * 40],
+            reserved_keys={"source_commit", "evidence_sha256"},
+        )
+    with pytest.raises(ValueError, match="more than once"):
+        _parse_additional_hashes(
+            ["model_sha256=" + "a" * 64, "model_sha256=" + "b" * 64],
+            reserved_keys=set(),
+        )
+
+    assert _parse_additional_hashes(
+        ["model_sha256=" + "a" * 64],
+        reserved_keys={"source_commit"},
+    ) == {"model_sha256": "a" * 64}
 
     project_file = Path(__file__).resolve()
     assert _portable_path(project_file).endswith(

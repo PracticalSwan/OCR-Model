@@ -65,6 +65,7 @@ class RuntimeSettings:
     asset_root: Path
     output_root: Path
     device: str
+    private_output_root: Path | None = None
 
     @classmethod
     def load(cls, home: str | Path | None = None) -> "RuntimeSettings":
@@ -141,6 +142,11 @@ class RuntimeSettings:
                 "output_root",
                 "outputs",
             ),
+            private_output_root=runtime_path(
+                "OCR_MODEL_PRIVATE_OUTPUT_ROOT",
+                "private_output_root",
+                paths.get("private_outputs", "outputs/private"),
+            ),
             device=str(
                 os.environ.get("OCR_MODEL_DEVICE")
                 or runtime.get("device")
@@ -156,6 +162,9 @@ class RuntimeSettings:
             {
                 "OCR_MODEL_HOME": str(self.home),
                 "OCR_MODEL_ASSET_ROOT": str(self.asset_root),
+                "OCR_MODEL_PRIVATE_OUTPUT_ROOT": str(
+                    self.private_output_root or (self.output_root / "private")
+                ),
                 "OCR_MODEL_LAYOUT_PYTHON": str(self.layout_python),
                 "OCR_MODEL_LAYOUT_MODELS": str(self.asset_root / "cache" / "layoutxlm"),
                 "OCR_MODEL_OCR_CACHE": str(self.asset_root / "cache" / "ocr"),

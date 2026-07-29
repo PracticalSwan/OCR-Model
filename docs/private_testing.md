@@ -76,3 +76,22 @@ to change the model.
 The older July 17 lifecycle completed 26 documents and 203 pages with the
 historical checkpoint. That remains historical evidence and must not be
 reported as the current OCR-upgrade private run.
+
+## Portable owner-only private mode
+
+The portable package has a separate convenience boundary for individual
+sensitive documents:
+
+```powershell
+.\.runtime\app\Scripts\python.exe .\extract_document.py `
+  "C:\private\document.pdf" --private-document
+```
+
+The GUI exposes the same option as **Private document**. It creates an opaque
+`outputs/private/run_<uuid>` directory regardless of a public output
+override, forces `--private-output`, disables K-Means display and
+visualizations, redacts source filenames and paths from command/log/error
+surfaces, and does not create a downloadable archive or gallery. Gradio is
+also configured to block the private root. This mode is a local containment
+control; it does not authorize publishing private output or using it for
+training, calibration, selection, or accuracy claims.

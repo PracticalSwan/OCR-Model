@@ -33,17 +33,18 @@ documented without post-test tuning. See the
 [OCR upgrade release notes](docs/OCR_UPGRADE_RELEASE_NOTES.md) and
 [current OCR model card](reports/ocr_upgrade/final_ocr_model_card.md).
 
-The published package is `D:\OCR_Model.zip`, built from clean
-commit `fcae32edc193ff6574bf99362da0e2368d5ef464`. It is 1,159,061,897 bytes
-with SHA-256
-`d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
-Fresh CPU setup, CPU/GPU inference, image/PDF/rotation/Thai profiles, schema,
-visualization, fallback, privacy, archive-integrity, and loopback GUI checks
-pass. The GitHub Release asset reports the same size and SHA-256.
+For the current package digest and size, use the `OCR_Model.zip.sha256`
+sidecar and the live GitHub Release asset. `BUILD_INFO.json` binds each package
+to a clean source commit and the SHA-256 of the exact Git candidate tree; the
+release verifier also checks archive CRC, root layout, duplicate/traversal
+paths, payload privacy, and agreement among the build record, sidecar, tag, and
+published asset. The earlier July 29 archive identity remains historical
+evidence in the release notes rather than a current-package checksum embedded
+inside the package.
 
 ## What it does
 
-For an uploaded image or PDF, the local pipeline:
+For a public uploaded image or PDF, the local pipeline:
 
 - previews the image or first PDF page before extraction;
 - evaluates document orientation and fine deskew evidence;
@@ -57,6 +58,12 @@ For an uploaded image or PDF, the local pipeline:
 The GUI has one progress indicator and independently scrollable OCR-text and
 run-log panes. The preserved four-cluster rotation experiment contributes a
 display-only quadrant; it never controls OCR or extraction.
+
+Calibrated LayoutXLM inference is fail-closed: the configured checkpoint,
+calibration, and OCR-stack binding must agree, and a required worker failure
+cannot silently become a rule-only result. Developers may explicitly request
+generic/rule fallback with `--allow-generic-layout-fallback`; that output must
+not be described as calibrated LayoutXLM inference.
 
 ## Try it
 
@@ -83,6 +90,14 @@ After setup, the same pipeline runs from one command:
 ```powershell
 .\run_cli.bat "C:\path\to\document.pdf"
 ```
+
+For a sensitive local document, add `--private-document` when invoking
+`extract_document.py`, or select **Private document** in the GUI. Private mode
+is the GUI default. It does not preview the upload, copies it to an opaque
+short-lived worker path, removes that copy and the session upload cache after
+the run, uses an opaque `outputs/private/run_<uuid>` directory, hides source
+names and paths, disables visualizations and downloadable archives, and never
+exposes the private output or upload-cache roots through the web application.
 
 The default recipient setup is CPU-only. A compatible NVIDIA GPU is optional.
 
@@ -125,7 +140,10 @@ python scripts/extract_document.py --help
 Every completed run is schema-validated against
 [`schemas/inference_output.schema.json`](schemas/inference_output.schema.json).
 Unsupported or conflicting fields remain `null`; emitted values include
-confidence, evidence, validation status, and extraction source.
+confidence, evidence, validation status, and extraction source. The learned
+canonical-evidence head directly supervises 14 configured fields; the output
+contract supports 27 fields after learned evidence, validated rules, and
+hybrid resolution are combined.
 
 ### Reproduce the preserved rotation experiment
 
@@ -239,7 +257,9 @@ See the [Build Week changelog](docs/devpost/BUILD_WEEK_CHANGELOG.md) and
 
 More detail is available in the [privacy guide](docs/privacy.md),
 [evaluation guide](docs/evaluation.md), and
-[requirements](docs/requirements.md).
+[requirements](docs/requirements.md). The
+[report lifecycle guide](reports/README.md) distinguishes current,
+generation-specific, and historical evidence.
 
 ## Project layout
 

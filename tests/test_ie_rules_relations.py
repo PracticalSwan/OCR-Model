@@ -70,6 +70,15 @@ def test_extended_commercial_fields_are_label_bound_and_evidence_backed() -> Non
     assert fields["balance"]["value"] == "0.00"
 
 
+def test_website_rule_rejects_email_shaped_www_candidate() -> None:
+    fields, _ = extract_rule_fields(
+        {"lines": [_line(0, "Website: www.name@gmail.com", 5)]}
+    )
+
+    assert "website" not in fields
+    assert fields["email"]["value"] == "www.name@gmail.com"
+
+
 def _entity(entity_id: str, label: str, bbox: list[float]) -> dict:
     return {"id": entity_id, "label": label, "bbox": bbox, "page_number": 1}
 

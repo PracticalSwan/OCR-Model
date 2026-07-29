@@ -76,6 +76,14 @@ def main() -> int:
         "--confidence-threshold", type=float,
         help="minimum confidence for emitted learned entities, relations, and canonical fields",
     )
+    parser.add_argument(
+        "--allow-generic-layout-fallback",
+        action="store_true",
+        help=(
+            "explicitly allow OCR plus generic/rule extraction when the "
+            "configured calibrated layout model is unavailable or incompatible"
+        ),
+    )
     parser.add_argument("--model-setup", default=str(PROJECT_ROOT / "reports" / "ocr" / "model_setup.json"))
     parser.add_argument("--log-level", choices=("DEBUG", "INFO", "WARNING", "ERROR"), default="INFO")
     args = parser.parse_args()
@@ -116,7 +124,7 @@ def main() -> int:
         layout_checkpoint=args.model_checkpoint,
         confidence_threshold=args.confidence_threshold,
         enable_kmeans_display=not args.disable_kmeans_display,
-        require_layout_model=True,
+        require_layout_model=not args.allow_generic_layout_fallback,
         ocr_profile=args.ocr_profile,
         detector_model=args.detector_model,
         general_recognizer=args.general_recognizer,

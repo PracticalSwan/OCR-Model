@@ -101,8 +101,9 @@ committed. The source/derived license is CC-BY-NC-SA-4.0.
 
 Calibration uses 653 public `dev_calibration` examples. It writes
 `models/multitask_calibration.json` with temperatures and thresholds bound to
-the exact build, manifest, and checkpoint hashes. It records zero private and
-zero Gmail rows. The calibration SHA-256 is
+the exact build, manifest, checkpoint, and OCR-stack hashes. Runtime validates
+that OCR binding before it starts calibrated layout inference. It records zero
+private and zero Gmail rows. The calibration SHA-256 is
 `81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`.
 
 ## 5. Run inference
@@ -122,6 +123,16 @@ canonical evidence, and typed relations. Evidence rules validate fields,
 arithmetic, generic key/value pairs, and tables. Results are schema-validated
 before atomic write; page errors can be isolated with
 `--continue-on-page-error`.
+
+The configured checkpoint, calibration, and OCR stack are required by
+default. Initialization or runtime worker failure aborts the run. For an
+explicit degraded developer workflow, add
+`--allow-generic-layout-fallback`; that path retains OCR plus evidence/rule
+output but must not be reported as calibrated LayoutXLM inference.
+
+The learned canonical-evidence head directly supervises 14 configured fields.
+The result schema supports 27 fields after learned evidence, validation rules,
+and hybrid resolution are combined.
 
 Use `--save-visualization` for public/debug inputs only. For private inputs,
 follow [private_testing.md](private_testing.md); detailed private outputs must

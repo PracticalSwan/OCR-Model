@@ -1,16 +1,23 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 from PIL import Image
 
 import extract_document
+import src.inference.document_pipeline as document_pipeline
+from src.information_extraction import entity_worker_client
 
 from src.information_extraction.entity_inference import entities_from_word_predictions
 from src.information_extraction.entity_worker_client import SubprocessLayoutEntityExtractor
 from src.inference.document_io import DocumentInputError, DocumentPage, load_document_pages
-from src.inference.document_pipeline import DocumentPipeline, merge_document_fields
+from src.inference.document_pipeline import (
+    DocumentPipeline,
+    DocumentPipelineError,
+    merge_document_fields,
+)
 from src.inference.output_writer import require_private_output_root
 from src.ocr.adaptive import AdaptiveRenderingConfig
 
@@ -174,6 +181,11 @@ class FakeMultiTaskExtractor:
         }
 
 
+class BrokenEntityExtractor:
+    def extract(self, *_args, **_kwargs):
+        raise RuntimeError("synthetic worker failure")
+
+
 def test_unknown_document_returns_generic_pair_and_wrong_kmeans_does_not_control_ocr() -> None:
     pipeline = DocumentPipeline(
         ocr=FakeOCR(), device="cpu", kmeans_predictor=WrongKMeans(), entity_extractor=None
@@ -306,6 +318,280 @@ def test_document_pipeline_uses_all_trained_heads_and_model_tables() -> None:
     assert result["fields"]["total_amount"]["value"] == "12.50"
     assert result["pages"][0]["key_value_pairs"][0]["id"] == "model-relation"
     assert result["pages"][0]["tables"][0]["method"] == "geometry:table_cell_grid"
+
+
+def test_required_layout_runtime_failure_raises_pipeline_error() -> None:
+    pipeline = DocumentPipeline(
+        ocr=FakeOCR(),
+        device="cpu",
+        entity_extractor=BrokenEntityExtractor(),
+        enable_kmeans_display=False,
+        require_layout_model=True,
+    )
+
+    with pytest.raises(DocumentPipelineError, match="required layout entity inference failed"):
+        pipeline.extract_pages(
+            document_id="doc",
+            source_type="image",
+            pages=[DocumentPage(1, Image.new("RGB", (100, 100), "white"))],
+        )
+
+
+def test_required_layout_runtime_failure_ignores_page_continuation() -> None:
+    pipeline = DocumentPipeline(
+        ocr=FakeOCR(),
+        device="cpu",
+        entity_extractor=BrokenEntityExtractor(),
+        enable_kmeans_display=False,
+        require_layout_model=True,
+    )
+
+    with pytest.raises(
+        DocumentPipelineError,
+        match="required layout entity inference failed",
+    ):
+        pipeline.extract_pages(
+            document_id="doc",
+            source_type="image",
+            pages=[DocumentPage(1, Image.new("RGB", (100, 100), "white"))],
+            continue_on_page_error=True,
+        )
+
+
+def test_optional_layout_runtime_failure_warns_and_uses_generic_fallback() -> None:
+    pipeline = DocumentPipeline(
+        ocr=FakeOCR(),
+        device="cpu",
+        entity_extractor=BrokenEntityExtractor(),
+        enable_kmeans_display=False,
+        require_layout_model=False,
+    )
+
+    result = pipeline.extract_pages(
+        document_id="doc",
+        source_type="image",
+        pages=[DocumentPage(1, Image.new("RGB", (100, 100), "white"))],
+    )
+
+    assert {entity["label"] for entity in result["pages"][0]["entities"]} == {
+        "KEY",
+        "VALUE",
+    }
+    assert any(
+        "layout entity inference failed; generic fallback used" in warning
+        for warning in result["pages"][0]["warnings"]
+    )
+
+
+def _stub_pipeline_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        document_pipeline.ModelRegistry,
+        "from_setup",
+        staticmethod(lambda *_args, **_kwargs: object()),
+    )
+    monkeypatch.setattr(
+        document_pipeline,
+        "build_ocr_stack_binding",
+        lambda *_args, **_kwargs: {
+            "detector_sha256": "a" * 64,
+            "recognizer_sha256": "b" * 64,
+            "preprocessing_sha256": "c" * 64,
+        },
+    )
+    monkeypatch.setattr(
+        document_pipeline,
+        "MultilingualOCR",
+        lambda *_args, **_kwargs: FakeOCR(),
+    )
+    monkeypatch.setattr(
+        entity_worker_client,
+        "SubprocessLayoutEntityExtractor",
+        lambda *_args, **_kwargs: object(),
+    )
+
+
+def _pipeline_config(
+    tmp_path: Path,
+    *,
+    calibration_binding: dict[str, str] | None = None,
+    include_inference_checkpoint: bool = True,
+) -> dict:
+    checkpoint = tmp_path / "selected-checkpoint"
+    checkpoint.mkdir()
+    layout_python = tmp_path / "layout-python.exe"
+    layout_python.touch()
+    calibration = tmp_path / "calibration.json"
+    calibration.write_text(
+        json.dumps(
+            {
+                "ocr_stack_binding": calibration_binding
+                or {
+                    "detector_sha256": "a" * 64,
+                    "recognizer_sha256": "b" * 64,
+                    "preprocessing_sha256": "c" * 64,
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    layout_model = {"calibration": str(calibration)}
+    if include_inference_checkpoint:
+        layout_model["inference_checkpoint"] = str(checkpoint)
+    return {
+        "paths": {
+            "project_root": str(tmp_path),
+            "layout_python": str(layout_python),
+            "layout_models": str(tmp_path / "layout-model-cache"),
+        },
+        "ocr": {"cache_enabled": False, "default_profile": "original"},
+        "layout_model": layout_model,
+    }
+
+
+def test_required_layout_rejects_calibration_for_different_ocr_stack_early(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _stub_pipeline_dependencies(monkeypatch)
+    cfg = _pipeline_config(
+        tmp_path,
+        calibration_binding={
+            "detector_sha256": "a" * 64,
+            "recognizer_sha256": "b" * 64,
+            "preprocessing_sha256": "d" * 64,
+        },
+    )
+
+    with pytest.raises(
+        DocumentPipelineError,
+        match="calibration OCR stack binding mismatch",
+    ):
+        DocumentPipeline.from_config(
+            cfg,
+            require_layout_model=True,
+            ocr_profile="adaptive",
+        )
+
+
+def test_optional_layout_mismatch_uses_explicit_generic_fallback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _stub_pipeline_dependencies(monkeypatch)
+    cfg = _pipeline_config(
+        tmp_path,
+        calibration_binding={
+            "detector_sha256": "a" * 64,
+            "recognizer_sha256": "b" * 64,
+            "preprocessing_sha256": "d" * 64,
+        },
+    )
+
+    pipeline = DocumentPipeline.from_config(
+        cfg,
+        require_layout_model=False,
+        ocr_profile="adaptive",
+    )
+
+    assert pipeline.entity_extractor is None
+    assert pipeline.require_layout_model is False
+    assert any(
+        "calibration OCR stack binding mismatch" in warning
+        for warning in pipeline.initialization_warnings
+    )
+
+
+def test_required_layout_refuses_missing_configured_inference_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _stub_pipeline_dependencies(monkeypatch)
+    cfg = _pipeline_config(tmp_path, include_inference_checkpoint=False)
+
+    with pytest.raises(DocumentPipelineError, match="inference_checkpoint"):
+        DocumentPipeline.from_config(cfg, require_layout_model=True)
+
+
+def test_from_config_uses_configured_inference_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _stub_pipeline_dependencies(monkeypatch)
+    cfg = _pipeline_config(tmp_path)
+    captured: dict[str, object] = {}
+
+    def extractor(checkpoint, **_kwargs):
+        captured["checkpoint"] = Path(checkpoint)
+        return object()
+
+    monkeypatch.setattr(
+        entity_worker_client,
+        "SubprocessLayoutEntityExtractor",
+        extractor,
+    )
+
+    pipeline = DocumentPipeline.from_config(cfg, require_layout_model=True)
+
+    assert captured["checkpoint"] == Path(
+        cfg["layout_model"]["inference_checkpoint"]
+    )
+    assert pipeline.require_layout_model is True
+
+
+@pytest.mark.parametrize(
+    ("extra_args", "required"),
+    [([], True), (["--allow-generic-layout-fallback"], False)],
+)
+def test_general_cli_layout_fallback_is_explicit_opt_in(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    extra_args: list[str],
+    required: bool,
+) -> None:
+    captured: dict[str, object] = {}
+    cfg = {
+        "paths": {
+            "project_root": str(tmp_path),
+            "external_assets": str(tmp_path / "external"),
+        }
+    }
+    page = DocumentPage(1, Image.new("RGB", (100, 100), "white"))
+
+    class FakePipeline:
+        @classmethod
+        def from_config(cls, _cfg, **kwargs):
+            captured.update(kwargs)
+            return cls()
+
+        def extract_pages_with_rendered_pages(self, **_kwargs):
+            return {}, [page]
+
+        def close(self):
+            return None
+
+    monkeypatch.setattr(extract_document.cfgmod, "load_config", lambda _: cfg)
+    monkeypatch.setattr(extract_document, "configure_external_environment", lambda *_: None)
+    monkeypatch.setattr(extract_document, "DocumentPipeline", FakePipeline)
+    monkeypatch.setattr(
+        extract_document,
+        "load_document_pages",
+        lambda *_args, **_kwargs: ("doc", "image", [page]),
+    )
+    monkeypatch.setattr(
+        extract_document,
+        "write_document_outputs",
+        lambda *_args, **_kwargs: tmp_path / "result.json",
+    )
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "extract_document.py",
+            "--input",
+            str(tmp_path / "fixture.png"),
+            "--output",
+            str(tmp_path / "output"),
+            *extra_args,
+        ],
+    )
+
+    assert extract_document.main() == 0
+    assert captured["require_layout_model"] is required
 
 
 def test_multipage_field_conflict_abstains_when_confidences_are_tied() -> None:

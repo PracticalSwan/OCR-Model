@@ -822,7 +822,9 @@ def _preparation_report(summary: Mapping[str, Any], cfg: Mapping[str, Any]) -> s
         "",
         "The full profile applies every required angle to the deterministic selected corpus.",
         "It is not described as a full-corpus run. Full materialization remains subject to",
-        f"the smoke-derived disk gate and a {cfg['runtime'].get('minimum_free_space_gb', 10)} GiB reserve.",
+        "the smoke-derived disk gate and a "
+        f"{cfg['runtime'].get('rotation_minimum_free_space_gib', cfg['runtime'].get('minimum_free_space_gb', 10))} "
+        "GiB rotation-stage reserve.",
         "",
         "Private filenames and source paths are absent from this report and all public metadata.",
     ])

@@ -863,7 +863,11 @@ def _resource_estimate(cfg, profile, expected_count):
     root = cfgmod.project_root(cfg)
     free = disk_free_bytes(root)
     total = disk_total_bytes(root)
-    reserve = int(float(cfg["runtime"].get("minimum_free_space_gb", 10)) * (1024 ** 3))
+    reserve_gib = cfg["runtime"].get(
+        "rotation_minimum_free_space_gib",
+        cfg["runtime"].get("minimum_free_space_gb", 10),
+    )
+    reserve = int(float(reserve_gib) * (1024 ** 3))
     multiplier = float(cfg["runtime"].get("disk_estimate_safety_multiplier", 1.35))
     smoke_path = cfgmod.resolve_path(cfg, "reports") / "rotation_preparation" / "smoke_resource_estimate.json"
     if smoke_path.exists():

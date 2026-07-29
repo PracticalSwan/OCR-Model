@@ -30,6 +30,20 @@ Gmail roots before opening it. A matching input is rejected unless
 `--private-output` is present; that mode then requires the destination to stay
 below the ignored D: private root. The caller cannot opt out of either guard.
 
+The portable CLI/GUI adds an explicit `--private-document` / **Private
+document** mode for owner-only local use. It forces an opaque
+`outputs/private/run_<uuid>` destination, hides source filenames and paths,
+redacts command/log/error surfaces, disables preview, visualizations, and
+downloadable archives, and blocks both the private root and the per-session
+Gradio upload cache from file serving. Before the child process starts, the
+source is copied to an opaque short-lived input path so the original path is
+not present in child-process arguments. That copy and any upload-cache copy
+are removed after the run. Private mode is selected by default in the GUI.
+Public preview/gallery/download artifacts use a separate per-session cache
+under the allowed public output root; they never share the blocked upload
+cache, and the session cache is removed on GUI shutdown.
+These containment controls do not make the result publishable.
+
 ## Before staging or pushing
 
 1. Verify repository visibility and remote ownership.
@@ -42,6 +56,14 @@ below the ignored D: private root. The caller cannot opt out of either guard.
 7. Confirm all 30 entries in
    `reports/ocr_upgrade/verification_executions.json` are current and that the
    staged-file and portable-package privacy checks point to executed evidence.
+8. Build only from a clean Git candidate tree in marked, isolated D: staging.
+   Never target the installed `D:\OCR_Model` working copy. Copy without
+   following reparse points, bind the synthetic sample to executed evidence,
+   scan every completed-payload byte for prohibited paths, secrets, and every
+   live private-inventory filename, then write the full payload manifest.
+9. Validate ZIP CRC, single-root layout, duplicate names, absolute/traversal
+   paths, sidecar, `BUILD_INFO.json`, tag target, and live Release asset as one
+   generation.
 
 Ignore rules are a safeguard, not authorization to publish. A successful scan
 means no known match was found in the checked surface; it does not prove that

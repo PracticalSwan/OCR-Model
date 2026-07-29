@@ -1,6 +1,7 @@
 """Local image/PDF to schema-validated information-extraction JSON."""
 from __future__ import annotations
 
+import json
 import statistics
 import time
 from collections import Counter
@@ -21,7 +22,7 @@ from src.inference.document_io import rerender_pdf_page
 from src.inference.kmeans_display import KMeansRotationDisplay, safe_kmeans_display
 from src.ocr.cache import OCRCache
 from src.ocr.model_registry import ModelRegistry
-from src.ocr.stack_binding import build_ocr_stack_binding
+from src.ocr.stack_binding import build_ocr_stack_binding, validate_ocr_stack_binding
 from src.ocr.pipeline import MultilingualOCR
 from src.ocr.adaptive import (
     AdaptiveRenderingConfig,
@@ -36,6 +37,10 @@ class DocumentPipelineError(RuntimeError):
     """Raised when the main extraction path cannot produce a result."""
 
 
+class RequiredLayoutModelError(DocumentPipelineError):
+    """Raised when mandatory calibrated layout inference cannot continue."""
+
+
 class DocumentPipeline:
     def __init__(
         self,
@@ -45,6 +50,7 @@ class DocumentPipeline:
         entity_extractor: Any | None = None,
         kmeans_predictor: Any | None = None,
         enable_kmeans_display: bool = True,
+        require_layout_model: bool = False,
         initialization_warnings: Sequence[str] = (),
         adaptive_rendering: AdaptiveRenderingConfig | None = None,
         pdf_rerenderer: Any = rerender_pdf_page,
@@ -55,6 +61,7 @@ class DocumentPipeline:
         self.entity_extractor = entity_extractor
         self.kmeans_predictor = kmeans_predictor
         self.enable_kmeans_display = bool(enable_kmeans_display)
+        self.require_layout_model = bool(require_layout_model)
         self.initialization_warnings = list(initialization_warnings)
         self.adaptive_rendering = adaptive_rendering
         self.pdf_rerenderer = pdf_rerenderer
@@ -223,29 +230,40 @@ class DocumentPipeline:
         )
         warnings: list[str] = []
         entity_extractor = None
-        configured_checkpoint = cfg.get("layout_model", {}).get("inference_checkpoint")
-        checkpoint = Path(layout_checkpoint) if layout_checkpoint else (
-            _resolve_configured_path(cfg, configured_checkpoint)
-            if configured_checkpoint
-            else cfgmod.resolve_path(cfg, "ie_checkpoints") / "layoutxlm_multitask" / "final"
-        )
-        configured_calibration = cfg.get("layout_model", {}).get("calibration")
-        calibration = (
-            (
-                Path(calibration_path)
-                if calibration_path
-                else (
-                    _resolve_configured_path(cfg, configured_calibration)
-                    if configured_calibration
-                    else cfgmod.project_root(cfg)
-                    / "models"
-                    / "multitask_calibration.json"
-                )
-            )
-            if use_layout_calibration
-            else None
-        )
         try:
+            configured_checkpoint = cfg.get("layout_model", {}).get(
+                "inference_checkpoint"
+            )
+            if layout_checkpoint is not None:
+                checkpoint = Path(layout_checkpoint)
+            elif configured_checkpoint:
+                checkpoint = _resolve_configured_path(cfg, configured_checkpoint)
+            else:
+                raise ValueError(
+                    "layout_model.inference_checkpoint must be configured "
+                    "when no layout checkpoint override is supplied"
+                )
+            configured_calibration = cfg.get("layout_model", {}).get("calibration")
+            calibration = (
+                (
+                    Path(calibration_path)
+                    if calibration_path
+                    else (
+                        _resolve_configured_path(cfg, configured_calibration)
+                        if configured_calibration
+                        else cfgmod.project_root(cfg)
+                        / "models"
+                        / "multitask_calibration.json"
+                    )
+                )
+                if use_layout_calibration
+                else None
+            )
+            if calibration is not None:
+                _validate_calibration_ocr_binding(
+                    calibration,
+                    expected_ocr_binding=ocr_stack_binding,
+                )
             from src.information_extraction.entity_worker_client import (
                 SubprocessLayoutEntityExtractor,
             )
@@ -264,7 +282,8 @@ class DocumentPipeline:
         except Exception as exc:
             if require_layout_model:
                 raise DocumentPipelineError(
-                    f"required final layout model failed to initialize: {type(exc).__name__}: {exc}"
+                    "required calibrated layout model failed to initialize: "
+                    f"{type(exc).__name__}: {exc}"
                 ) from exc
             warnings.append(
                 f"layout model unavailable; evidence-only generic/rule fallback active: {type(exc).__name__}: {exc}"
@@ -281,6 +300,7 @@ class DocumentPipeline:
             entity_extractor=entity_extractor,
             kmeans_predictor=kmeans_predictor,
             enable_kmeans_display=enable_kmeans_display,
+            require_layout_model=require_layout_model,
             initialization_warnings=warnings,
             adaptive_rendering=adaptive_rendering,
             max_render_pixels=int(
@@ -374,6 +394,8 @@ class DocumentPipeline:
                     language_hint=language_hint,
                     deskew_angle=deskew_angle,
                 )
+            except RequiredLayoutModelError:
+                raise
             except Exception as exc:
                 if not continue_on_page_error:
                     raise DocumentPipelineError(
@@ -560,6 +582,11 @@ class DocumentPipeline:
                     entities, model_warnings = model_result
                     page_warnings.extend(model_warnings)
             except Exception as exc:
+                if self.require_layout_model:
+                    raise RequiredLayoutModelError(
+                        "required layout entity inference failed: "
+                        f"{type(exc).__name__}: {exc}"
+                    ) from exc
                 page_warnings.append(
                     f"layout entity inference failed; generic fallback used: {type(exc).__name__}: {exc}"
                 )
@@ -762,6 +789,21 @@ def _normalized_field_value(value: Any) -> str:
 def _resolve_configured_path(cfg: Mapping[str, Any], value: Any) -> Path:
     path = Path(str(value))
     return path if path.is_absolute() else cfgmod.project_root(cfg) / path
+
+
+def _validate_calibration_ocr_binding(
+    calibration_path: str | Path,
+    *,
+    expected_ocr_binding: Mapping[str, Any],
+) -> None:
+    path = Path(calibration_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"required calibration file does not exist: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    binding = payload.get("ocr_stack_binding")
+    if not isinstance(binding, Mapping):
+        raise ValueError("calibration artifact has no OCR stack binding")
+    validate_ocr_stack_binding(binding, expected_ocr_binding)
 
 
 def _detected_languages(pages: Sequence[Mapping[str, Any]]) -> list[str]:

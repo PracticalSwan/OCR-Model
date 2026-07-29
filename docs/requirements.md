@@ -28,7 +28,9 @@ cannot control or block OCR/extraction.
 | IE-010 | Validate every result against a versioned JSON Schema before write. | Pass; unsupported/conflicted fields are explicit `null`. |
 | IE-011 | Keep multipage geometry/output isolated by page. | Pass, including continued output after a configured page-level failure. |
 | IE-012 | Make K-Means display-only and failure-isolated. | Pass; disabled/missing/wrong artifacts cannot block extraction. |
-| IE-013 | Fail fast when a required final checkpoint/calibration is missing or mismatched. | Pass in CLI, worker, unit, integration, and verifier checks. |
+| IE-013 | Fail fast when a required final checkpoint/calibration is missing, mismatched, bound to another OCR stack, or fails at runtime. | Pass in CLI/worker regressions; generic/rule-only fallback requires an explicit opt-in and is never labeled calibrated LayoutXLM output. |
+| IE-014 | Provide an explicit portable private-document mode. | Pass; GUI-private is the default and disables preview, uses opaque private-root output and worker input, removes session upload/input caches, redacts paths/names, provides no visualization/archive, and blocks Gradio access. |
+| IE-015 | Distinguish learned field supervision from the output contract. | Pass; 14 configured fields have direct model supervision and the schema supports 27 fields after learned, rule, and hybrid resolution. |
 
 ## Data, training, and evaluation requirements
 
@@ -51,16 +53,17 @@ cannot control or block OCR/extraction.
 
 | ID | Requirement | Final validated state |
 |---|---|---|
-| SF-001 | Preserve at least 15 GiB free on C: and D: at materialization/training gates. | Pass; after fresh portable setup C: had 23.71 GiB and D: 391.685 GiB free. |
+| SF-001 | Preserve the stage-specific free-space reserve: 10 GiB for the bounded rotation materializer and 15 GiB for OCR/model setup, training, and portable setup. | Pass; the rotation key is explicit and backward-compatible, and after fresh portable setup C: had 23.71 GiB and D: 391.685 GiB free. |
 | SF-002 | Keep large assets below the configured D: root. | Pass for environments, caches, examples, checkpoint, generated and private output. |
 | SF-003 | Detect incomplete/hash-mismatched OCR artifacts. | Pass in registry, downloader, verifier, and tests. |
 | SF-004 | Isolate Paddle CUDA from CUDA PyTorch on Windows. | Pass with persistent subprocess inference and separate environment partitions. |
 | SF-005 | Bind public OCR caches to source/model/profile/route/transform provenance and exclude private data. | Pass in cache and privacy tests. |
 | SF-006 | Return actionable input/model/storage/protocol errors without fabricated output. | Pass for missing, corrupt, encrypted, oversized, invalid-checkpoint, and worker failures. |
 | SF-007 | Constrain detailed private outputs to ignored private roots. | Pass; public path rejection, anonymous IDs, no public visualization, aggregate-only report. |
-| SF-008 | Preserve historical rotation evidence. | Pass: 20/20 rotation verifier checks and reload evidence. |
+| SF-008 | Preserve historical rotation evidence. | Historical pass: the frozen July 28 report is 20/20. A July 30 rerun is 18/20 because verified cleanup removed 203 derived private page renders, so 812 retained private rotations cannot re-hash their source render; all public rows and all rotation files remain present. |
 | SF-009 | Make integration evidence executable and tamper-evident. | Pass: 11 source/model/config/checkpoint/fixture/output artifacts independently re-hashed and semantically checked. |
 | SF-010 | Reject large/unexpected/publication-risk Git candidates. | Pass in the complete IE verifier; final staged audit is still mandatory before push. |
+| SF-011 | Build portable releases from an exact clean source candidate tree without modifying an installed working copy. | Pass in builder/provenance tests; only marked isolated D: staging is allowed, installed-target and reparse-point copies are rejected, source/sample/payload hashes are bound, all payload bytes are privacy-scanned, and every ZIP entry must match the frozen payload manifest before sidecar creation. |
 
 ## Measured quality
 

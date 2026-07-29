@@ -10,7 +10,12 @@ from src.portable.gui import (
     _clean_log_line,
     _on_document_change,
     _preview_document,
+    _public_component_cache,
+    _remove_public_component_cache,
+    _remove_uploaded_private_cache,
 )
+from src.portable.api import ExtractionRun
+from src.portable.runtime import RuntimeSettings
 
 
 def test_preview_document_renders_uploaded_image(tmp_path: Path) -> None:
@@ -68,3 +73,91 @@ def test_result_panes_have_bounded_independent_scroll_contract() -> None:
 
 def test_run_log_strips_terminal_color_sequences() -> None:
     assert _clean_log_line("\x1b[32mCreating model\x1b[0m") == "Creating model"
+
+
+def test_private_document_change_hides_filename(tmp_path: Path) -> None:
+    source = tmp_path / "Sensitive Private Invoice.png"
+    Image.new("RGB", (12, 12), "white").save(source)
+
+    preview, note, status, *_ = _on_document_change(str(source), True)
+
+    assert preview is None
+    assert "preview is disabled" in note.casefold()
+    assert source.name not in note
+    assert source.stem not in note
+    assert source.name not in status
+    assert source.stem not in status
+
+
+def test_private_gui_returns_no_gallery_or_archive_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from src.portable import gui
+
+    settings = object.__new__(RuntimeSettings)
+    object.__setattr__(settings, "output_root", tmp_path / "outputs")
+    object.__setattr__(settings, "private_output_root", tmp_path / "outputs" / "private")
+    source = tmp_path / "Sensitive Private Invoice.png"
+    Image.new("RGB", (12, 12), "white").save(source)
+    output = settings.private_output_root / "run_opaque"
+    output.mkdir(parents=True)
+    run = ExtractionRun(
+        input_path=source,
+        output_dir=output,
+        result_path=output / "document_result.json",
+        payload={
+            "document_id": source.stem,
+            "fields": {},
+            "pages": [],
+            "processing": {"private_output": True},
+        },
+        command=(),
+        private_document=True,
+    )
+    monkeypatch.setattr(gui, "run_extraction", lambda *args, **kwargs: run)
+
+    result = gui._run_gui(
+        str(source), "auto", "cpu", None, settings=settings, private_document=True
+    )
+
+    assert result[4] == []
+    assert result[5] is None
+    assert source.name not in result[0]
+    assert source.stem not in str(result[3])
+
+
+def test_private_gui_removes_only_its_opaque_upload_cache(
+    tmp_path: Path,
+) -> None:
+    cache_root = tmp_path / "session_opaque"
+    cached = cache_root / "nested" / "private.pdf"
+    cached.parent.mkdir(parents=True)
+    cached.write_bytes(b"private")
+    outside = tmp_path / "user-owned.pdf"
+    outside.write_bytes(b"keep")
+
+    assert _remove_uploaded_private_cache(str(outside), cache_root) is False
+    assert outside.is_file()
+    assert _remove_uploaded_private_cache(str(cached), cache_root) is True
+    assert not cached.exists()
+    assert cache_root.is_dir()
+
+
+def test_public_component_cache_is_session_scoped_and_safely_removed(
+    tmp_path: Path,
+) -> None:
+    settings = object.__new__(RuntimeSettings)
+    object.__setattr__(settings, "output_root", tmp_path / "outputs")
+    session_root = tmp_path / "runtime" / "session_opaque"
+    cache = _public_component_cache(settings, session_root)
+    (cache / "preview.webp").parent.mkdir(parents=True)
+    (cache / "preview.webp").write_bytes(b"public-preview")
+
+    _remove_public_component_cache(cache, settings)
+
+    assert not cache.exists()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    with pytest.raises(RuntimeError, match="unexpected public"):
+        _remove_public_component_cache(outside, settings)
+    assert outside.is_dir()

@@ -5,7 +5,7 @@ import argparse
 import json
 import sys
 
-from .api import ExtractionError, run_extraction
+from .api import ExtractionError, _display_path, run_extraction
 from .results import field_rows
 from .runtime import RuntimeSettings
 
@@ -24,26 +24,36 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--device", choices=("cpu", "gpu:0"))
     parser.add_argument(
         "--ocr-profile",
-        choices=("original", "custom", "adaptive", "auto"),
+        choices=("original", "auto"),
         default="auto",
+        help=(
+            "portable calibrated extraction supports the original profile; "
+            "experimental profiles require the lower-level CLI and explicit "
+            "generic-layout fallback"
+        ),
     )
     parser.add_argument(
         "--detector-model",
-        choices=("original", "custom", "auto"),
+        choices=("original", "auto"),
         default="auto",
     )
     parser.add_argument(
         "--general-recognizer",
-        choices=("original", "custom", "auto"),
+        choices=("original", "auto"),
         default="auto",
     )
     parser.add_argument(
         "--thai-recognizer",
-        choices=("original", "custom", "auto"),
+        choices=("original", "auto"),
         default="auto",
     )
     parser.add_argument("--max-pages", type=int)
     parser.add_argument("--no-visualization", action="store_true")
+    parser.add_argument(
+        "--private-document",
+        action="store_true",
+        help="store this document under the protected private output root",
+    )
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)
     try:
@@ -56,6 +66,7 @@ def main(argv: list[str] | None = None) -> int:
             device=args.device,
             max_pages=args.max_pages,
             save_visualization=not args.no_visualization,
+            private_document=args.private_document,
             on_log=None if args.quiet else lambda line: print(line, file=sys.stderr),
             ocr_profile=args.ocr_profile,
             detector_model=args.detector_model,
@@ -70,8 +81,12 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(
             {
                 "status": "complete",
-                "result": str(run.result_path),
-                "output_directory": str(run.output_dir),
+                "result": _display_path(
+                    run.result_path, private_document=run.private_document
+                ),
+                "output_directory": _display_path(
+                    run.output_dir, private_document=run.private_document
+                ),
                 "fields": [
                     {
                         "name": row[0],

@@ -47,13 +47,19 @@ Windows host. The implementation uses two Python 3.10 environments:
 The OCR process owns Paddle models. `SubprocessLayoutEntityExtractor` keeps a
 persistent `scripts/layout_entity_worker.py` process and exchanges one JSON
 object per line. Startup, protocol, request, timeout, and checkpoint errors are
-explicit. Final-profile evaluation and private testing require the learned
-checkpoint; they cannot silently fall back to rules.
+explicit. Before the worker starts, the pipeline validates that calibration is
+bound to the resolved detector, recognizer, preprocessing, and OCR profile.
+Final-profile evaluation and private testing require the learned checkpoint;
+initialization and runtime worker failures cannot silently fall back to rules.
+An explicit `--allow-generic-layout-fallback` switch exists for development
+and degraded operation, but its result is identified as generic/rule-only
+rather than calibrated LayoutXLM output.
 
 Environments, caches, aligned examples, checkpoints, generated documents, and
 private output live under
 `D:\CSX4201\vision-info-extraction-assets`. Storage gates preserve at least
-15 GiB on both C: and D: before materialization or training.
+10 GiB for bounded rotation materialization and at least 15 GiB on both C: and
+D: before OCR/model setup, training, or portable setup.
 
 ## OCR models, preprocessing, and routing
 
@@ -115,6 +121,11 @@ The shared encoder feeds four learned heads:
 - geometry-aware typed entity-pair relations with real positives and hard
   negatives.
 
+The canonical-evidence head directly supervises the 14 configured model
+fields. The public output schema supports 27 fields because validated rules
+and hybrid resolution can populate additional fields; these counts describe
+different layers and are not interchangeable.
+
 Inference merges overlapping windows, applies learned calibrated thresholds,
 resolves conflicting evidence by abstaining, then combines learned output with
 deterministic evidence-backed field validation, arithmetic checks, generic
@@ -141,7 +152,27 @@ and processing provenance. Unsupported or conflicted canonical values are
 explicitly `null`; every emitted value carries evidence and confidence.
 
 Schema validation precedes atomic write. Private results must target the
-configured ignored D: private root.
+configured ignored D: private root. The portable CLI/GUI private-document mode
+adds an opaque `run_<uuid>` destination, forces the private-output guard,
+redacts source names/paths, disables preview, visualizations, and downloadable
+archives, and blocks private-output and upload-cache roots from the web file
+server. The original source is copied to an opaque short-lived worker input so
+its path never enters child-process arguments; both that copy and the private
+session upload cache are removed afterward.
+
+## Release boundary
+
+Portable release construction uses isolated staging below
+`D:\CSX4201\vision-info-extraction-assets` and rejects the installed
+`D:\OCR_Model` working copy as a build target. Forced staging deletion requires
+an exact builder-owned parent sentinel. Copying never follows reparse points,
+verifies source stability and destination hashes, and binds the synthetic
+sample to integration evidence. A clean Git candidate-tree hash and commit are
+written to `BUILD_INFO.json`; a streaming all-file privacy scan and complete
+payload SHA-256 manifest precede archiving. The archive is built from the
+frozen manifest list and every ZIP entry is stream-hashed back against it
+before sidecar generation, in addition to CRC, root, duplicate-name,
+absolute-path, and traversal validation.
 
 ## Evaluation boundaries
 

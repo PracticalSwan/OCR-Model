@@ -103,10 +103,13 @@ recognizer. Their inference-tree SHA-256 values are
 `eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d`
 and `6c46447e05189eb3f863dc75855f0cfccf16a4af188a249861377c69216f40b1`.
 The custom Thai recognizer passed its synthetic-only acceptance boundary and
-remains available to explicit custom/adaptive profiles, with inference-tree
-SHA-256
+remains available to explicit custom/adaptive OCR experiments, with
+inference-tree SHA-256
 `0876e624221bf0ff2d888506c7b9fa84eacc99f98394b424e81c098769d91e73`.
-It is not a claim of real-world Thai benchmark quality.
+The shipped LayoutXLM calibration is original-stack-bound, so these
+experiments require explicit generic-layout fallback and are not calibrated
+LayoutXLM extraction. This is not a claim of real-world Thai benchmark
+quality.
 
 The selected fresh LayoutXLM checkpoint is
 `D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`
@@ -114,6 +117,11 @@ with `model.safetensors` SHA-256
 `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`.
 The bound calibration SHA-256 is
 `81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`.
+Runtime and report-compilation entry points resolve this checkpoint from
+`layout_model.inference_checkpoint` in `config.yaml`; they do not probe a
+legacy sibling `final` directory. Calibrated inference validates the
+calibration's detector/recognizer/preprocessing/profile binding against the
+resolved OCR stack before starting the layout worker.
 
 Training-data counts, rejected trials, adaptive DPI, tiling, padding,
 recognition retries, orientation selection, and exact reproduction commands
@@ -130,7 +138,8 @@ collision.
 ## Troubleshooting
 
 - Storage gate failure: free space or change the configured external root;
-  never bypass the 15 GiB reserve.
+  never bypass the 15 GiB OCR/model/setup reserve. The bounded rotation
+  materializer has its own explicit 10 GiB reserve.
 - Paddle/Torch DLL error: verify that the command uses the correct interpreter
   and that the layout worker is a subprocess.
 - Missing model/hash mismatch: rerun `download_ocr_models.py`; do not copy an
@@ -141,6 +150,11 @@ collision.
   into the repository.
 - CUDA unavailable: rerun the environment report and inspect driver/runtime
   probes before falling back to CPU.
+- Layout worker/calibration binding failure: correct the configured
+  checkpoint, calibration, or OCR profile. Use
+  `--allow-generic-layout-fallback` only when a clearly labeled
+  generic/rule-only result is acceptable; it is not calibrated LayoutXLM
+  inference.
 - K-Means maintenance artifacts remain in their original scikit-learn 1.8
   joblib form. Inference uses the hash-bound `inference_params.npz` numeric
   export, which was checked against all 7,520 public train/validation/test

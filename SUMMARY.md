@@ -1,12 +1,15 @@
 # Summary — Domain-Adapted OCR and Information-Extraction Pre-Model
 
 **Project:** CSX4201 vision-info-extraction
-**Verified through:** 2026-07-29
+**Verified through:** 2026-07-30
 
 ## Outcome
 
-The workspace contains a public-trained academic pre-model with independently
-selectable original, custom, and adaptive OCR profiles. A deterministic
+The workspace contains a public-trained academic pre-model with original,
+custom, and adaptive OCR experiment profiles. Only the original OCR stack is
+bound to the shipped LayoutXLM calibration; custom/adaptive runs require the
+lower-level CLI's explicit generic-layout fallback and are not calibrated
+LayoutXLM extraction. A deterministic
 400-page `DEV_SELECT` benchmark replaced the prior three-page selection
 evidence. Public-only detector/recognizer trials were executed, OCR-realistic
 LayoutXLM streams were rebuilt, a fresh checkpoint was selected and
@@ -40,14 +43,15 @@ exact-angle estimator are reported, not hidden.
 | End-to-end rotation | 72/72 nonempty; public coverage 0.3068–0.3839; entity F1 0.1326–0.1807; synthetic Thai 18/18 |
 | Unseen CORU | 100/100 pages; 78.53% QA-answer text recall; 15.68% canonical exact match; 25.96 seconds/page |
 | Private operation | 2/2 anonymous documents and pages; aggregate only; no filename/text/image/per-document output |
-| Integration | Original/custom/adaptive image profiles plus rotated, Thai, and mixed-language multipage PDF outputs are schema-valid |
+| Integration | Strict original calibrated image/PDF paths plus explicit degraded custom/adaptive OCR experiments are schema-valid; historical custom/adaptive outputs did not prove calibrated LayoutXLM |
 
 ## Portable product and publication
 
 The model is available through a one-command CLI and repaired local GUI.
-The GUI previews images and first-page PDF renders, uses one progress surface,
-and keeps long OCR and run-log output independently scrollable. Extraction is
-local and requires no OpenAI API key.
+For public mode, the GUI previews images and first-page PDF renders. Private
+mode is selected by default and disables preview. The GUI uses one progress
+surface and keeps long OCR and run-log output independently scrollable.
+Extraction is local and requires no OpenAI API key.
 
 The public `v1.0.0-build-week` Release remains the historical July 21
 privacy-audited package for Windows and a Docker-backed macOS route. The
@@ -72,14 +76,23 @@ ZIP, and demo MP4 were preserved.
 
 The OCR upgrade merged into `main` through PR #2 at
 `c6303f6843de9af1c7c97fde1ef6ff43e01de553`. The current portable archive is
-published under `v1.1.0-ocr-upgrade`. Its tag targets clean package-build
-commit `fcae32edc193ff6574bf99362da0e2368d5ef464`; the archive is
-1,159,061,897 bytes and has SHA-256
-`d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
-Fresh CPU setup and real CPU/GPU image, rotated-image, two-page PDF, custom
-Thai, adaptive, schema, visualization, fallback, archive-integrity, privacy,
-and loopback GUI checks pass. GitHub reports the same archive size and digest;
-the historical `v1.0.0-build-week` Release remains available.
+published under `v1.1.0-ocr-upgrade`; its live Release asset and
+`OCR_Model.zip.sha256` sidecar are the authoritative current size and digest.
+Each corrected build is produced from isolated staging, refuses a dirty Git
+candidate tree, records the exact source commit/tree hash in `BUILD_INFO.json`,
+requires a builder-owned deletion sentinel, refuses all installed-working-copy
+targets and source reparse points, binds the safe sample to integration
+evidence, scans every payload byte, emits a complete SHA-256 payload manifest,
+and validates ZIP integrity before publication.
+The historical `v1.0.0-build-week` Release remains available.
+
+Calibrated layout inference now validates the calibration's OCR-stack binding
+before starting its worker and fails closed on required worker errors. An
+explicit developer-only generic/rule fallback remains available but is never
+reported as calibrated LayoutXLM output. The portable CLI and GUI also expose
+an explicit private-document mode with opaque run IDs, filename/path
+redaction, no private preview, opaque short-lived worker input, session-cache
+cleanup, private-root isolation, and no visualization or downloadable archive.
 
 ## Current model and runtime
 
@@ -133,6 +146,10 @@ Complete:
 - locked in-domain, 18-angle layout, 18-angle end-to-end, and 100-page unseen
   evaluation;
 - schema validation, private path/cache gates, aggregate-only private testing;
+- 14 model-supervised canonical-evidence fields and 27 schema-supported output
+  fields with their different scopes stated explicitly;
+- fail-closed calibration/OCR-stack binding plus explicit generic-only
+  fallback, and an opaque portable private-document workflow;
 - cryptographically bound integration evidence and final report bundle;
 - preserved, failure-isolated K-Means display baseline.
 

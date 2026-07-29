@@ -53,8 +53,20 @@ Registry defaults: detector `original`, general recognizer `original`, Thai reco
 ## Fallback, cache, and portability
 
 - The original detector and recognizers remain registered as explicit fallbacks.
+- Calibrated LayoutXLM inference requires the configured checkpoint,
+  calibration, and OCR-stack binding to agree; a required worker failure fails
+  the run. Explicit generic/rule-only fallback is a separate degraded mode and
+  is not reported as calibrated LayoutXLM output.
 - OCR caches are bound to model, preprocessing, and configuration hashes; mismatched entries are rejected.
 - Portable packages contain selected inference artifacts and allowed fallbacks only. Training data, crops, caches, environments, logs, and private material are excluded.
+- Portable private-document mode uses an opaque private root, redacts source
+  names/paths, disables preview, visualizations, and downloadable archives,
+  runs from a removed-after-use opaque worker copy, and removes the private
+  Gradio upload cache after the run.
+
+The learned canonical-evidence head directly supervises 14 configured fields.
+The versioned output schema supports 27 fields after learned evidence,
+validated rules, and hybrid resolution; these are different scopes.
 
 ## Known limitations
 

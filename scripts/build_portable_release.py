@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
+import os
+import re
 import shutil
-import subprocess
+import stat
 import sys
 import zipfile
 from datetime import datetime, timezone
@@ -17,13 +20,32 @@ import yaml
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_TARGET = Path("D:/OCR_Model")
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.release_provenance import require_clean_git_worktree  # noqa: E402
+
 DEFAULT_ASSET_ROOT = Path("D:/CSX4201/vision-info-extraction-assets")
+INSTALLED_TARGET = Path("D:/OCR_Model")
+DEFAULT_TARGET = (
+    DEFAULT_ASSET_ROOT / "release-staging" / "v1.1.0-in-place" / "OCR_Model"
+)
+STAGING_SENTINEL_NAME = ".ocr-model-release-staging.json"
+STAGING_SENTINEL_PURPOSE = "csx4201-portable-release-staging-v1"
 PORTABLE_LAYOUT_CHECKPOINT = "assets/checkpoints/layoutxlm_multitask/final"
 OCR_MODEL_NAMES = (
     "PP-OCRv6_medium_det",
     "PP-OCRv6_medium_rec",
     "th_PP-OCRv5_mobile_rec",
+)
+SECRET_PATTERNS = (
+    re.compile(
+        rb"(?i)(?:api[_-]?key|client[_-]?secret|password|access[_-]?token)"
+        rb"\s*[:=]\s*['\"]?[A-Za-z0-9_\-/.+=]{16,}"
+    ),
+    re.compile(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+    re.compile(rb"\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b"),
+    re.compile(rb"\bgh[pousr]_[A-Za-z0-9]{20,}\b"),
+    re.compile(rb"\bAKIA[0-9A-Z]{16}\b"),
 )
 
 
@@ -44,21 +66,53 @@ def write_json(path: Path, payload: Any) -> None:
 
 
 def copy_file(source: Path, target: Path) -> None:
+    _assert_no_reparse_components(source)
+    if _is_reparse_point(source):
+        raise ValueError(f"refusing to copy a reparse point: {source}")
     if not source.is_file():
         raise FileNotFoundError(source)
+    source_size = source.stat().st_size
+    source_hash = sha256_file(source)
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, target)
+    if (
+        source.stat().st_size != source_size
+        or sha256_file(source) != source_hash
+        or target.stat().st_size != source_size
+        or sha256_file(target) != source_hash
+    ):
+        target.unlink(missing_ok=True)
+        raise RuntimeError(f"source changed or copy verification failed: {source}")
 
 
 def copy_tree(source: Path, target: Path) -> None:
+    _assert_no_reparse_components(source)
+    if _is_reparse_point(source):
+        raise ValueError(f"refusing to copy a reparse directory: {source}")
     if not source.is_dir():
         raise FileNotFoundError(source)
-    shutil.copytree(
-        source,
-        target,
-        dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache"),
-    )
+    target.mkdir(parents=True, exist_ok=True)
+    _copy_tree_no_follow(source, target)
+
+
+def _copy_tree_no_follow(source: Path, target: Path) -> None:
+    ignored_names = {"__pycache__", ".pytest_cache"}
+    with os.scandir(source) as entries:
+        ordered = sorted(entries, key=lambda entry: entry.name.casefold())
+    for entry in ordered:
+        if entry.name in ignored_names or entry.name.endswith(".pyc"):
+            continue
+        source_path = Path(entry.path)
+        target_path = target / entry.name
+        if entry.is_symlink() or _is_reparse_point(source_path):
+            raise ValueError(f"refusing to follow a reparse point: {source_path}")
+        if entry.is_dir(follow_symlinks=False):
+            target_path.mkdir(parents=True, exist_ok=True)
+            _copy_tree_no_follow(source_path, target_path)
+        elif entry.is_file(follow_symlinks=False):
+            copy_file(source_path, target_path)
+        else:
+            raise ValueError(f"refusing to copy a special file: {source_path}")
 
 
 def selected_layout_checkpoint(
@@ -94,29 +148,102 @@ def selected_layout_checkpoint(
     return checkpoint, actual_hash, calibration
 
 
-def prepare_target(target: Path, *, force: bool) -> None:
+def validate_build_location(target: Path, asset_root: Path) -> None:
+    """Constrain release builds to the owner-authorized external staging root."""
     resolved = target.resolve()
+    installed = INSTALLED_TARGET.resolve()
+    assets = DEFAULT_ASSET_ROOT.resolve()
+    if asset_root.resolve() != assets:
+        raise ValueError(
+            "portable asset root must be exactly "
+            "D:\\CSX4201\\vision-info-extraction-assets"
+        )
+    if resolved == installed:
+        raise ValueError(
+            "release builder must never target the installed D:\\OCR_Model "
+            "working copy; use external-assets release staging"
+        )
+    if assets not in resolved.parents:
+        raise ValueError(
+            "portable release builds are allowed only below "
+            "D:\\CSX4201\\vision-info-extraction-assets"
+        )
+
+
+def require_unchanged_provenance(
+    initial: dict[str, Any],
+    final: dict[str, Any],
+) -> None:
+    """Fail if release-source state changed while the payload was assembled."""
+    keys = (
+        "source_commit",
+        "source_tree_dirty",
+        "source_tree_sha256",
+        "source_candidate_file_count",
+        "source_missing_candidate_paths",
+    )
+    changed = [key for key in keys if initial.get(key) != final.get(key)]
+    if changed:
+        raise RuntimeError(
+            "release source changed during payload assembly: "
+            + ", ".join(changed)
+        )
+
+
+def prepare_target(target: Path, *, force: bool) -> None:
+    resolved = Path(os.path.abspath(target))
     if resolved.name != "OCR_Model":
         raise ValueError("portable target directory must be named exactly OCR_Model")
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    _assert_no_reparse_components(resolved.parent)
     if resolved.exists():
         if not force:
             raise FileExistsError(
                 f"target exists: {resolved}; pass --force to rebuild it"
             )
+        if (resolved / ".runtime").exists() or (
+            resolved / "runtime.local.json"
+        ).exists():
+            raise ValueError(
+                "refusing to delete an installed OCR_Model working copy; "
+                "build under the external-assets release-staging directory"
+            )
+        _require_staging_sentinel(resolved)
+        if _is_reparse_point(resolved):
+            raise ValueError(
+                f"refusing to delete a reparse-point target: {resolved}"
+            )
         shutil.rmtree(resolved)
+    else:
+        sentinel = resolved.parent / STAGING_SENTINEL_NAME
+        if sentinel.exists():
+            _require_staging_sentinel(resolved)
+        else:
+            write_json(sentinel, _staging_sentinel_payload(resolved))
     resolved.mkdir(parents=True)
 
 
-def git_value(*args: str) -> str | None:
-    completed = subprocess.run(
-        ["git", *args],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    return completed.stdout.strip() if completed.returncode == 0 else None
+def _staging_sentinel_payload(target: Path) -> dict[str, str]:
+    return {
+        "schema_version": "1.0",
+        "purpose": STAGING_SENTINEL_PURPOSE,
+        "target": str(Path(os.path.abspath(target))),
+    }
+
+
+def _require_staging_sentinel(target: Path) -> None:
+    sentinel = target.parent / STAGING_SENTINEL_NAME
+    if not sentinel.is_file() or _is_reparse_point(sentinel):
+        raise ValueError(
+            "refusing to delete unmarked release staging; the builder-owned "
+            f"{STAGING_SENTINEL_NAME} sentinel is missing"
+        )
+    try:
+        payload = json.loads(sentinel.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("release-staging sentinel is invalid") from exc
+    if payload != _staging_sentinel_payload(target):
+        raise ValueError("release-staging sentinel does not match this target")
 
 
 def copy_application(target: Path) -> None:
@@ -388,10 +515,30 @@ def _copy_upgrade_registry(target: Path) -> None:
 
 def copy_samples(target: Path, asset_root: Path) -> None:
     fixture_root = asset_root / "generated" / "integration_smoke" / "fixtures"
-    copy_file(
-        fixture_root / "unknown_upright.png",
-        target / "samples" / "unknown_upright.png",
+    fixture = fixture_root / "unknown_upright.png"
+    report_path = (
+        PROJECT_ROOT
+        / "reports"
+        / "information_extraction"
+        / "integration_smoke.json"
     )
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    record = (
+        report.get("fixture_artifacts", {})
+        .get("unknown_upright_image")
+    )
+    if not isinstance(record, dict):
+        raise ValueError("integration evidence has no upright sample binding")
+    recorded = Path(str(record.get("path", "")))
+    if (
+        Path(os.path.abspath(recorded)) != Path(os.path.abspath(fixture))
+        or int(record.get("size_bytes", -1)) != fixture.stat().st_size
+        or str(record.get("sha256", "")) != sha256_file(fixture)
+    ):
+        raise ValueError(
+            "synthetic sample does not match integration evidence"
+        )
+    copy_file(fixture, target / "samples" / "unknown_upright.png")
     (target / "samples" / "README.md").write_text(
         "# Synthetic sample\n\n"
         "`unknown_upright.png` is a generated integration fixture containing "
@@ -402,8 +549,9 @@ def copy_samples(target: Path, asset_root: Path) -> None:
 
 
 def privacy_audit(target: Path) -> dict[str, Any]:
-    files = [path for path in target.rglob("*") if path.is_file()]
-    prohibited = []
+    files, reparse_points, special_paths = _payload_inventory(target)
+    prohibited: list[str] = []
+    prohibited.extend(special_paths)
     for path in files:
         relative = path.relative_to(target)
         lowered = [part.casefold() for part in relative.parts]
@@ -417,33 +565,337 @@ def privacy_audit(target: Path) -> dict[str, Any]:
             prohibited.append(relative.as_posix())
         if any(part in {"private_outputs", "private-evaluation"} for part in lowered):
             prohibited.append(relative.as_posix())
+
+    private_names = _private_inventory_names(
+        PROJECT_ROOT / "data" / "metadata" / "private_file_inventory.csv"
+    )
+    private_needles = _private_name_needles(private_names)
+    secret_hits: list[str] = []
+    private_name_hits: list[str] = []
+    for path in files:
+        try:
+            secret_hit, private_name_hit = _scan_payload_file(
+                path,
+                private_needles,
+            )
+        except OSError:
+            prohibited.append(path.relative_to(target).as_posix())
+            continue
+        relative = path.relative_to(target).as_posix()
+        if secret_hit:
+            secret_hits.append(relative)
+        if (
+            private_name_hit
+            or any(name in relative.casefold() for name in private_names)
+        ):
+            private_name_hits.append(relative)
+
+    failed = bool(
+        prohibited or reparse_points or secret_hits or private_name_hits
+    )
+    prohibited_lower = [value.casefold() for value in prohibited]
     audit = {
-        "status": "pass" if not prohibited else "fail",
+        "status": "fail" if failed else "pass",
         "checked_file_count": len(files),
         "prohibited_files": sorted(set(prohibited)),
-        "raw_data_included": False,
-        "private_gmail_data_included": False,
-        "private_outputs_included": False,
-        "credentials_included": False,
+        "reparse_points": sorted(set(reparse_points)),
+        "secret_hit_files": sorted(set(secret_hits)),
+        "private_filename_hit_files": sorted(set(private_name_hits)),
+        "private_filename_inventory_count": len(private_names),
+        "raw_data_included": any(
+            value == "data" or value.startswith("data/")
+            for value in prohibited_lower
+        ),
+        "private_gmail_data_included": bool(private_name_hits),
+        "private_outputs_included": any(
+            "private_outputs" in value or "private-evaluation" in value
+            for value in prohibited_lower
+        ),
+        "credentials_included": bool(secret_hits),
         "safe_sample_count": 1,
-        "method": "allowlisted source copy plus prohibited-path scan",
+        "method": (
+            "allowlisted copy plus final-payload prohibited-path, reparse, "
+            "streaming all-file secret-pattern and live private-filename scans"
+        ),
     }
     write_json(target / "PRIVACY_AUDIT.json", audit)
-    if prohibited:
-        raise ValueError("privacy audit failed: " + ", ".join(prohibited))
+    if failed:
+        raise ValueError(
+            "privacy audit failed; inspect PRIVACY_AUDIT.json for hit paths"
+        )
     return audit
 
 
-def build_info(target: Path, model_records: list[dict[str, Any]]) -> None:
-    status = git_value("status", "--porcelain") or ""
+def _private_inventory_names(inventory_path: Path) -> set[str]:
+    if not inventory_path.is_file():
+        raise FileNotFoundError(
+            "private filename inventory is required for the release scan"
+        )
+    names: set[str] = set()
+    with inventory_path.open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            for key in (
+                "original_filename",
+                "current_relative_path",
+                "original_relative_path",
+                "relative_path",
+                "path",
+                "filename",
+            ):
+                value = str(row.get(key) or "").strip()
+                if value:
+                    names.add(Path(value).name.casefold())
+    names.discard("")
+    if not names:
+        raise ValueError(
+            "private filename inventory contains no usable filename values"
+        )
+    return names
+
+
+def _private_name_needles(names: set[str]) -> tuple[bytes, ...]:
+    needles: set[bytes] = set()
+    for name in names:
+        for encoding in ("utf-8", "utf-16-le", "utf-16-be"):
+            encoded = name.encode(encoding, errors="ignore").lower()
+            if encoded:
+                needles.add(encoded)
+    return tuple(sorted(needles, key=len, reverse=True))
+
+
+def _scan_payload_file(
+    path: Path,
+    private_needles: tuple[bytes, ...],
+) -> tuple[bool, bool]:
+    max_needle = max((len(value) for value in private_needles), default=0)
+    overlap = max(8192, max_needle * 2)
+    tail = b""
+    secret_hit = False
+    private_name_hit = False
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(4 * 1024 * 1024), b""):
+            content = tail + chunk
+            lowered = content.lower()
+            if not secret_hit:
+                secret_hit = any(
+                    pattern.search(content) for pattern in SECRET_PATTERNS
+                )
+            if not private_name_hit:
+                private_name_hit = any(
+                    needle in lowered for needle in private_needles
+                )
+            if secret_hit and private_name_hit:
+                break
+            tail = content[-overlap:]
+    return secret_hit, private_name_hit
+
+
+def _is_reparse_point(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    return bool(attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT)
+
+
+def _assert_no_reparse_components(path: Path) -> None:
+    absolute = Path(os.path.abspath(path))
+    current = Path(absolute.anchor)
+    for part in absolute.parts[1:]:
+        current /= part
+        if (current.exists() or current.is_symlink()) and _is_reparse_point(
+            current
+        ):
+            raise ValueError(f"path contains a reparse point: {current}")
+
+
+def _payload_inventory(
+    target: Path,
+) -> tuple[list[Path], list[str], list[str]]:
+    files: list[Path] = []
+    reparse_points: list[str] = []
+    special_paths: list[str] = []
+    pending = [target]
+    while pending:
+        directory = pending.pop()
+        with os.scandir(directory) as entries:
+            ordered = sorted(entries, key=lambda entry: entry.name.casefold())
+        for entry in ordered:
+            path = Path(entry.path)
+            relative = path.relative_to(target).as_posix()
+            if entry.is_symlink() or _is_reparse_point(path):
+                reparse_points.append(relative)
+            elif entry.is_dir(follow_symlinks=False):
+                pending.append(path)
+            elif entry.is_file(follow_symlinks=False):
+                files.append(path)
+            else:
+                special_paths.append(relative)
+    files.sort(key=lambda path: path.relative_to(target).as_posix())
+    return files, sorted(reparse_points), sorted(special_paths)
+
+
+def write_payload_manifest(target: Path) -> dict[str, Any]:
+    manifest_path = target / "PAYLOAD_MANIFEST.json"
+    if manifest_path.exists():
+        manifest_path.unlink()
+    files, reparse_points, special_paths = _payload_inventory(target)
+    if reparse_points or special_paths:
+        raise ValueError(
+            "cannot create payload manifest with reparse or special paths"
+        )
+    records = [
+        {
+            "path": path.relative_to(target).as_posix(),
+            "size_bytes": path.stat().st_size,
+            "sha256": sha256_file(path),
+        }
+        for path in files
+    ]
+    payload = {
+        "schema_version": "1.0",
+        "self_excluded": "PAYLOAD_MANIFEST.json",
+        "file_count": len(records),
+        "total_size_bytes": sum(record["size_bytes"] for record in records),
+        "files": records,
+    }
+    write_json(manifest_path, payload)
+    return payload
+
+
+def validate_payload_manifest(target: Path) -> dict[str, Any]:
+    manifest_path = target / "PAYLOAD_MANIFEST.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("payload manifest is missing or invalid") from exc
+    records = manifest.get("files")
+    if (
+        not isinstance(records, list)
+        or int(manifest.get("file_count", -1)) != len(records)
+        or manifest.get("self_excluded") != "PAYLOAD_MANIFEST.json"
+    ):
+        raise ValueError("payload manifest structure is invalid")
+    expected: dict[str, dict[str, Any]] = {}
+    for record in records:
+        if not isinstance(record, dict):
+            raise ValueError("payload manifest contains a non-object record")
+        relative = str(record.get("path", ""))
+        if (
+            not relative
+            or relative == "PAYLOAD_MANIFEST.json"
+            or relative in expected
+            or Path(relative).is_absolute()
+            or ".." in Path(relative).parts
+        ):
+            raise ValueError(f"payload manifest path is unsafe: {relative!r}")
+        expected[relative] = record
+    files, reparse_points, special_paths = _payload_inventory(target)
+    if reparse_points or special_paths:
+        raise ValueError(
+            "payload contains reparse points or special files after manifesting"
+        )
+    actual_paths = {
+        path.relative_to(target).as_posix()
+        for path in files
+        if path != manifest_path
+    }
+    if actual_paths != set(expected):
+        raise ValueError("payload file set changed after manifest creation")
+    for relative, record in expected.items():
+        path = target / relative
+        if (
+            int(record.get("size_bytes", -1)) != path.stat().st_size
+            or str(record.get("sha256", "")) != sha256_file(path)
+        ):
+            raise ValueError(
+                f"payload file changed after manifest creation: {relative}"
+            )
+    expected_total = sum(
+        int(record["size_bytes"]) for record in expected.values()
+    )
+    if int(manifest.get("total_size_bytes", -1)) != expected_total:
+        raise ValueError("payload manifest total size is invalid")
+    return manifest
+
+
+def validate_zip_payload_manifest(
+    archive: Path,
+    *,
+    expected_root: str,
+    manifest: dict[str, Any],
+    manifest_path: Path,
+) -> dict[str, Any]:
+    expected = {
+        str(record["path"]): {
+            "size_bytes": int(record["size_bytes"]),
+            "sha256": str(record["sha256"]),
+        }
+        for record in manifest["files"]
+    }
+    expected["PAYLOAD_MANIFEST.json"] = {
+        "size_bytes": manifest_path.stat().st_size,
+        "sha256": sha256_file(manifest_path),
+    }
+    observed: dict[str, dict[str, Any]] = {}
+    prefix = f"{expected_root}/"
+    with zipfile.ZipFile(archive, "r") as source:
+        for info in source.infolist():
+            if info.is_dir():
+                continue
+            normalized = info.filename.replace("\\", "/")
+            if not normalized.startswith(prefix):
+                raise ValueError(
+                    f"ZIP payload entry escaped expected root: {info.filename}"
+                )
+            relative = normalized[len(prefix):]
+            digest = hashlib.sha256()
+            size = 0
+            with source.open(info, "r") as stream:
+                for chunk in iter(
+                    lambda: stream.read(4 * 1024 * 1024),
+                    b"",
+                ):
+                    digest.update(chunk)
+                    size += len(chunk)
+            observed[relative] = {
+                "size_bytes": size,
+                "sha256": digest.hexdigest(),
+            }
+    if observed != expected:
+        missing = sorted(set(expected) - set(observed))
+        extra = sorted(set(observed) - set(expected))
+        changed = sorted(
+            relative
+            for relative in set(expected) & set(observed)
+            if expected[relative] != observed[relative]
+        )
+        raise ValueError(
+            "ZIP payload does not match PAYLOAD_MANIFEST.json: "
+            f"missing={missing}, extra={extra}, changed={changed}"
+        )
+    return {
+        "manifest_file_count": len(expected),
+        "manifest_match": True,
+    }
+
+
+def build_info(
+    target: Path,
+    model_records: list[dict[str, Any]],
+    provenance: dict[str, Any],
+) -> None:
     write_json(
         target / "BUILD_INFO.json",
         {
             "schema_version": "1.0",
             "built_at": datetime.now(timezone.utc).isoformat(),
             "source_repository": "PracticalSwan/csx4201-vision-info-extraction",
-            "source_commit": git_value("rev-parse", "HEAD"),
-            "source_tree_dirty_at_build": bool(status),
+            "source_commit": provenance["source_commit"],
+            "source_tree_dirty_at_build": provenance["source_tree_dirty"],
+            "source_tree_sha256": provenance["source_tree_sha256"],
+            "source_candidate_file_count": provenance[
+                "source_candidate_file_count"
+            ],
             "model_file_count": len(model_records),
             "model_size_bytes": sum(item["size_bytes"] for item in model_records),
             "supported_hosts": {
@@ -456,7 +908,45 @@ def build_info(target: Path, model_records: list[dict[str, Any]]) -> None:
     )
 
 
-def make_zip(target: Path) -> tuple[Path, str]:
+def validate_zip_archive(archive: Path, expected_root: str) -> dict[str, Any]:
+    with zipfile.ZipFile(archive, "r") as source:
+        names = source.namelist()
+        corrupt = source.testzip()
+    duplicates = sorted(
+        name for name in set(names) if names.count(name) > 1
+    )
+    unsafe = []
+    roots = set()
+    for name in names:
+        normalized = name.replace("\\", "/")
+        parts = Path(normalized).parts
+        if (
+            not parts
+            or normalized.startswith("/")
+            or re.match(r"^[A-Za-z]:", normalized)
+            or any(part in {"", ".", ".."} for part in parts)
+        ):
+            unsafe.append(name)
+            continue
+        roots.add(parts[0])
+    if corrupt or duplicates or unsafe or roots != {expected_root}:
+        raise ValueError(
+            "ZIP validation failed: "
+            f"corrupt={corrupt!r}, duplicates={len(duplicates)}, "
+            f"unsafe={len(unsafe)}, roots={sorted(roots)}"
+        )
+    return {
+        "entry_count": len(names),
+        "root": expected_root,
+        "crc_passed": True,
+        "duplicate_count": 0,
+        "unsafe_path_count": 0,
+    }
+
+
+def make_zip(target: Path) -> tuple[Path, str, dict[str, Any]]:
+    payload_manifest = validate_payload_manifest(target)
+    manifest_path = target / "PAYLOAD_MANIFEST.json"
     archive = target.with_suffix(".zip")
     if archive.exists():
         archive.unlink()
@@ -467,21 +957,32 @@ def make_zip(target: Path) -> tuple[Path, str]:
         compresslevel=6,
         allowZip64=True,
     ) as output:
-        for path in sorted(target.rglob("*")):
-            if not path.is_file():
-                continue
+        manifest_files = [
+            target / str(record["path"])
+            for record in payload_manifest["files"]
+        ]
+        for path in [*manifest_files, manifest_path]:
             arcname = (Path(target.name) / path.relative_to(target)).as_posix()
             # ZipFile.write streams large model files instead of reading the
             # 1+ GiB checkpoint into memory. macOS instructions invoke the
             # launchers through `bash`, so executable-bit preservation is not
             # required.
             output.write(path, arcname)
+    verification = validate_zip_archive(archive, target.name)
+    verification.update(
+        validate_zip_payload_manifest(
+            archive,
+            expected_root=target.name,
+            manifest=payload_manifest,
+            manifest_path=manifest_path,
+        )
+    )
     digest = sha256_file(archive)
     archive.with_suffix(".zip.sha256").write_text(
         f"{digest}  {archive.name}\n",
         encoding="ascii",
     )
-    return archive, digest
+    return archive, digest, verification
 
 
 def main() -> int:
@@ -492,19 +993,25 @@ def main() -> int:
     parser.add_argument("--zip", action="store_true", dest="create_zip")
     args = parser.parse_args()
 
-    target = args.target.expanduser().resolve()
-    asset_root = args.asset_root.expanduser().resolve()
+    target = Path(os.path.abspath(args.target.expanduser()))
+    asset_root = Path(os.path.abspath(args.asset_root.expanduser()))
+    provenance = require_clean_git_worktree(PROJECT_ROOT)
+    validate_build_location(target, asset_root)
     prepare_target(target, force=args.force)
     copy_application(target)
     portable_config(target)
     model_records = copy_models(target, asset_root)
     copy_samples(target, asset_root)
+    build_info(target, model_records, provenance)
     privacy = privacy_audit(target)
-    build_info(target, model_records)
+    payload_manifest = write_payload_manifest(target)
+    final_provenance = require_clean_git_worktree(PROJECT_ROOT)
+    require_unchanged_provenance(provenance, final_provenance)
     archive = None
     archive_hash = None
+    archive_verification = None
     if args.create_zip:
-        archive, archive_hash = make_zip(target)
+        archive, archive_hash, archive_verification = make_zip(target)
     print(
         json.dumps(
             {
@@ -513,8 +1020,13 @@ def main() -> int:
                 "file_count": sum(1 for path in target.rglob("*") if path.is_file()),
                 "model_size_bytes": sum(item["size_bytes"] for item in model_records),
                 "privacy_audit": privacy["status"],
+                "payload_manifest_file_count": payload_manifest["file_count"],
+                "payload_manifest_total_size_bytes": payload_manifest[
+                    "total_size_bytes"
+                ],
                 "archive": str(archive) if archive else None,
                 "archive_sha256": archive_hash,
+                "archive_verification": archive_verification,
             },
             indent=2,
         )

@@ -28,16 +28,38 @@ Run:
 3. Double-click `launch_windows.bat`.
 4. Select an image/PDF and click **Extract document**.
 
-The upload card previews the complete selected image or the first page of a
-PDF before extraction. Selecting a different document clears the previous
-status and results. A run uses one compact loading indicator; it does not cover
-each output tab with separate spinners.
+The GUI starts in private mode. Private uploads are not previewed. After
+deliberately clearing **Private document** for public material, the upload card
+previews the complete selected image or the first page of a PDF. Selecting a
+different document clears the previous status and results. A run uses one
+compact loading indicator; it does not cover each output tab with separate
+spinners.
 
 After setup, the model can also be run in one command:
 
 ```powershell
 .\run_cli.bat "C:\path\to\document.pdf"
 ```
+
+For a sensitive local document, use the explicit private mode:
+
+```powershell
+.\.runtime\app\Scripts\python.exe .\extract_document.py `
+  "C:\private\document.pdf" --private-document
+```
+
+The GUI exposes the same choice as **Private document** and selects it by
+default. This mode ignores any public output override, creates an opaque
+`outputs/private/run_<uuid>` folder, forces the lower-level private-output
+guard, hides the source filename and filesystem paths, disables preview,
+K-Means display, and visualizations, and offers no downloadable result
+archive. The original source path is not passed to the model child process:
+the input is copied to an opaque short-lived path and removed after the run.
+The session upload cache is also removed after a private run. Both that cache
+and the private output root are blocked from Gradio file serving.
+Public previews, galleries, and result downloads use a separate per-session
+cache below the allowed public output root, so blocking uploads does not break
+public display. Both session caches are removed when the GUI shuts down.
 
 Or with the lightweight app Python:
 
@@ -101,6 +123,10 @@ Terminal color sequences are removed from the displayed log.
 
 In the GUI, **Maximum PDF pages = 0** means process every page.
 
+Private-document runs are the exception to the public output list above: they
+remain below `outputs/private/`, use opaque run IDs, and do not create or show
+visualizations or downloadable archives.
+
 ## Readiness and troubleshooting
 
 Run the fast check:
@@ -131,26 +157,29 @@ The earlier
 [`v1.0.0-build-week` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
 remains the historical July 21 package.
 
-The published archive was built from clean commit
-`fcae32edc193ff6574bf99362da0e2368d5ef464`. It is 1,159,061,897 bytes
-with SHA-256:
+Use the live Release asset and `OCR_Model.zip.sha256` sidecar for the current
+archive size and digest. `BUILD_INFO.json` records the clean source commit,
+exact Git candidate-tree SHA-256, candidate count, and clean-state flag. The
+release build runs only from isolated staging below
+`D:\CSX4201\vision-info-extraction-assets`; it rejects `D:\OCR_Model` as a
+build target unconditionally. Rebuilding an existing staging target also
+requires the exact builder-owned sentinel in that target's parent.
 
-```text
-d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746
-```
-
-The GitHub Release asset reports the same size and SHA-256, and the published
-sidecar content matches the locally verified sidecar.
-
-Its sidecar matches, its 181 ZIP entries contain no duplicate or traversal
-path, and its package privacy audit passes. A fresh package-local CPU setup
-passed the doctor probe and real image, rotated-image, two-page PDF, custom
-Thai, adaptive-profile, JSON Schema, and visualization checks. The package
-also passed a GPU image run using the existing verified environments, with
-stable semantic parity against CPU. The GUI returned HTTP 200 from its
-loopback-only launch. Machine-local `.runtime`, `runtime.local.json`, and
-outputs are not part of the clean ZIP. Executed evidence is
-`reports/ocr_upgrade/portable_verification.json` in the source repository.
+Before publication, the completed payload is scanned for prohibited data
+paths, reparse points, secret patterns, and live private-filename inventory
+matches without skipping large or binary files. Source copies are verified
+before and after copying, reparse points are never followed, and the synthetic
+sample must match its executed integration-evidence size and SHA-256. A
+`PAYLOAD_MANIFEST.json` records every other package file, size, and SHA-256.
+The builder archives only that frozen list, then stream-hashes every ZIP entry
+and requires exact path/size/SHA-256 agreement with the embedded manifest
+before writing the sidecar. The ZIP also passes CRC, single-root,
+duplicate-name, absolute-path, and traversal checks. Generation-specific
+executed evidence is `reports/ocr_upgrade/portable_verification.json` in the
+source repository; it is authoritative only when its provenance,
+`BUILD_INFO.json`, tag, sidecar, and live Release asset all agree.
+Machine-local `.runtime`, `runtime.local.json`, and outputs are never part of
+the clean ZIP.
 
 The package includes the project's MIT `LICENSE` and `CONTRIBUTING.md`.
 LayoutXLM-derived weights and other third-party components retain the upstream
@@ -173,6 +202,16 @@ recognizer, the accepted synthetic-only custom Thai recognizer, and explicit
 original/custom/adaptive profile metadata. The original detector and
 recognizers remain available as fallbacks. Every result records the resolved
 profile and model identities.
+
+The calibrated layout stage is stricter than an OCR-model fallback. Its
+checkpoint, calibration, and OCR-stack binding must agree, and a required
+layout worker error fails the run. Only the lower-level development CLI can
+explicitly opt into generic/rule-only layout fallback; such output is not
+calibrated LayoutXLM inference. Because the shipped calibration is bound to the
+original OCR stack, the portable one-command CLI offers only
+`--ocr-profile original`/`auto` and original/auto component selectors.
+Custom/adaptive OCR experiments remain lower-level, explicit degraded-mode
+workflows rather than portable calibrated extraction.
 
 The package keeps the original scikit-learn joblib files for provenance, but
 the display-only rotation branch loads `models/kmeans_rotation/inference_params.npz`.
