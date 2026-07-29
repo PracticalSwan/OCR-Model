@@ -96,8 +96,9 @@ For a sensitive local document, add `--private-document` when invoking
 is the GUI default. It does not preview the upload, copies it to an opaque
 short-lived worker path, removes that copy and the session upload cache after
 the run, uses an opaque `outputs/private/run_<uuid>` directory, hides source
-names and paths, disables visualizations and downloadable archives, and never
-exposes the private output or upload-cache roots through the web application.
+names and paths, disables visualizations and downloadable archives, blocks the
+private output root from the web application, and keeps the GUI loopback-only.
+Gradio's required upload cache is removed after the private run.
 
 The default recipient setup is CPU-only. A compatible NVIDIA GPU is optional.
 

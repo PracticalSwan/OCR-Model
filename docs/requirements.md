@@ -29,7 +29,7 @@ cannot control or block OCR/extraction.
 | IE-011 | Keep multipage geometry/output isolated by page. | Pass, including continued output after a configured page-level failure. |
 | IE-012 | Make K-Means display-only and failure-isolated. | Pass; disabled/missing/wrong artifacts cannot block extraction. |
 | IE-013 | Fail fast when a required final checkpoint/calibration is missing, mismatched, bound to another OCR stack, or fails at runtime. | Pass in CLI/worker regressions; generic/rule-only fallback requires an explicit opt-in and is never labeled calibrated LayoutXLM output. |
-| IE-014 | Provide an explicit portable private-document mode. | Pass; GUI-private is the default and disables preview, uses opaque private-root output and worker input, removes session upload/input caches, redacts paths/names, provides no visualization/archive, and blocks Gradio access. |
+| IE-014 | Provide an explicit portable private-document mode. | Pass; GUI-private is the default and disables preview, uses opaque private-root output and worker input, removes session upload/input caches, redacts paths/names, provides no visualization/archive, and blocks Gradio access to the private output root. |
 | IE-015 | Distinguish learned field supervision from the output contract. | Pass; 14 configured fields have direct model supervision and the schema supports 27 fields after learned, rule, and hybrid resolution. |
 
 ## Data, training, and evaluation requirements

@@ -155,10 +155,11 @@ Schema validation precedes atomic write. Private results must target the
 configured ignored D: private root. The portable CLI/GUI private-document mode
 adds an opaque `run_<uuid>` destination, forces the private-output guard,
 redacts source names/paths, disables preview, visualizations, and downloadable
-archives, and blocks private-output and upload-cache roots from the web file
-server. The original source is copied to an opaque short-lived worker input so
-its path never enters child-process arguments; both that copy and the private
-session upload cache are removed afterward.
+archives, and blocks the private-output root from the web file server. The GUI
+remains loopback-only, while Gradio's own upload cache remains available for
+required input preprocessing. The original source is copied to an opaque
+short-lived worker input so its path never enters child-process arguments;
+both that copy and the private session upload cache are removed afterward.
 
 ## Release boundary
 

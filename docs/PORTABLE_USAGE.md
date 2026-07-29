@@ -55,11 +55,12 @@ guard, hides the source filename and filesystem paths, disables preview,
 K-Means display, and visualizations, and offers no downloadable result
 archive. The original source path is not passed to the model child process:
 the input is copied to an opaque short-lived path and removed after the run.
-The session upload cache is also removed after a private run. Both that cache
-and the private output root are blocked from Gradio file serving.
+The session upload cache is also removed after a private run. The private
+output root is blocked from Gradio file serving, and the GUI remains
+loopback-only outside its container.
 Public previews, galleries, and result downloads use a separate per-session
-cache below the allowed public output root, so blocking uploads does not break
-public display. Both session caches are removed when the GUI shuts down.
+cache below the allowed public output root. Both session caches are removed
+when the GUI shuts down.
 
 Or with the lightweight app Python:
 

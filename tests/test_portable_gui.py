@@ -8,6 +8,7 @@ from PIL import Image
 from src.portable.gui import (
     APP_CSS,
     _clean_log_line,
+    _gradio_blocked_paths,
     _on_document_change,
     _preview_document,
     _public_component_cache,
@@ -161,3 +162,20 @@ def test_public_component_cache_is_session_scoped_and_safely_removed(
     with pytest.raises(RuntimeError, match="unexpected public"):
         _remove_public_component_cache(outside, settings)
     assert outside.is_dir()
+
+
+def test_gradio_upload_cache_is_not_blocked(tmp_path: Path) -> None:
+    settings = object.__new__(RuntimeSettings)
+    object.__setattr__(settings, "home", tmp_path)
+    object.__setattr__(settings, "output_root", tmp_path / "outputs")
+    object.__setattr__(
+        settings,
+        "private_output_root",
+        tmp_path / "outputs" / "private",
+    )
+    upload_cache = tmp_path / ".runtime" / "gradio" / "session_opaque"
+
+    blocked = _gradio_blocked_paths(settings)
+
+    assert str(settings.private_output_root) in blocked
+    assert str(upload_cache) not in blocked

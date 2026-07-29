@@ -304,6 +304,23 @@ def _remove_public_component_cache(
         shutil.rmtree(root_absolute)
 
 
+def _gradio_blocked_paths(settings: RuntimeSettings) -> list[str]:
+    """Block private data/output roots without blocking Gradio uploads."""
+    blocked = [
+        str(path)
+        for path in (
+            settings.home / "data" / "raw" / "private",
+            settings.home / "private_outputs",
+        )
+        if path.exists()
+    ]
+    # Keep the configured private root blocked before the first private run.
+    blocked.append(
+        str(settings.private_output_root or (settings.output_root / "private"))
+    )
+    return blocked
+
+
 def _run_gui(
     uploaded: str | None,
     language: str,
@@ -606,20 +623,7 @@ def main(argv: list[str] | None = None) -> int:
         settings,
         gradio_temp_root,
     )
-    blocked = [
-        str(path)
-        for path in (
-            settings.home / "data" / "raw" / "private",
-            settings.home / "private_outputs",
-        )
-        if path.exists()
-    ]
-    # Keep the configured private root blocked even before the first private
-    # run creates it; public output access remains explicitly allowed above.
-    blocked.append(
-        str(settings.private_output_root or (settings.output_root / "private"))
-    )
-    blocked.append(str(gradio_temp_root))
+    blocked = _gradio_blocked_paths(settings)
     try:
         build_app(
             settings,
