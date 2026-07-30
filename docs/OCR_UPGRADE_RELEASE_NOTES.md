@@ -432,9 +432,9 @@ changes are:
   `config.yaml` rather than probing a legacy `final` sibling;
 - portable CLI/GUI private-document mode uses opaque private-root run IDs,
   defaults on in the GUI, disables preview, uses and removes an opaque
-  short-lived worker input, removes the private session upload cache, redacts
-  source filenames/paths, and disables visualizations and downloadable
-  archives;
+  short-lived worker input, redacts source filenames/paths from result
+  surfaces, and disables visualizations and downloadable archives; the single
+  reusable GUI session cache is removed when the GUI shuts down;
 - the learned 14-field canonical-evidence scope is distinguished from the
   27-field schema output contract;
 - the rotation-stage 10 GiB reserve is named separately from the 15 GiB
@@ -456,6 +456,27 @@ and both live assets were downloaded and re-hashed. The local archive,
 sidecar, live digest, tag, `BUILD_INFO.json`, and payload manifest now agree.
 No patch version, temporary release assets, deletion sentinel, or custom
 release-state protocol is used.
+
+## GUI state and layout repair
+
+The July 30 GUI repair removes an extraction-to-upload feedback edge that
+caused a completed private run to trigger the document-change reset and erase
+its own output. Extraction now updates only the seven result components.
+Changing **Private processing** updates only the preview and helper text, while
+an actual document change remains the deliberate result-reset boundary. The
+selected upload remains usable for repeat runs until the single GUI session
+cache is removed at shutdown.
+
+The Gradio 6.0.1 footer Settings control was removed because it raised a
+browser-side `TypeError: Illegal invocation`. The repaired layout adds a
+bounded centered canvas, a distinct settings heading, shorter private-mode
+copy, a full-width extraction action, a status card, responsive spacing, and
+a dedicated Download tab. Browser verification used the safe bundled
+`unknown_upright.png`: one real GPU extraction produced five populated fields,
+the result remained present after a private-mode toggle, the upload remained
+selected, the Settings button was absent, and the browser console had zero
+errors. Public preview also waits briefly for Gradio's upload copy to become
+visible, preventing a transient missing-file message during first render.
 
 ## Remaining limitations
 

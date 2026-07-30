@@ -55,9 +55,12 @@ For a public uploaded image or PDF, the local pipeline:
 - validates the result against a versioned JSON Schema; and
 - writes JSON, page overlays, OCR artifacts, logs, and a downloadable ZIP.
 
-The GUI has one progress indicator and independently scrollable OCR-text and
-run-log panes. The preserved four-cluster rotation experiment contributes a
-display-only quadrant; it never controls OCR or extraction.
+The GUI has one progress indicator, independently scrollable OCR-text and
+run-log panes, and a dedicated Download tab. Completed results persist after a
+run and when extraction settings change; selecting a different document
+deliberately resets the prior result. The preserved four-cluster rotation
+experiment contributes a display-only quadrant; it never controls OCR or
+extraction.
 
 Calibrated LayoutXLM inference is fail-closed: the configured checkpoint,
 calibration, and OCR-stack binding must agree, and a required worker failure
@@ -92,13 +95,15 @@ After setup, the same pipeline runs from one command:
 ```
 
 For a sensitive local document, add `--private-document` when invoking
-`extract_document.py`, or select **Private document** in the GUI. Private mode
-is the GUI default. It does not preview the upload, copies it to an opaque
-short-lived worker path, removes that copy and the session upload cache after
-the run, uses an opaque `outputs/private/run_<uuid>` directory, hides source
-names and paths, disables visualizations and downloadable archives, blocks the
-private output root from the web application, and keeps the GUI loopback-only.
-Gradio's required upload cache is removed after the private run.
+`extract_document.py`, or leave **Private processing** selected in the GUI.
+Private mode is the GUI default. It does not preview the upload, copies it to
+an opaque short-lived worker path, removes that worker copy after the run, uses
+an opaque `outputs/private/run_<uuid>` directory, redacts source names and
+paths from result surfaces, disables visualizations and downloadable archives,
+blocks the private output root from the web application, and keeps the GUI
+loopback-only. The local file selector still shows the selected filename. The
+single Gradio session cache remains available so the same selection can be run
+again and is removed when the GUI shuts down.
 
 The default recipient setup is CPU-only. A compatible NVIDIA GPU is optional.
 

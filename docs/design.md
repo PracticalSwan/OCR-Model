@@ -159,7 +159,9 @@ archives, and blocks the private-output root from the web file server. The GUI
 remains loopback-only, while Gradio's own upload cache remains available for
 required input preprocessing. The original source is copied to an opaque
 short-lived worker input so its path never enters child-process arguments;
-both that copy and the private session upload cache are removed afterward.
+that worker copy is removed after the run. One GUI session cache preserves the
+selected upload across extraction and settings changes, then is removed when
+the GUI shuts down.
 
 ## Release boundary
 

@@ -28,10 +28,11 @@ Run:
 3. Double-click `launch_windows.bat`.
 4. Select an image/PDF and click **Extract document**.
 
-The GUI starts in private mode. Private uploads are not previewed. After
-deliberately clearing **Private document** for public material, the upload card
-previews the complete selected image or the first page of a PDF. Selecting a
-different document clears the previous status and results. A run uses one
+The GUI starts with **Private processing** selected. Private uploads are not
+previewed. After deliberately clearing it for public material, the upload card
+previews the complete selected image or the first page of a PDF. Completed
+results remain visible when processing settings change. Selecting a different
+document deliberately clears the previous status and results. A run uses one
 compact loading indicator; it does not cover each output tab with separate
 spinners.
 
@@ -48,18 +49,18 @@ For a sensitive local document, use the explicit private mode:
   "C:\private\document.pdf" --private-document
 ```
 
-The GUI exposes the same choice as **Private document** and selects it by
+The GUI exposes the same choice as **Private processing** and selects it by
 default. This mode ignores any public output override, creates an opaque
 `outputs/private/run_<uuid>` folder, forces the lower-level private-output
-guard, hides the source filename and filesystem paths, disables preview,
-K-Means display, and visualizations, and offers no downloadable result
-archive. The original source path is not passed to the model child process:
+guard, redacts the source filename and filesystem paths from result surfaces,
+disables preview, K-Means display, and visualizations, and offers no
+downloadable result archive. The local file selector still shows the selected
+filename. The original source path is not passed to the model child process:
 the input is copied to an opaque short-lived path and removed after the run.
-The session upload cache is also removed after a private run. The private
-output root is blocked from Gradio file serving, and the GUI remains
+One Gradio session cache remains available so settings changes and repeat runs
+do not invalidate the selection; it is removed when the GUI shuts down. The
+private output root is blocked from Gradio file serving, and the GUI remains
 loopback-only outside its container.
-Public previews, galleries, and result downloads use the same Gradio session
-cache, which is removed when the GUI shuts down.
 
 Or with the lightweight app Python:
 
@@ -117,9 +118,10 @@ Every run creates a timestamped folder under `outputs/` containing:
 - `portable_run.log`: local diagnostic log
 
 The GUI shows a field table, combined OCR text, full JSON, page visualizations,
-and a downloadable ZIP of that run. The OCR text and run-log panes have fixed
-heights with independent vertical scrolling, so long output remains usable.
-Terminal color sequences are removed from the displayed log.
+and a dedicated Download tab for the ZIP of a public run. The OCR text and
+run-log panes have fixed heights with independent vertical scrolling, so long
+output remains usable. Terminal color sequences are removed from the displayed
+log.
 
 In the GUI, **Maximum PDF pages = 0** means process every page.
 

@@ -7,6 +7,7 @@ import math
 import os
 import re
 import shutil
+import time
 import uuid
 from pathlib import Path
 
@@ -35,10 +36,16 @@ PREVIEW_IMAGE_SUFFIXES = {
 }
 PREVIEW_MAX_PIXELS = 12_000_000
 PREVIEW_PDF_DPI = 120
+UPLOAD_READY_TIMEOUT_SECONDS = 0.5
+FOOTER_LINKS = ["gradio"]
 APP_CSS = """
 .gradio-container {
-    width: 100% !important;
-    max-width: 100% !important;
+    width: min(100%, 90rem) !important;
+    max-width: 90rem !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
 }
 
 #document-upload {
@@ -51,6 +58,38 @@ APP_CSS = """
 
 #document-preview img {
     object-fit: contain !important;
+}
+
+#extraction-settings {
+    gap: 0.7rem;
+}
+
+#extraction-settings-heading {
+    margin-bottom: -0.25rem;
+}
+
+#private-document label {
+    align-items: flex-start;
+    white-space: normal;
+}
+
+#private-document-note {
+    margin-top: -0.45rem;
+    color: var(--body-text-color-subdued);
+}
+
+#extract-button {
+    width: 100%;
+    min-height: 3rem;
+    margin-top: 0.15rem;
+}
+
+#run-status {
+    min-height: 3.25rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--block-border-color);
+    border-radius: var(--block-radius);
+    background: var(--block-background-fill);
 }
 
 #ocr-text textarea,
@@ -89,6 +128,11 @@ APP_CSS = """
 }
 
 @media (max-width: 780px) {
+    .gradio-container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
     #document-preview {
         min-height: 18rem;
     }
@@ -180,6 +224,9 @@ def _preview_document(uploaded: str | None):
         return None, "Upload an image or PDF to preview it here."
     source = Path(uploaded)
     try:
+        deadline = time.monotonic() + UPLOAD_READY_TIMEOUT_SECONDS
+        while not source.is_file() and time.monotonic() < deadline:
+            time.sleep(0.025)
         if not source.is_file():
             raise ValueError("uploaded file no longer exists")
         if source.suffix.casefold() == ".pdf":
@@ -198,26 +245,32 @@ def _preview_document(uploaded: str | None):
 
 
 def _on_document_change(uploaded: str | None, private_document: bool = False):
-    if uploaded and private_document:
-        # Do not open or render private uploads in the browser-facing UI.
-        preview = None
-        preview_note = (
-            "Private preview is disabled. The document filename is hidden."
-        )
-        status = (
-            "Ready to extract the private document. "
-            "Select **Extract document** to run the local model."
-        )
-    else:
-        preview, preview_note = _preview_document(uploaded)
+    preview, preview_note = _on_private_mode_change(uploaded, private_document)
     if uploaded and not private_document:
         status = (
             f"Ready to extract **{Path(uploaded).name}**. "
             "Select **Extract document** to run the local model."
         )
+    elif uploaded:
+        status = (
+            "Ready to extract the private document. "
+            "Select **Extract document** to run the local model."
+        )
     elif not uploaded:
         status = "Choose a document, then select **Extract document**."
     return preview, preview_note, status, [], "", None, [], None, ""
+
+
+def _on_private_mode_change(
+    uploaded: str | None,
+    private_document: bool = False,
+):
+    if uploaded and private_document:
+        return (
+            None,
+            "Private preview is disabled. The selected file stays on this computer.",
+        )
+    return _preview_document(uploaded)
 
 
 def _clean_log_line(line: str) -> str:
@@ -234,31 +287,6 @@ def _prepare_gradio_temp_root(settings: RuntimeSettings) -> Path:
     root.mkdir(parents=True, exist_ok=False)
     os.environ["GRADIO_TEMP_DIR"] = str(root)
     return root
-
-
-def _remove_uploaded_private_cache(
-    uploaded: str | None,
-    gradio_temp_root: Path | None,
-) -> bool:
-    """Remove a private upload only when it is inside this GUI session cache."""
-    if not uploaded or gradio_temp_root is None:
-        return False
-    source = Path(uploaded).absolute()
-    root = Path(gradio_temp_root).absolute()
-    if source == root or root not in source.parents:
-        return False
-    if source.is_symlink() or source.is_file():
-        source.unlink(missing_ok=True)
-    elif source.exists():
-        return False
-    parent = source.parent
-    while parent != root and root in parent.parents:
-        try:
-            parent.rmdir()
-        except OSError:
-            break
-        parent = parent.parent
-    return True
 
 
 def _remove_gradio_temp_root(root: Path, settings: RuntimeSettings) -> None:
@@ -299,7 +327,6 @@ def _run_gui(
     *,
     settings: RuntimeSettings,
     private_document: bool = False,
-    gradio_temp_root: Path | None = None,
 ):
     if not uploaded:
         raise ValueError("Choose an image or PDF first.")
@@ -310,21 +337,17 @@ def _run_gui(
         del log_tail[:-200]
 
     try:
-        try:
-            run = run_extraction(
-                uploaded,
-                settings=settings,
-                language=language,
-                device=device,
-                max_pages=int(max_pages) if max_pages else None,
-                on_log=on_log,
-                private_document=private_document,
-            )
-        except ExtractionError as exc:
-            raise RuntimeError(str(exc)) from exc
-    finally:
-        if private_document:
-            _remove_uploaded_private_cache(uploaded, gradio_temp_root)
+        run = run_extraction(
+            uploaded,
+            settings=settings,
+            language=language,
+            device=device,
+            max_pages=int(max_pages) if max_pages else None,
+            on_log=on_log,
+            private_document=private_document,
+        )
+    except ExtractionError as exc:
+        raise RuntimeError(str(exc)) from exc
     pages = len(run.payload.get("pages") or [])
     if private_document:
         display_payload = redact_private_payload(
@@ -415,7 +438,15 @@ def build_app(
                     "Upload an image or PDF to preview it here.",
                     elem_id="document-preview-note",
                 )
-            with gr.Column(scale=4, min_width=320):
+            with gr.Column(
+                scale=4,
+                min_width=320,
+                elem_id="extraction-settings",
+            ):
+                gr.Markdown(
+                    "### Extraction settings",
+                    elem_id="extraction-settings-heading",
+                )
                 language = gr.Dropdown(
                     choices=["auto", "general", "thai", "en", "tr", "th"],
                     value="auto",
@@ -433,11 +464,24 @@ def build_app(
                     label="Maximum PDF pages (0 = all)",
                 )
                 private_document = gr.Checkbox(
-                    label="Private document (hide filename and output paths)",
+                    label="Private processing",
                     value=True,
+                    elem_id="private-document",
                 )
-                run_button = gr.Button("Extract document", variant="primary")
-        status = gr.Markdown("Choose a document, then select **Extract document**.")
+                gr.Markdown(
+                    "Enabled by default: hides the browser preview, redacts result "
+                    "paths, and skips the downloadable archive.",
+                    elem_id="private-document-note",
+                )
+                run_button = gr.Button(
+                    "Extract document",
+                    variant="primary",
+                    elem_id="extract-button",
+                )
+        status = gr.Markdown(
+            "Choose a document, then select **Extract document**.",
+            elem_id="run-status",
+        )
         with gr.Tabs():
             with gr.Tab("Extracted fields"):
                 fields = gr.Dataframe(
@@ -474,11 +518,13 @@ def build_app(
                     autoscroll=False,
                     elem_id="run-log",
                 )
-        archive = gr.File(
-            label="Download complete local result (.zip)",
-            interactive=False,
-            height=90,
-        )
+            with gr.Tab("Download"):
+                archive = gr.File(
+                    label="Download complete local result (.zip)",
+                    interactive=False,
+                    height=90,
+                    elem_id="download-archive",
+                )
 
         def run_handler(
             uploaded_value: str | None,
@@ -487,18 +533,13 @@ def build_app(
             max_pages_value: float | None,
             private_document_value: bool,
         ):
-            result = _run_gui(
+            return _run_gui(
                 uploaded_value,
                 language_value,
                 device_value,
                 max_pages_value,
                 settings=runtime,
                 private_document=bool(private_document_value),
-                gradio_temp_root=gradio_temp_root,
-            )
-            return (
-                *result,
-                None if private_document_value else uploaded_value,
             )
 
         uploaded.change(
@@ -520,18 +561,11 @@ def build_app(
             trigger_mode="always_last",
         )
         private_document.change(
-            _on_document_change,
+            _on_private_mode_change,
             inputs=[uploaded, private_document],
             outputs=[
                 preview,
                 preview_note,
-                status,
-                fields,
-                text,
-                result_json,
-                gallery,
-                archive,
-                log,
             ],
             show_progress="hidden",
             queue=False,
@@ -548,7 +582,6 @@ def build_app(
                 gallery,
                 archive,
                 log,
-                uploaded,
             ],
             show_progress="minimal",
             concurrency_limit=1,
@@ -595,7 +628,7 @@ def main(argv: list[str] | None = None) -> int:
             allowed_paths=[str(settings.output_root)],
             blocked_paths=blocked,
             show_error=True,
-            footer_links=["gradio", "settings"],
+            footer_links=FOOTER_LINKS,
             mcp_server=False,
             max_file_size="100mb",
             css=APP_CSS,

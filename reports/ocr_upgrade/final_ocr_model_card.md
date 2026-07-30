@@ -61,8 +61,9 @@ Registry defaults: detector `original`, general recognizer `original`, Thai reco
 - Portable packages contain selected inference artifacts and allowed fallbacks only. Training data, crops, caches, environments, logs, and private material are excluded.
 - Portable private-document mode uses an opaque private root, redacts source
   names/paths, disables preview, visualizations, and downloadable archives,
-  runs from a removed-after-use opaque worker copy, and removes the private
-  Gradio upload cache after the run.
+  and runs from a removed-after-use opaque worker copy. Its single Gradio
+  upload cache supports settings changes and repeat runs, then is removed when
+  the GUI shuts down.
 
 The learned canonical-evidence head directly supervises 14 configured fields.
 The versioned output schema supports 27 fields after learned evidence,

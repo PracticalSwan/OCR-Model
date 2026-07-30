@@ -31,17 +31,18 @@ Gmail roots before opening it. A matching input is rejected unless
 below the ignored D: private root. The caller cannot opt out of either guard.
 
 The portable CLI/GUI adds an explicit `--private-document` / **Private
-document** mode for owner-only local use. It forces an opaque
+processing** mode for owner-only local use. It forces an opaque
 `outputs/private/run_<uuid>` destination, hides source filenames and paths,
 redacts command/log/error surfaces, disables preview, visualizations, and
 downloadable archives, and blocks the private output root from file serving.
 Gradio's own per-session upload cache remains available for required input
 preprocessing on the loopback-only GUI. Before the child process starts, the
 source is copied to an opaque short-lived input path so the original path is
-not present in child-process arguments. That copy and any upload-cache copy
-are removed after the run. Private mode is selected by default in the GUI.
-Public preview/gallery/download artifacts use the same Gradio session cache,
-which is removed on GUI shutdown.
+not present in child-process arguments. That worker copy is removed after the
+run. The local file selector still shows the selected filename; result
+surfaces do not. Private mode is selected by default in the GUI. Public and
+private selections share one Gradio session cache so repeat runs and settings
+changes remain usable; the session cache is removed on GUI shutdown.
 These containment controls do not make the result publishable.
 
 ## Before staging or pushing

@@ -49,9 +49,10 @@ exact-angle estimator are reported, not hidden.
 
 The model is available through a one-command CLI and repaired local GUI.
 For public mode, the GUI previews images and first-page PDF renders. Private
-mode is selected by default and disables preview. The GUI uses one progress
-surface and keeps long OCR and run-log output independently scrollable.
-Extraction is local and requires no OpenAI API key.
+processing is selected by default and disables preview. The GUI uses one
+progress surface, keeps long OCR and run-log output independently scrollable,
+places downloads in their own tab, and preserves completed results across
+settings changes. Extraction is local and requires no OpenAI API key.
 
 The public `v1.0.0-build-week` Release remains the historical July 21
 privacy-audited package for Windows and a Docker-backed macOS route. The
