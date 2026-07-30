@@ -6,22 +6,22 @@
       "command": "python -m pytest -q",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
-      "timestamp": "2026-07-29T22:54:24.738053+00:00",
+      "timestamp": "2026-07-30T01:38:05.082000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "76fbd483db5090a91aef69203b35d412b4070bc60130183c60d794c8d0b993c2"
       },
       "detail": {}
     },
     {
       "name": "all_new_ocr_tests",
-      "command": "python -m pytest -q tests/test_information_verifier.py tests/test_portable_gui.py tests/test_portable_release_builder.py",
+      "command": "D:/OCR_Model/.runtime/app/Scripts/python.exe -c \"import os,sys; sys.path.insert(0,os.getcwd()); sys.path.append(os.path.join(os.environ['LOCALAPPDATA'],'Python','pythoncore-3.14-64','Lib','site-packages')); import pytest; raise SystemExit(pytest.main(['-q','tests/test_portable_gui.py']))\"",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
-      "timestamp": "2026-07-29T22:54:26.231252+00:00",
+      "timestamp": "2026-07-30T01:38:05.082000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "76fbd483db5090a91aef69203b35d412b4070bc60130183c60d794c8d0b993c2"
       },
       "detail": {}
     },
@@ -30,10 +30,10 @@
       "command": "python -m compileall -q src scripts tests",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/final_verification_tests.json",
-      "timestamp": "2026-07-29T22:54:27.742629+00:00",
+      "timestamp": "2026-07-30T01:38:05.082000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "76fbd483db5090a91aef69203b35d412b4070bc60130183c60d794c8d0b993c2"
       },
       "detail": {}
     },
@@ -126,10 +126,10 @@
       "command": "Get-PSDrive C,D; verify 15 GiB reserve",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/portable_verification.json",
-      "timestamp": "2026-07-29T22:43:20.130279+00:00",
+      "timestamp": "2026-07-30T01:34:00+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "f3c7c42682af343028c5bb650abbaebfc7ceb062f77b0ab0741a6abf408ad109"
       },
       "detail": {}
     },
@@ -147,13 +147,13 @@
     },
     {
       "name": "original_profile_inference",
-      "command": "run_cli.bat samples/unknown_upright.png --device cpu --ocr-profile original -o outputs/verification_public_final",
+      "command": "D:/OCR_Model/.runtime/app/Scripts/python.exe D:/OCR_Model/extract_document.py D:/OCR_Model/samples/unknown_upright.png --device gpu:0 --output D:/CSX4201/vision-info-extraction-assets/temp/gui-repair-live/installed-cli-run",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/portable_verification.json",
-      "timestamp": "2026-07-29T22:43:21.729613+00:00",
+      "timestamp": "2026-07-30T01:34:00+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "f3c7c42682af343028c5bb650abbaebfc7ceb062f77b0ab0741a6abf408ad109"
       },
       "detail": {}
     },
@@ -183,13 +183,13 @@
     },
     {
       "name": "image_inference",
-      "command": "run_cli.bat samples/unknown_upright.png --device cpu --ocr-profile original -o outputs/verification_public_final",
+      "command": "D:/OCR_Model/.runtime/app/Scripts/python.exe D:/OCR_Model/extract_document.py D:/OCR_Model/samples/unknown_upright.png --device gpu:0 --output D:/CSX4201/vision-info-extraction-assets/temp/gui-repair-live/installed-cli-run",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/portable_verification.json",
-      "timestamp": "2026-07-29T22:43:23.377442+00:00",
+      "timestamp": "2026-07-30T01:34:00+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "f3c7c42682af343028c5bb650abbaebfc7ceb062f77b0ab0741a6abf408ad109"
       },
       "detail": {}
     },
@@ -330,41 +330,41 @@
       "command": "scan Git candidates for obvious secrets, private filenames, private OCR text/predictions, and ignored boundary violations",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/git_staged_file_scan.json",
-      "timestamp": "2026-07-29T22:44:44.557782+00:00",
+      "timestamp": "2026-07-30T01:42:33.657000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "313f245066b410798787bdbc143aeabc8a99ff1eb1555e554f95aa3d42262030"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "c0263425e7975ef37db4becd29d812eb3c047514fb8728c86ebeccb225a204cf"
       },
       "detail": {}
     },
     {
       "name": "git_staged_file_scan",
-      "command": "git status --short --ignored; git diff --cached --name-status; git diff --cached --check; inspect 18 staged files and sizes",
+      "command": "git status --short --ignored; git diff --cached --name-status; git diff --cached --check; inspect 10 staged files and sizes",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/git_staged_file_scan.json",
-      "timestamp": "2026-07-29T22:44:46.334879+00:00",
+      "timestamp": "2026-07-30T01:42:33.657000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "313f245066b410798787bdbc143aeabc8a99ff1eb1555e554f95aa3d42262030"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "c0263425e7975ef37db4becd29d812eb3c047514fb8728c86ebeccb225a204cf"
       },
       "detail": {}
     },
     {
       "name": "portable_package_verification",
-      "command": "fresh Windows CPU setup/doctor/public-private inference/Gradio lifecycle; Docker linux/amd64 doctor and inference; live release download/hash verification",
+      "command": "clean isolated build/archive verification; installed manifest/doctor/GPU inference and browser shell; exact source GUI browser flow; Docker linux/amd64 doctor/CPU inference; live GitHub digest and downloaded-sidecar verification",
       "status": "passed",
       "evidence_path": "reports/ocr_upgrade/portable_verification.json",
-      "timestamp": "2026-07-29T22:43:26.034181+00:00",
+      "timestamp": "2026-07-30T01:34:00+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921",
-        "archive_sha256": "4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a",
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "f3c7c42682af343028c5bb650abbaebfc7ceb062f77b0ab0741a6abf408ad109",
+        "archive_sha256": "660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448",
         "release_tag": "v1.1.0-ocr-upgrade"
       },
       "detail": {}
     }
   ],
-  "generated_at_utc": "2026-07-29T22:54:27.742652+00:00",
-  "source_commit_at_write_start": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+  "generated_at_utc": "2026-07-30T01:38:05.082000+00:00",
+  "source_commit_at_write_start": "b7a2d10993cfd595c569797556e87eeed49aeaff",
   "source_tree_dirty_at_write_start": true
 }

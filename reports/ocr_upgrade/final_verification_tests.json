@@ -1,28 +1,29 @@
 {
   "schema_version": "1.0",
   "status": "passed",
-  "generated_at_utc": "2026-07-29T22:54:06.532Z",
-  "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+  "generated_at_utc": "2026-07-30T01:38:05.082Z",
+  "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
   "baseline_commit": "af0816b",
   "checks": [
     {
       "name": "all_original_tests",
       "command": "python -m pytest -q",
       "passed": true,
-      "passed_count": 417,
-      "skipped_count": 3,
+      "passed_count": 420,
+      "skipped_count": 4,
       "failed_count": 0,
-      "duration_seconds": 22.49
+      "duration_seconds": 21.11
     },
     {
       "name": "all_new_ocr_tests",
-      "command": "python -m pytest -q tests/test_information_verifier.py tests/test_portable_gui.py tests/test_portable_release_builder.py",
+      "command": "D:/OCR_Model/.runtime/app/Scripts/python.exe -c \"import os,sys; sys.path.insert(0,os.getcwd()); sys.path.append(os.path.join(os.environ['LOCALAPPDATA'],'Python','pythoncore-3.14-64','Lib','site-packages')); import pytest; raise SystemExit(pytest.main(['-q','tests/test_portable_gui.py']))\"",
       "passed": true,
-      "test_file_count": 3,
-      "passed_count": 45,
-      "skipped_count": 1,
+      "runtime_gradio_version": "6.0.1",
+      "scope": "portable GUI behavior under the shipped Gradio runtime",
+      "passed_count": 14,
+      "skipped_count": 0,
       "failed_count": 0,
-      "duration_seconds": 3.34
+      "duration_seconds": 3.54
     },
     {
       "name": "python_compilation",

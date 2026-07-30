@@ -76,9 +76,11 @@ data, final model assets, the local runtime, runtime configuration, canonical
 ZIP, and demo MP4 were preserved.
 
 The OCR upgrade merged into `main` through PR #2 at
-`c6303f6843de9af1c7c97fde1ef6ff43e01de553`. The current portable archive is
-published under `v1.1.0-ocr-upgrade`; its live Release asset and
-`OCR_Model.zip.sha256` sidecar are the authoritative current size and digest.
+`c6303f6843de9af1c7c97fde1ef6ff43e01de553`. The GUI-state repair is published
+under `v1.1.0-ocr-upgrade` from clean commit
+`b7a2d10993cfd595c569797556e87eeed49aeaff`. Its live 1,159,080,320-byte
+Release asset and `OCR_Model.zip.sha256` sidecar use SHA-256
+`660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448`.
 Each corrected build is produced from isolated staging, refuses a dirty Git
 candidate tree, records the exact source commit/tree hash in `BUILD_INFO.json`,
 refuses every existing target and all installed-working-copy targets, rejects

@@ -8,9 +8,9 @@ into `main` at `c6303f6843de9af1c7c97fde1ef6ff43e01de553` on 2026-07-29
 **Release:** [`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
 The July 29 initial asset targeted
 `fcae32edc193ff6574bf99362da0e2368d5ef464`. The same release and asset names
-now identify the corrected clean build from
-`36ca41ee48dabd42bbb26f33cd490410a7f00c57`; the live ZIP and sidecar agree on
-SHA-256 `4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a`.
+now identify the GUI-state correction built from clean commit
+`b7a2d10993cfd595c569797556e87eeed49aeaff`; the live ZIP and sidecar agree on
+SHA-256 `660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448`.
 
 **Evidence window:** 2026-07-24 through 2026-07-30
 
@@ -528,25 +528,28 @@ historical public
 [`v1.0.0-build-week`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
 Release remains available.
 
-The corrected clean archive has 183 ZIP entries and a 182-file payload
+The current GUI-state correction has 183 ZIP entries and a 182-file payload
 manifest:
 
 ```text
 D:\OCR_Model.zip
-size: 1,159,079,957 bytes
-SHA-256: 4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a
+size: 1,159,080,320 bytes
+SHA-256: 660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448
 ```
 
-A fresh Windows CPU setup, doctor probe, public image extraction, private-mode
-extraction, and public/private Gradio lifecycle passed. The exact Linux/AMD64
-Docker image passed HTTP readiness, doctor, and one-page CPU extraction; its
-test container, image, and network were then removed. The installed
-`D:\OCR_Model` manifest matches all 182 records. Current-generation evidence is
-in `portable_verification.json`; the initial package's broader custom,
-adaptive, PDF, and GPU probes remain clearly labeled in
+A clean isolated build passed payload privacy, CRC, root-layout, duplicate,
+traversal, and manifest checks. The installed `D:\OCR_Model` matches all 182
+payload records while preserving its machine-local runtime, configuration, and
+existing outputs. Its GPU doctor and one-page GPU extraction passed. The exact
+Linux/AMD64 Docker image passed HTTP readiness, doctor, and one-page CPU
+extraction; its test container, image, and network were then removed.
+Browser verification covered the exact repaired source and matching installed
+GUI payload. Current-generation evidence is in `portable_verification.json`;
+the initial package's broader custom, adaptive, PDF, and GPU probes remain
+clearly labeled in
 `portable_verification_initial_fcae32e.json`.
 
-After current verification, C: had 54.834 GiB free and D: had 393.254 GiB
+After current verification, C: had 54.863 GiB free and D: had 417.321 GiB
 free, both above the 15 GiB reserve.
 
 Authoritative machine-readable evidence is under `reports/ocr_upgrade/`,

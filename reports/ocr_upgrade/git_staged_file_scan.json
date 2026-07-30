@@ -1,45 +1,38 @@
 {
   "schema_version": "1.0",
   "status": "passed",
-  "generated_at_utc": "2026-07-29T22:44:00Z",
-  "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+  "generated_at_utc": "2026-07-30T01:42:33.657Z",
+  "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
   "repository": {
     "name": "PracticalSwan/csx4201-vision-info-extraction",
     "visibility": "PUBLIC",
     "branch": "main"
   },
   "commands": [
-    "git status --short --ignored",
-    "git diff --cached --name-status",
-    "git diff --cached --check",
-    "inspect every staged code, test, documentation, and report path",
-    "inspect staged file sizes with a 50 MiB ceiling",
-    "scan Git candidates for obvious secrets and private filenames"
+    "gh repo view PracticalSwan/csx4201-vision-info-extraction --json visibility,defaultBranchRef",
+    "git status --short; git diff --name-only; git diff --check",
+    "inspect every changed documentation and verification-evidence path",
+    "validate changed JSON files with python -m json.tool",
+    "inspect changed file sizes with a 50 MiB ceiling",
+    "scan changed files for obvious credentials, private filenames, and forbidden private-data paths"
   ],
-  "staged_file_count": 18,
+  "staged_file_count": 10,
   "staged_files": [
     "AGENTS.md",
     "AGENT_MEMORY.md",
     "SUMMARY.md",
     "docs/OCR_UPGRADE_RELEASE_NOTES.md",
-    "docs/evaluation.md",
-    "docs/requirements.md",
-    "reports/README.md",
     "reports/ocr_upgrade/final_verification_tests.json",
     "reports/ocr_upgrade/git_staged_file_scan.json",
     "reports/ocr_upgrade/portable_verification.json",
-    "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
     "reports/ocr_upgrade/verification.json",
     "reports/ocr_upgrade/verification_executions.json",
-    "reports/verification/information_extraction_verification.json",
-    "scripts/record_ocr_upgrade_verification.py",
-    "scripts/verify_information_extraction.py",
-    "tests/test_information_verifier.py",
-    "tests/test_portable_release_builder.py"
+    "reports/verification/information_extraction_verification.json"
   ],
   "checks": {
     "staged_diff_check": "passed",
     "staged_diff_inspected": true,
+    "changed_json_valid": true,
     "staged_file_sizes_inspected": true,
     "files_over_50_mib": [],
     "untracked_unignored_file_count": 0,
@@ -50,7 +43,7 @@
     "gmail_fit_rows": 0
   },
   "notes": [
-    "Ignored raw data, Gmail/private manifests, private outputs, caches, and the demo video are not staged.",
-    "The scan covers the final publication file set; verifier outputs are regenerated from this exact evidence file."
+    "This evidence commit contains only current release documentation and verification reports.",
+    "Ignored raw data, Gmail/private manifests, private outputs, caches, and model-training assets remain unstaged."
   ]
 }

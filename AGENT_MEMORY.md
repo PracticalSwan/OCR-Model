@@ -49,10 +49,10 @@
   `c6303f6843de9af1c7c97fde1ef6ff43e01de553`. The initial
   `v1.1.0-ocr-upgrade` asset targeted
   `fcae32edc193ff6574bf99362da0e2368d5ef464`; its size and digest remain
-  historical evidence in the release notes. The July 30 in-place correction
-  targets clean commit `36ca41ee48dabd42bbb26f33cd490410a7f00c57`;
-  the live 1,159,079,957-byte archive and sidecar have SHA-256
-  `4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a`.
+  historical evidence in the release notes. The July 30 GUI-state correction
+  targets clean commit `b7a2d10993cfd595c569797556e87eeed49aeaff`;
+  the live 1,159,080,320-byte archive and sidecar have SHA-256
+  `660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448`.
   Require agreement with the tag, `BUILD_INFO.json`, exact source
   candidate-tree hash, and generation-specific portable verification. The
   historical `v1.0.0-build-week` Release remains available.
@@ -393,3 +393,18 @@
   Windows CPU, installed doctor, public/private Gradio, Docker Linux/AMD64 CPU,
   manifest, sidecar, and live-download checks pass; physical Mac remains
   untested.
+- 2026-07-30 - Repaired the current Gradio GUI without changing the release
+  version. Extraction no longer feeds back into the upload-change reset,
+  settings changes preserve completed output and the selected upload, repeat
+  private runs reuse one session cache until shutdown, and the broken Gradio
+  Settings control is absent. The centered responsive layout now uses a
+  dedicated Download tab. The full suite passes 420 tests with four
+  environment-dependent skips; the actual Gradio 6.0.1 focused suite passes
+  14 tests. Browser checks covered first-upload preview, real GPU extraction,
+  persistence, responsive layout, and zero console errors. The independent
+  specialized follow-up review found no defect. The clean build commit is
+  `b7a2d10993cfd595c569797556e87eeed49aeaff`; the live
+  1,159,080,320-byte asset and sidecar have SHA-256
+  `660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448`.
+  Installed Windows GPU and Docker Linux/AMD64 CPU sample extraction passed,
+  and the exact Docker test resources were removed.

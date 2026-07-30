@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
   "status": "passed",
-  "generated_at_utc": "2026-07-29T22:54:29.251414+00:00",
-  "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
-  "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+  "generated_at_utc": "2026-07-30T01:43:17.140069+00:00",
+  "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
+  "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
   "source_tree_dirty_at_start": true,
-  "source_tree_sha256_at_start": "e775c64a983f74a72f897a6249dd11287e7c267afff234a77decd0eb0c8e6656",
+  "source_tree_sha256_at_start": "24d7bd64198a92800274413a928addc270ab3ea7aa8832f34e5ce72109084a0d",
   "source_candidate_file_count_at_start": 523,
   "complete_mode": true,
   "checks_passed": 81,
@@ -13,11 +13,11 @@
   "checks": [
     {
       "name": "storage_reserve",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -28,19 +28,19 @@
         "anticipated_asset_gib": 0.0,
         "passed": true,
         "errors": [],
-        "c_free_gib": 54.793,
-        "projected_c_free_gib": 54.793,
-        "asset_free_gib": 393.254,
-        "projected_asset_free_gib": 393.254
+        "c_free_gib": 54.833,
+        "projected_c_free_gib": 54.833,
+        "asset_free_gib": 417.321,
+        "projected_asset_free_gib": 417.321
       }
     },
     {
       "name": "output_json_schema",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -48,11 +48,11 @@
     },
     {
       "name": "exact_ocr_model_registry",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -64,11 +64,11 @@
     },
     {
       "name": "ocr_models_on_external_drive",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -76,11 +76,11 @@
     },
     {
       "name": "annotation_manifest_exists",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -88,11 +88,11 @@
     },
     {
       "name": "annotation_gmail_fit_zero",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -100,11 +100,11 @@
     },
     {
       "name": "normalized_public_pages",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -112,11 +112,11 @@
     },
     {
       "name": "public_manifest_redacts_private_sources",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -126,11 +126,11 @@
     },
     {
       "name": "no_private_public_training_rows",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -138,11 +138,11 @@
     },
     {
       "name": "final_split_group_leakage_zero",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -155,11 +155,11 @@
     },
     {
       "name": "coru_is_wholly_unseen_domain",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -167,11 +167,11 @@
     },
     {
       "name": "private_operational_manifest_ignored",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -179,11 +179,11 @@
     },
     {
       "name": "model_dataset_summary",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -191,11 +191,11 @@
     },
     {
       "name": "model_dataset_gmail_fit_zero",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -203,11 +203,11 @@
     },
     {
       "name": "model_dataset_has_full_public_corpus",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -215,11 +215,11 @@
     },
     {
       "name": "model_dataset_has_three_labeled_sources",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -231,11 +231,11 @@
     },
     {
       "name": "model_dataset_private_fit_zero",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -243,11 +243,11 @@
     },
     {
       "name": "final_multitask_training_report",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -255,11 +255,11 @@
     },
     {
       "name": "layout_checkpoint_reload",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -267,11 +267,11 @@
     },
     {
       "name": "layout_training_gmail_fit_zero",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -279,11 +279,11 @@
     },
     {
       "name": "layout_training_public_only",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -291,11 +291,11 @@
     },
     {
       "name": "layout_training_profile_final",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -303,11 +303,11 @@
     },
     {
       "name": "layout_checkpoint_on_d",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -315,11 +315,11 @@
     },
     {
       "name": "final_checkpoint_complete",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -327,11 +327,11 @@
     },
     {
       "name": "final_calibration_report",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -339,11 +339,11 @@
     },
     {
       "name": "calibration_profile_final",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -351,11 +351,11 @@
     },
     {
       "name": "calibration_public_only",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -363,11 +363,11 @@
     },
     {
       "name": "calibration_private_zero",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -375,11 +375,11 @@
     },
     {
       "name": "calibration_checkpoint_hash_bound",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -387,11 +387,11 @@
     },
     {
       "name": "calibration_build_bound",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -399,11 +399,11 @@
     },
     {
       "name": "ocr_model_verification",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -411,11 +411,11 @@
     },
     {
       "name": "locked_public_test_evaluation",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -423,11 +423,11 @@
     },
     {
       "name": "private_aggregate_evaluation",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -435,11 +435,11 @@
     },
     {
       "name": "integration_smoke_summary_valid",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\information_extraction\\integration_smoke.json",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "evidence_sha256": "8d3e3c80190e0cc023d819326958141bda74f2fec8a81e48383c0c7f6897b262"
       },
@@ -450,11 +450,11 @@
     },
     {
       "name": "integration_image_pdf_rotation_thai_unknown",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\information_extraction\\integration_smoke.json",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "evidence_sha256": "8d3e3c80190e0cc023d819326958141bda74f2fec8a81e48383c0c7f6897b262"
       },
@@ -462,11 +462,11 @@
     },
     {
       "name": "natural_unseen_dataset_evaluation",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -474,11 +474,11 @@
     },
     {
       "name": "layout_angle_grid_evaluation",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -486,11 +486,11 @@
     },
     {
       "name": "end_to_end_angle_grid_evaluation",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -498,11 +498,11 @@
     },
     {
       "name": "public_only_ocr_ablation",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -510,11 +510,11 @@
     },
     {
       "name": "required_final_reports",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -522,11 +522,11 @@
     },
     {
       "name": "private_report_aggregate_only",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -534,11 +534,11 @@
     },
     {
       "name": "private_report_gmail_fit_zero",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -546,11 +546,11 @@
     },
     {
       "name": "private_report_checkpoint_hash_bound",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -558,11 +558,11 @@
     },
     {
       "name": "no_unignored_file_over_50_mib",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -570,11 +570,11 @@
     },
     {
       "name": "no_obvious_secrets_in_git_candidates",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -584,11 +584,11 @@
     },
     {
       "name": "no_private_filenames_in_git_candidates",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\config.yaml",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -598,11 +598,11 @@
     },
     {
       "name": "ocr_upgrade_required_reports",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -610,11 +610,11 @@
     },
     {
       "name": "ocr_upgrade_metric_report_provenance",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "config_sha256": "1c5866feec36749477da3c16b3401f4ae492632bf10cf672e028438c6f0e38f5"
       },
@@ -622,11 +622,11 @@
     },
     {
       "name": "ocr_upgrade_selection_uses_dev_select_only",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\ocr_model_selection.json",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "manifest_sha256": "1786af155d1c2c3e69224c87f1885da3a62ef59617d7d57ff4d7d4bea661e3ec",
         "checkpoint_sha256": "34c7a26e78d6285a2739e1b61839eadfd0e686ccbcf57f9cb47997c12cef2189"
@@ -635,11 +635,11 @@
     },
     {
       "name": "ocr_upgrade_one_time_locked_test",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\locked_test_run.json",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
         "manifest_sha256": "02d173cfcadeb6e7f0c061cba099568949423243c0b9f29a6628ce7750554133",
         "checkpoint_sha256": "f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180",
@@ -653,23 +653,23 @@
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\final_verification_tests.json",
-      "timestamp": "2026-07-29T22:54:24.738053+00:00",
+      "timestamp": "2026-07-30T01:38:05.082000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "76fbd483db5090a91aef69203b35d412b4070bc60130183c60d794c8d0b993c2"
       },
       "detail": {}
     },
     {
       "name": "all_new_ocr_tests",
-      "command": "python -m pytest -q tests/test_information_verifier.py tests/test_portable_gui.py tests/test_portable_release_builder.py",
+      "command": "D:/OCR_Model/.runtime/app/Scripts/python.exe -c \"import os,sys; sys.path.insert(0,os.getcwd()); sys.path.append(os.path.join(os.environ['LOCALAPPDATA'],'Python','pythoncore-3.14-64','Lib','site-packages')); import pytest; raise SystemExit(pytest.main(['-q','tests/test_portable_gui.py']))\"",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\final_verification_tests.json",
-      "timestamp": "2026-07-29T22:54:26.231252+00:00",
+      "timestamp": "2026-07-30T01:38:05.082000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "76fbd483db5090a91aef69203b35d412b4070bc60130183c60d794c8d0b993c2"
       },
       "detail": {}
     },
@@ -679,10 +679,10 @@
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\final_verification_tests.json",
-      "timestamp": "2026-07-29T22:54:27.742629+00:00",
+      "timestamp": "2026-07-30T01:38:05.082000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "767597a37feb54f57fb12288a4b384ded178b5184f9d3d76cea2494210cc1449"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "76fbd483db5090a91aef69203b35d412b4070bc60130183c60d794c8d0b993c2"
       },
       "detail": {}
     },
@@ -783,10 +783,10 @@
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\portable_verification.json",
-      "timestamp": "2026-07-29T22:43:20.130279+00:00",
+      "timestamp": "2026-07-30T01:34:00+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "f3c7c42682af343028c5bb650abbaebfc7ceb062f77b0ab0741a6abf408ad109"
       },
       "detail": {}
     },
@@ -805,14 +805,14 @@
     },
     {
       "name": "original_profile_inference",
-      "command": "run_cli.bat samples/unknown_upright.png --device cpu --ocr-profile original -o outputs/verification_public_final",
+      "command": "D:/OCR_Model/.runtime/app/Scripts/python.exe D:/OCR_Model/extract_document.py D:/OCR_Model/samples/unknown_upright.png --device gpu:0 --output D:/CSX4201/vision-info-extraction-assets/temp/gui-repair-live/installed-cli-run",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\portable_verification.json",
-      "timestamp": "2026-07-29T22:43:21.729613+00:00",
+      "timestamp": "2026-07-30T01:34:00+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "f3c7c42682af343028c5bb650abbaebfc7ceb062f77b0ab0741a6abf408ad109"
       },
       "detail": {}
     },
@@ -844,14 +844,14 @@
     },
     {
       "name": "image_inference",
-      "command": "run_cli.bat samples/unknown_upright.png --device cpu --ocr-profile original -o outputs/verification_public_final",
+      "command": "D:/OCR_Model/.runtime/app/Scripts/python.exe D:/OCR_Model/extract_document.py D:/OCR_Model/samples/unknown_upright.png --device gpu:0 --output D:/CSX4201/vision-info-extraction-assets/temp/gui-repair-live/installed-cli-run",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\portable_verification.json",
-      "timestamp": "2026-07-29T22:43:23.377442+00:00",
+      "timestamp": "2026-07-30T01:34:00+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "f3c7c42682af343028c5bb650abbaebfc7ceb062f77b0ab0741a6abf408ad109"
       },
       "detail": {}
     },
@@ -1004,50 +1004,50 @@
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\git_staged_file_scan.json",
-      "timestamp": "2026-07-29T22:44:44.557782+00:00",
+      "timestamp": "2026-07-30T01:42:33.657000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "313f245066b410798787bdbc143aeabc8a99ff1eb1555e554f95aa3d42262030"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "c0263425e7975ef37db4becd29d812eb3c047514fb8728c86ebeccb225a204cf"
       },
       "detail": {}
     },
     {
       "name": "git_staged_file_scan",
-      "command": "git status --short --ignored; git diff --cached --name-status; git diff --cached --check; inspect 18 staged files and sizes",
+      "command": "git status --short --ignored; git diff --cached --name-status; git diff --cached --check; inspect 10 staged files and sizes",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\git_staged_file_scan.json",
-      "timestamp": "2026-07-29T22:44:46.334879+00:00",
+      "timestamp": "2026-07-30T01:42:33.657000+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "313f245066b410798787bdbc143aeabc8a99ff1eb1555e554f95aa3d42262030"
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "c0263425e7975ef37db4becd29d812eb3c047514fb8728c86ebeccb225a204cf"
       },
       "detail": {}
     },
     {
       "name": "portable_package_verification",
-      "command": "fresh Windows CPU setup/doctor/public-private inference/Gradio lifecycle; Docker linux/amd64 doctor and inference; live release download/hash verification",
+      "command": "clean isolated build/archive verification; installed manifest/doctor/GPU inference and browser shell; exact source GUI browser flow; Docker linux/amd64 doctor/CPU inference; live GitHub digest and downloaded-sidecar verification",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\portable_verification.json",
-      "timestamp": "2026-07-29T22:43:26.034181+00:00",
+      "timestamp": "2026-07-30T01:34:00+00:00",
       "relevant_hashes": {
-        "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-        "evidence_sha256": "ee83b776d7373d352d122125dfb18a33aa74636a216e4e0bfdbab4efd963f921",
-        "archive_sha256": "4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a",
+        "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+        "evidence_sha256": "f3c7c42682af343028c5bb650abbaebfc7ceb062f77b0ab0741a6abf408ad109",
+        "archive_sha256": "660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448",
         "release_tag": "v1.1.0-ocr-upgrade"
       },
       "detail": {}
     },
     {
       "name": "final_execution_evidence_complete",
-      "command": "C:\\Users\\LOQ\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe scripts/verify_information_extraction.py --complete --portable-package D:\\OCR_Model --portable-release-tag v1.1.0-ocr-upgrade",
+      "command": "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
       "status": "passed",
       "passed": true,
       "evidence_path": "C:\\Assumption University\\CSX4201\\Project\\reports\\ocr_upgrade\\verification_executions.json",
-      "timestamp": "2026-07-29T22:54:29.251414+00:00",
+      "timestamp": "2026-07-30T01:43:17.140069+00:00",
       "relevant_hashes": {
-        "execution_evidence_sha256": "44139a55fedc34078584cdf16275fc78acfa839004f33dbfbf4d41cc0f57b49c"
+        "execution_evidence_sha256": "c8ce5ed62db592c7e51fedf3d004ae0072676ed9a015c6d11c5e3faa44fd9279"
       },
       "detail": []
     }

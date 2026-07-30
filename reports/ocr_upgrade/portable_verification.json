@@ -1,22 +1,24 @@
 {
   "schema_version": "1.0",
   "status": "passed",
-  "generated_at_utc": "2026-07-29T22:26:52.160Z",
-  "source_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-  "source_tree_sha256": "72ef8b001b05aa5ddabdb6218ee4a4236a515999638ba85675e2779f00d5d77a",
-  "source_candidate_file_count": 522,
+  "generated_at_utc": "2026-07-30T01:34:00Z",
+  "source_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+  "source_tree_sha256": "585d2de169de5e15a91f7682ccbcd5fd3673c155e3155dda6cc5587fc900e6d1",
+  "source_candidate_file_count": 523,
   "source_tree_dirty_at_build": false,
   "package": {
     "directory": "D:/OCR_Model",
     "archive": "D:/OCR_Model.zip",
-    "archive_size_bytes": 1159079957,
-    "archive_sha256": "4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a",
+    "archive_size_bytes": 1159080320,
+    "archive_sha256": "660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448",
     "sidecar_matches": true,
     "entry_count": 183,
     "manifest_file_count": 182,
+    "manifest_total_size_bytes": 1294401378,
     "manifest_matches_archive": true,
+    "crc_passed": true,
     "duplicate_entry_count": 0,
-    "path_traversal_entry_count": 0,
+    "unsafe_path_entry_count": 0,
     "model_file_count": 62,
     "model_size_bytes": 1293341575,
     "layout_checkpoint_sha256": "f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180",
@@ -37,30 +39,67 @@
     "rejected_general_custom_weights_included": false,
     "custom_detector_weights_included": false
   },
-  "clean_cpu_setup": {
-    "package_root": "D:/CSX4201/vision-info-extraction-assets/release-staging/v1.1.0-final-36ca41e/OCR_Model",
-    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File setup_windows.ps1 -Device cpu",
-    "fresh_runtime_created": true,
-    "exit_code": 0,
-    "doctor_probe": "passed",
-    "ocr_runtime": "paddle 3.3.0 paddleocr 3.7.0 sklearn 1.7.2",
-    "layout_runtime": "torch 2.8.0+cpu transformers 4.57.6 cuda False"
+  "clean_release_build": {
+    "staging_root": "D:/CSX4201/vision-info-extraction-assets/release-staging/gui-fix-b7a2d10",
+    "isolated_from_installed_root": true,
+    "existing_target_overwritten_by_builder": false,
+    "build_status": "complete",
+    "payload_privacy_audit": "pass",
+    "archive_root": "OCR_Model",
+    "archive_manifest_match": true,
+    "build_info_matches_source": true,
+    "uses_openai_api": false,
+    "physical_mac_tested": false
   },
-  "installed_package_doctor": {
-    "command": "D:/OCR_Model/.runtime/app/Scripts/python.exe D:/OCR_Model/doctor.py",
-    "status": "ready",
-    "device": "gpu:0",
-    "checks_passed": 7,
-    "checks_failed": 0,
+  "installed_package": {
+    "payload_membership_added": 0,
+    "payload_membership_removed": 0,
+    "changed_payload_files": [
+      "BUILD_INFO.json",
+      "MODEL_MANIFEST.json",
+      "README.md",
+      "docs/PORTABLE_USAGE.md",
+      "src/portable/gui.py"
+    ],
+    "payload_hash_mismatch_count": 0,
+    "machine_runtime_preserved": true,
+    "runtime_local_json_preserved": true,
+    "existing_output_file_count_preserved": 20,
+    "doctor_command": "D:/OCR_Model/.runtime/app/Scripts/python.exe D:/OCR_Model/doctor.py --probe",
+    "doctor_status": "ready",
+    "doctor_device": "gpu:0",
+    "doctor_checks_passed": 10,
+    "doctor_checks_failed": 0,
     "uses_openai_api": false
   },
   "current_generation_inference": {
-    "public_cpu_original": {
+    "installed_windows_gpu_original": {
+      "input": "samples/unknown_upright.png",
       "page_count": 1,
       "failure_count": 0,
       "schema_valid": true,
       "nonempty": true,
-      "visualization_count": 1,
+      "field_names": [
+        "currency",
+        "customer_name",
+        "organization_name",
+        "reference_number",
+        "total_amount"
+      ],
+      "field_values": {
+        "currency": "USD",
+        "customer_name": "TEST USER",
+        "organization_name": "NORTHSTAR LAB",
+        "reference_number": "AB-123",
+        "total_amount": "123.45"
+      }
+    },
+    "docker_linux_amd64_cpu_original": {
+      "input": "samples/unknown_upright.png",
+      "page_count": 1,
+      "failure_count": 0,
+      "schema_valid": true,
+      "nonempty": true,
       "field_names": [
         "currency",
         "customer_name",
@@ -68,31 +107,55 @@
         "reference_number",
         "total_amount"
       ]
-    },
-    "private_cpu_original": {
-      "page_count": 1,
-      "failure_count": 0,
-      "opaque_run_id": true,
-      "public_output_override_ignored": true,
-      "visualization_count": 0,
-      "downloadable_archive": false
     }
   },
-  "gui_lifecycle": {
-    "command": "D:/CSX4201/vision-info-extraction-assets/release-staging/v1.1.0-final-36ca41e/OCR_Model/.runtime/app/Scripts/python.exe app.py --host 127.0.0.1 --port 7864",
-    "http_status": 200,
-    "public_preview_shown": true,
-    "private_preview_shown": false,
-    "private_filename_shown": false,
-    "private_visualization_count": 0,
-    "private_archive_available": false,
-    "process_stopped_after_probe": true,
-    "port_closed_after_probe": true
+  "gui_verification": {
+    "source_gui_sha256": "d9afb52b3693cefba64c97f6749a5286a9c206ef5c930c5f131bce00ceec7e8e",
+    "staged_gui_sha256": "d9afb52b3693cefba64c97f6749a5286a9c206ef5c930c5f131bce00ceec7e8e",
+    "installed_gui_sha256": "d9afb52b3693cefba64c97f6749a5286a9c206ef5c930c5f131bce00ceec7e8e",
+    "full_host_suite": {
+      "passed": 420,
+      "skipped": 4,
+      "failed": 0,
+      "duration_seconds": 21.11
+    },
+    "actual_gradio_6_0_1_focused_suite": {
+      "passed": 14,
+      "skipped": 0,
+      "failed": 0,
+      "duration_seconds": 3.54
+    },
+    "browser_source_gui": {
+      "http_status": 200,
+      "first_public_upload_preview_shown": true,
+      "real_gpu_extraction_field_count": 5,
+      "completed_result_persisted": true,
+      "selected_upload_persisted": true,
+      "download_tab_present": true,
+      "settings_button_count": 0,
+      "console_error_count": 0,
+      "responsive_760px_layout_passed": true
+    },
+    "browser_installed_gui": {
+      "http_status": 200,
+      "download_tab_present": true,
+      "settings_button_count": 0,
+      "console_error_count": 0,
+      "process_stopped_after_probe": true,
+      "port_closed_after_probe": true
+    },
+    "screenshot_directory": "C:/Users/LOQ/.codex/visualizations/2026/07/24/019f92a8-d066-7571-90f6-67c3f7afb651/gui-repair-2026-07-30",
+    "independent_specialized_review": {
+      "reviewer_role": "code-reviewer",
+      "follow_up_completed": true,
+      "blocker_count": 0,
+      "non_blocking_defect_count": 0
+    }
   },
   "docker_linux_amd64": {
-    "compose_project": "csx4201_release_probe_36ca41e",
-    "image_id_prefix": "1d72da49cd83",
-    "image_size": "6.18 GB",
+    "compose_project": "ocrmodel-gui-fix-b7a2d10",
+    "image_id_prefix": "33507ba260a6",
+    "displayed_image_size": "1.37 GB",
     "http_status": 200,
     "doctor_probe": "passed",
     "cpu_inference_page_count": 1,
@@ -106,20 +169,24 @@
   },
   "live_release": {
     "url": "https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade",
+    "name": "OCR Model v1.1.0 - domain-adapted OCR upgrade",
     "tag": "v1.1.0-ocr-upgrade",
-    "tag_commit": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
-    "target_commitish": "36ca41ee48dabd42bbb26f33cd490410a7f00c57",
+    "tag_commit": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+    "target_commitish": "b7a2d10993cfd595c569797556e87eeed49aeaff",
+    "draft": false,
+    "prerelease": false,
     "asset_count": 2,
-    "archive_size_bytes": 1159079957,
-    "archive_digest": "sha256:4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a",
-    "downloaded_archive_matches_canonical": true,
-    "downloaded_sidecar_matches": true
+    "archive_size_bytes": 1159080320,
+    "archive_digest": "sha256:660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448",
+    "sidecar_size_bytes": 81,
+    "downloaded_sidecar_matches": true,
+    "github_archive_digest_matches_canonical": true
   },
   "historical_compatibility_evidence": {
     "report": "reports/ocr_upgrade/portable_verification_initial_fcae32e.json",
     "source_commit": "fcae32edc193ff6574bf99362da0e2368d5ef464",
     "not_rerun_for_current_generation": [
-      "GPU parity",
+      "fresh Windows CPU dependency installation",
       "custom Thai OCR",
       "adaptive OCR",
       "rotated image",
@@ -135,15 +202,15 @@
     "machine_local_runtime_and_outputs_excluded_from_clean_archive": true,
     "absolute_development_paths_retained_only_as_non_executing_provenance_or_documented_examples": true
   },
-  "storage_after_setup": {
-    "c_free_gib": 54.834,
-    "d_free_gib": 393.254,
+  "storage_after_verification": {
+    "c_free_gib": 54.863,
+    "d_free_gib": 417.321,
     "minimum_free_gib": 15.0,
     "passed": true
   },
   "limitations": [
     "Physical Apple hardware remains untested; macOS support is verified only through the Docker Linux/AMD64 CPU route.",
-    "The current package was not rerun on a physical GPU; the installed GPU doctor paths passed and the initial package's GPU compatibility evidence is retained separately.",
+    "The fresh Windows CPU dependency installation was not repeated because this generation changes GUI/docs/provenance only; the clean package build, installed GPU runtime, and Docker CPU runtime were verified.",
     "The locked accuracy results remain below the requested quality targets; this package is not production-ready."
   ]
 }
