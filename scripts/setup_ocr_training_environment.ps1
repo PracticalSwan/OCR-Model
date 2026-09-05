@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$AssetRoot = 'D:\CSX4201\vision-info-extraction-assets',
+    [string]$AssetRoot = 'D:\OCR_Model_Assets',
     [string]$Python310 = '',
     [switch]$SkipVerification
 )

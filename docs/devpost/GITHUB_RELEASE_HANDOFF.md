@@ -1,12 +1,16 @@
 # Public GitHub Release record
 
+> **Historical release record.** Local copies were removed during archival on
+> 2026-09-06. The public GitHub Release was intentionally retained and was not
+> modified by cleanup. See [the archive record](../../ARCHIVED.md).
+
 Release:
 
-<https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week>
+v1.0.0-build-week release
 
 ## Published payload
 
-- Repository: `PracticalSwan/csx4201-vision-info-extraction` (public)
+- Repository: <https://github.com/PracticalSwan/OCR-Model> (public)
 - Tag: `v1.0.0-build-week`
 - Title: `OCR Model - OpenAI Build Week portable release`
 - Asset: `OCR_Model.zip`

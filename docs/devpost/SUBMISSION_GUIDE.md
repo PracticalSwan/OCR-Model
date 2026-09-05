@@ -1,5 +1,10 @@
 # OpenAI Build Week submission record
 
+> **Historical submission record.** The local project was archived on
+> 2026-09-06. The submitted Devpost entry, public repository, video, and GitHub
+> Releases were intentionally left in place. See
+> [the archive record](../../ARCHIVED.md).
+
 ## Submitted entry
 
 - Entrant: Individual (solo)
@@ -12,7 +17,7 @@
   [OCR Model: Local Document Intelligence](https://devpost.com/software/ocr-model-local-document-intelligence)
 - Public demo: <https://youtu.be/8BV8LnbK1GI> (2:54)
 - Public repository:
-  <https://github.com/PracticalSwan/csx4201-vision-info-extraction>
+  <https://github.com/PracticalSwan/OCR-Model>
 - `/feedback` Session ID:
   `019f7669-11fd-7923-ad68-ea1a09bd7d74`
 - OpenAI API key: not used

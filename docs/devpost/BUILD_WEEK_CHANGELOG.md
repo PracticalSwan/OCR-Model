@@ -1,5 +1,9 @@
 # Build Week extension changelog
 
+> **Historical submission record.** The source was archived locally on
+> 2026-09-06; the public Devpost entry, video, repository, and Releases were
+> retained. See [the archive record](../../ARCHIVED.md).
+
 The trained information-extraction model and its final evaluation existed
 before OpenAI Build Week. The following product and GPT-5.6 integration work is
 the submission's post–July 13 extension.

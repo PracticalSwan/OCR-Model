@@ -1,5 +1,9 @@
 # Optional Codex/GPT-5.6 review (no API key)
 
+> **Archived 2026-09-06.** The global `ocr_model` MCP registration and local
+> server runtime were removed. This document records the historical integration
+> and can be used only as restoration guidance. See [the archive record](../ARCHIVED.md).
+
 The OCR Model performs extraction locally. Its optional Build Week extension
 lets GPT-5.6 review selected output fields through Codex without adding an
 OpenAI API call to the application.

@@ -1,5 +1,9 @@
 # Final Evaluation Protocol and Results
 
+> **Historical evaluation record.** The local executable stack was archived and
+> removed on 2026-09-06. Results below were not rerun after cleanup and do not
+> describe a currently installed model. See [the archive record](../ARCHIVED.md).
+
 ## Split discipline
 
 | Split | Allowed use |
@@ -19,9 +23,9 @@ resolved OCR-stack binding before calibrated layout inference begins.
 ## Commands
 
 ```powershell
-$ocr = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr\Scripts\python.exe'
-$layout = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-layout\Scripts\python.exe'
-$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+$ocr = 'D:\OCR_Model_Assets\environments\ie-ocr\Scripts\python.exe'
+$layout = 'D:\OCR_Model_Assets\environments\ie-layout\Scripts\python.exe'
+$checkpoint = 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 
 & $layout scripts/evaluate_multitask_model.py `
   --profile final --checkpoint $checkpoint --split test_in_domain `

@@ -1,9 +1,13 @@
 # Contributing
 
-OCR Model is a solo academic project maintained by Sithu Win San. The project
-is not adding collaborators, co-maintainers, or team members. That boundary
-does not prevent community contribution: focused issues and pull requests are
-welcome.
+> **Archive notice:** OCR Model was archived on 2026-09-06. The repository is
+> retained for historical reference and is not accepting active feature work,
+> issues, or pull requests. See [ARCHIVED.md](ARCHIVED.md).
+
+OCR Model is an independent project maintained by Sithu Win San. The project
+is not adding collaborators, co-maintainers, or team members.
+Before archival, focused issues and pull requests were welcome; that historical
+policy is superseded by the archive notice above.
 
 ## Before opening an issue
 

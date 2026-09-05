@@ -101,7 +101,7 @@ def main() -> int:
     rows = _load_rows(manifest_path)[: args.limit]
     configure_external_environment()
     require_storage_gate(
-        Path("D:/CSX4201/vision-info-extraction-assets"),
+        Path("D:/OCR_Model_Assets"),
         operation="large OCR preprocessing ablation",
         anticipated_c_gib=0.1,
         anticipated_asset_gib=1.0,

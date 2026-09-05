@@ -42,15 +42,15 @@ def main() -> int:
     )
     parser.add_argument(
         "--vendor-root",
-        default="D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR",
+        default="D:/OCR_Model_Assets/vendor/PaddleOCR",
     )
     parser.add_argument(
         "--environment-root",
-        default="D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr-train",
+        default="D:/OCR_Model_Assets/environments/ie-ocr-train",
     )
     parser.add_argument(
         "--artifact-root",
-        default="D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade",
+        default="D:/OCR_Model_Assets/checkpoints/ocr_upgrade",
     )
     args = parser.parse_args()
 

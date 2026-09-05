@@ -1,11 +1,17 @@
 # Summary — Domain-Adapted OCR and Information-Extraction Pre-Model
 
-**Project:** CSX4201 vision-info-extraction
+**Project:** OCR Model: Local Document Intelligence
 **Verified through:** 2026-07-30
+
+> **Archive status (2026-09-06):** the source and historical evidence are
+> retained, while the local runtime, model assets, generated data, and MCP
+> integration were removed. See [ARCHIVED.md](ARCHIVED.md). The evaluation
+> summary below remains a historical result, not a claim that inference is
+> currently installed on this computer.
 
 ## Outcome
 
-The workspace contains a public-trained academic pre-model with original,
+The workspace contains an independently maintained document-intelligence model with original,
 custom, and adaptive OCR experiment profiles. Only the original OCR stack is
 bound to the shipped LayoutXLM calibration; custom/adaptive runs require the
 lower-level CLI's explicit generic-layout fallback and are not calibrated
@@ -108,7 +114,7 @@ includes a fixed 37° slice.
 Checkpoint:
 
 ```text
-D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
+D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
 ```
 
 Model SHA-256:
@@ -159,16 +165,15 @@ Complete:
 
 Still open research/product decisions:
 
-- professor-approved canonical fields, document types, and official quality
-  thresholds;
+- broader validation of canonical fields, document types, and quality thresholds;
 - a compatible labeled public Thai benchmark;
 - broader OCR/domain adaptation and stronger relation supervision;
-- an approved orientation/zone method if the professor requires more than the
+- a stronger orientation/zone method if future product requirements need more than the
   preserved K-Means diagnostic plus independent OCR correction;
 - any future commercial redistribution path, because the inherited
   LayoutXLM-derived checkpoint is CC BY-NC-SA 4.0.
 
-The result is a working academic pre-model with measured limitations. The
+The result is a working local document-intelligence model with measured limitations. The
 locked end-to-end quality targets were not reached, so it is not a claim of
 production readiness or accurate operation on every document. Full upgrade
 evidence and commands are in

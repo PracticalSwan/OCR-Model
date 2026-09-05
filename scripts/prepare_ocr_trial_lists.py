@@ -28,19 +28,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--real-root",
-        default="D:/CSX4201/vision-info-extraction-assets/data/recognition_training",
+        default="D:/OCR_Model_Assets/data/recognition_training",
     )
     parser.add_argument(
         "--synthetic-root",
-        default="D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition",
+        default="D:/OCR_Model_Assets/data/synthetic_recognition",
     )
     parser.add_argument(
         "--vendor-root",
-        default="D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR",
+        default="D:/OCR_Model_Assets/vendor/PaddleOCR",
     )
     parser.add_argument(
         "--output-root",
-        default="D:/CSX4201/vision-info-extraction-assets/data/ocr_trial_lists",
+        default="D:/OCR_Model_Assets/data/ocr_trial_lists",
     )
     parser.add_argument(
         "--report",

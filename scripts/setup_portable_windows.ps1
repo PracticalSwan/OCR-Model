@@ -4,8 +4,8 @@ param(
     [string]$Device = 'cpu',
     [string]$Python310 = '',
     [switch]$ReuseExisting,
-    [string]$ExistingOCRPython = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr\Scripts\python.exe',
-    [string]$ExistingLayoutPython = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-layout\Scripts\python.exe'
+    [string]$ExistingOCRPython = 'D:\OCR_Model_Assets\environments\ie-ocr\Scripts\python.exe',
+    [string]$ExistingLayoutPython = 'D:\OCR_Model_Assets\environments\ie-layout\Scripts\python.exe'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,7 +71,7 @@ if ($ReuseExisting) {
 }
 
 $BundledAssetRoot = Join-Path $ProjectRoot 'assets'
-$LegacyAssetRoot = 'D:\CSX4201\vision-info-extraction-assets'
+$LegacyAssetRoot = 'D:\OCR_Model_Assets'
 $AssetRoot = if (Test-Path -LiteralPath (Join-Path $BundledAssetRoot 'checkpoints\layoutxlm_multitask\final\model.safetensors')) {
     $BundledAssetRoot
 } else {

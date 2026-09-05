@@ -1,4 +1,4 @@
-# config.yaml - vision-info-extraction (CSX4201)
+# config.yaml - OCR Model local document intelligence
 # Dataset organization, audit, and validation configuration.
 # Paths are relative to project_root unless absolute. Use POSIX separators;
 # src/config.py resolves them with pathlib (Windows-safe).
@@ -30,19 +30,19 @@ paths:
   rotation_models: "models/kmeans_rotation"
   reports: "reports"
   # Large OCR, layout-model, cache, and generated assets live outside C:.
-  external_assets: "D:/CSX4201/vision-info-extraction-assets"
-  ocr_environment: "D:/CSX4201/vision-info-extraction-assets/environments/ie-ocr"
-  layout_environment: "D:/CSX4201/vision-info-extraction-assets/environments/ie-layout"
-  layout_python: "D:/CSX4201/vision-info-extraction-assets/environments/ie-layout/Scripts/python.exe"
-  paddle_cache: "D:/CSX4201/vision-info-extraction-assets/cache/paddlex"
-  huggingface_cache: "D:/CSX4201/vision-info-extraction-assets/cache/huggingface"
-  ocr_models: "D:/CSX4201/vision-info-extraction-assets/models/paddleocr"
-  layout_models: "D:/CSX4201/vision-info-extraction-assets/models/layoutxlm"
-  ie_checkpoints: "D:/CSX4201/vision-info-extraction-assets/checkpoints"
-  ocr_cache: "D:/CSX4201/vision-info-extraction-assets/ocr_cache"
-  model_datasets: "D:/CSX4201/vision-info-extraction-assets/data/model_datasets"
-  generated_documents: "D:/CSX4201/vision-info-extraction-assets/generated"
-  private_outputs: "D:/CSX4201/vision-info-extraction-assets/private-evaluation"
+  external_assets: "D:/OCR_Model_Assets"
+  ocr_environment: "D:/OCR_Model_Assets/environments/ie-ocr"
+  layout_environment: "D:/OCR_Model_Assets/environments/ie-layout"
+  layout_python: "D:/OCR_Model_Assets/environments/ie-layout/Scripts/python.exe"
+  paddle_cache: "D:/OCR_Model_Assets/cache/paddlex"
+  huggingface_cache: "D:/OCR_Model_Assets/cache/huggingface"
+  ocr_models: "D:/OCR_Model_Assets/models/paddleocr"
+  layout_models: "D:/OCR_Model_Assets/models/layoutxlm"
+  ie_checkpoints: "D:/OCR_Model_Assets/checkpoints"
+  ocr_cache: "D:/OCR_Model_Assets/ocr_cache"
+  model_datasets: "D:/OCR_Model_Assets/data/model_datasets"
+  generated_documents: "D:/OCR_Model_Assets/generated"
+  private_outputs: "D:/OCR_Model_Assets/private-evaluation"
 
 # Where dataset_discovery looks for datasets. The target layout (data/raw) is
 # searched first so discovery is idempotent after organization; the legacy
@@ -124,16 +124,16 @@ ocr:
   preprocessing_version: "3.0-domain-adapted-adaptive"
   preprocessing_profile: "original"
   adaptive_preprocessing_profile: "grayscale_normalized"
-  paddle_cache_home: "D:/CSX4201/vision-info-extraction-assets/cache/paddlex"
+  paddle_cache_home: "D:/OCR_Model_Assets/cache/paddlex"
   detector:
     name: "PP-OCRv6_medium_det"
-    path: "D:/CSX4201/vision-info-extraction-assets/cache/paddlex/official_models/PP-OCRv6_medium_det"
+    path: "D:/OCR_Model_Assets/cache/paddlex/official_models/PP-OCRv6_medium_det"
   general_recognizer:
     name: "PP-OCRv6_medium_rec"
-    path: "D:/CSX4201/vision-info-extraction-assets/cache/paddlex/official_models/PP-OCRv6_medium_rec"
+    path: "D:/OCR_Model_Assets/cache/paddlex/official_models/PP-OCRv6_medium_rec"
   thai_recognizer:
     name: "th_PP-OCRv5_mobile_rec"
-    path: "D:/CSX4201/vision-info-extraction-assets/cache/paddlex/official_models/th_PP-OCRv5_mobile_rec"
+    path: "D:/OCR_Model_Assets/cache/paddlex/official_models/th_PP-OCRv5_mobile_rec"
   language_modes: ["auto", "general", "thai", "en", "tr", "th"]
   orientation_candidates: [0, 90, 180, 270]
   enable_continuous_deskew: true
@@ -169,7 +169,7 @@ ocr:
 layout_model:
   architecture: "MultiTaskTextLayoutModel"
   checkpoint: "microsoft/layoutxlm-base"
-  inference_checkpoint: "D:/CSX4201/vision-info-extraction-assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise"
+  inference_checkpoint: "D:/OCR_Model_Assets/checkpoints/layoutxlm_multitask/ocr_upgrade_fresh_b_noise"
   calibration: "models/multitask_calibration.json"
   license: "CC-BY-NC-SA-4.0"
   max_length: 512

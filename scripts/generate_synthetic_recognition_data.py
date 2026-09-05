@@ -99,19 +99,19 @@ def main() -> int:
     parser.add_argument(
         "--real-corpus-root",
         default=(
-            "D:/CSX4201/vision-info-extraction-assets/data/recognition_training"
+            "D:/OCR_Model_Assets/data/recognition_training"
         ),
     )
     parser.add_argument(
         "--output-root",
         default=(
-            "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition"
+            "D:/OCR_Model_Assets/data/synthetic_recognition"
         ),
     )
     parser.add_argument(
         "--font-root",
         default=(
-            "D:/CSX4201/vision-info-extraction-assets/fonts/google-fonts/"
+            "D:/OCR_Model_Assets/fonts/google-fonts/"
             f"{GOOGLE_FONTS_COMMIT}"
         ),
     )
@@ -402,7 +402,7 @@ def _download_pinned(
         try:
             request = urllib.request.Request(
                 url,
-                headers={"User-Agent": "csx4201-ocr-upgrade/1.0"},
+                headers={"User-Agent": "ocr-model/1.0"},
             )
             with urllib.request.urlopen(request, timeout=60) as response:
                 data = response.read()

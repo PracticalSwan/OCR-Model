@@ -1,5 +1,9 @@
 # Devpost submission copy
 
+> **Historical submission copy.** The local project was archived on
+> 2026-09-06; the public Devpost entry and supporting publications were retained.
+> See [the archive record](../../ARCHIVED.md).
+
 ## Project name
 
 OCR Model: Local Document Intelligence
@@ -25,7 +29,7 @@ OpenAI API key and no raw-document upload.
 
 Document extraction projects often stop at a notebook or a model checkpoint.
 That makes them hard to test, hard to share, and risky for documents that may
-contain personal information. I wanted the finished course model to behave like
+contain personal information. I wanted the finished document-intelligence model to behave like
 a usable tool while keeping local extraction authoritative and making any
 cloud-assisted review deliberate.
 

@@ -1,5 +1,9 @@
 # Synthetic OCR training data
 
+> **Historical data-generation record.** The generated data and large asset
+> volume were removed on 2026-09-06; the aggregate evidence below is retained
+> for reproducibility. See [the archive record](../ARCHIVED.md).
+
 The OCR upgrade uses synthetic text only as a bounded supplement to the real
 public FATURA, FUNSD, and SROIE crops. Large images and font files stay on the
 D: asset volume; Git contains the generator, provenance, and aggregate
@@ -106,9 +110,9 @@ accuracy.
 
 ```powershell
 python scripts/generate_synthetic_recognition_data.py `
-  --real-corpus-root "D:\CSX4201\vision-info-extraction-assets\data\recognition_training" `
-  --output-root "D:\CSX4201\vision-info-extraction-assets\data\synthetic_recognition" `
-  --font-root "D:\CSX4201\vision-info-extraction-assets\fonts\google-fonts\9fab8b6cc7b2f20376914fd765d918c698c66d75" `
+  --real-corpus-root "D:\OCR_Model_Assets\data\recognition_training" `
+  --output-root "D:\OCR_Model_Assets\data\synthetic_recognition" `
+  --font-root "D:\OCR_Model_Assets\fonts\google-fonts\9fab8b6cc7b2f20376914fd765d918c698c66d75" `
   --synthetic-fraction 0.20 `
   --thai-train-count 12000 `
   --thai-validation-count 2000 `

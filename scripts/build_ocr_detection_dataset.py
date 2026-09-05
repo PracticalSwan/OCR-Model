@@ -60,7 +60,7 @@ def main() -> int:
     parser.add_argument(
         "--output-root",
         default=(
-            "D:/CSX4201/vision-info-extraction-assets/data/detector_training"
+            "D:/OCR_Model_Assets/data/detector_training"
         ),
     )
     parser.add_argument("--force", action="store_true")

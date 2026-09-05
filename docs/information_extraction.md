@@ -1,9 +1,14 @@
 # Information-Extraction Workflow
 
+> **Restoration-only workflow (archived 2026-09-06).** The referenced
+> `D:\OCR_Model_Assets` environments and assets were removed. Recreate and
+> revalidate them before running these commands. See
+> [the archive record](../ARCHIVED.md).
+
 ## 1. Normalize and verify public annotations
 
 ```powershell
-$ocr = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr\Scripts\python.exe'
+$ocr = 'D:\OCR_Model_Assets\environments\ie-ocr\Scripts\python.exe'
 & $ocr scripts/normalize_ie_annotations.py --force
 & $ocr scripts/verify_ie_annotations.py
 ```
@@ -52,9 +57,9 @@ SHA-256 is
 ## 3. Train the final multi-task checkpoint
 
 ```powershell
-$layout = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-layout\Scripts\python.exe'
+$layout = 'D:\OCR_Model_Assets\environments\ie-layout\Scripts\python.exe'
 $manifest = 'data\metadata\final_model_dataset_manifest_ocr_v2_b_noise.csv'
-$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+$checkpoint = 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 & $layout scripts/train_multitask_model.py `
   --profile final --manifest $manifest --checkpoint $checkpoint `
   --device cuda --epochs 4 --trial-id fresh_b_noise `
@@ -75,7 +80,7 @@ had the highest downstream selection score, 0.800401.
 Current local checkpoint:
 
 ```text
-D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
+D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
 ```
 
 `model.safetensors` SHA-256:
@@ -92,7 +97,7 @@ committed. The source/derived license is CC-BY-NC-SA-4.0.
 ```powershell
 & $layout scripts/calibrate_multitask_model.py `
   --profile final --checkpoint `
-  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
+  'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --manifest data\metadata\final_model_dataset_manifest_ocr_v2.csv `
   --device cuda --ocr-profile original `
   --streams ground_truth paddleocr `
@@ -111,10 +116,10 @@ private and zero Gmail rows. The calibration SHA-256 is
 ```powershell
 & $ocr scripts/extract_document.py `
   --input 'path\to\document.pdf' `
-  --output 'D:\CSX4201\vision-info-extraction-assets\generated\run-001' `
+  --output 'D:\OCR_Model_Assets\generated\run-001' `
   --language auto --device gpu:0 `
   --model-checkpoint `
-  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+  'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 ```
 
 The OCR process selects orientation, preprocessing, and general/Thai route. A
@@ -143,24 +148,24 @@ remain under the ignored D: root.
 ```powershell
 & $layout scripts/evaluate_multitask_model.py `
   --profile final --checkpoint `
-  'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
+  'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --split test_in_domain --streams ground_truth --device cuda `
   --group-by dataset language --calibration models\multitask_calibration.json `
   --report-name ocr_upgrade_locked_test_ground_truth.json
 & $layout scripts/evaluate_layout_angles.py `
-  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
+  --checkpoint 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --device cuda --pages-per-dataset 10
 & $ocr scripts/evaluate_end_to_end_angles.py `
-  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
+  --checkpoint 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --device gpu:0 --pages-per-dataset 1
 & $ocr scripts/evaluate_unseen_coru.py `
-  --checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
+  --checkpoint 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --device gpu:0 --limit 100
 & $ocr scripts/evaluate_private_gmail.py `
-  --layout-checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
+  --layout-checkpoint 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise' `
   --device gpu:0 --limit 2
 & $ocr scripts/run_integration_smoke.py --device gpu:0 `
-  --model-checkpoint 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+  --model-checkpoint 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 python scripts/compile_ocr_upgrade_reports.py
 & $layout scripts/compile_final_reports.py `
   --heldout-report ocr_upgrade_locked_test_ground_truth.json

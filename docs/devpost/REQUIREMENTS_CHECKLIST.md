@@ -1,5 +1,9 @@
 # OpenAI Build Week requirements checklist
 
+> **Frozen submission checklist.** The local project was archived on
+> 2026-09-06. The statuses below describe the submitted historical entry and
+> were not re-judged during cleanup. See [the archive record](../../ARCHIVED.md).
+
 Status reflects the submitted entry and public Release verified on 2026-07-21.
 
 | Requirement | Status | Evidence |

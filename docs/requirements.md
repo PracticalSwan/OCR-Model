@@ -1,5 +1,9 @@
 # Information-Extraction Requirements
 
+> **Frozen requirements/evidence record.** The project was archived locally on
+> 2026-09-06. Statuses below describe the completed historical implementation,
+> not a currently installed runtime. See [the archive record](../ARCHIVED.md).
+
 Acceptance criteria and executed evidence for the final working academic
 pre-model. Passing a functional requirement does not imply production-quality
 accuracy; measured quality is reported separately.
@@ -118,7 +122,7 @@ private ground truth, so the aggregate is an operation check, not accuracy.
 
 ## Open acceptance decisions
 
-- professor-approved canonical fields/document types and minimum thresholds;
+- validated canonical fields/document types and minimum quality thresholds;
 - whether the required four zones specifically demand K-Means, a supervised
   angle model, or only quadrant display after orientation estimation;
 - exact 90/180/270 boundary ownership;

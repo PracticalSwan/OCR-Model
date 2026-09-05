@@ -1,5 +1,13 @@
 # OCR Model: Local Document Intelligence
 
+> [!IMPORTANT]
+> **Archived on 2026-09-06.** The source is retained for reference, but the
+> local runtime and large model assets were removed. Commands below describe
+> the historical product and its restoration workflow. See
+> [ARCHIVED.md](ARCHIVED.md) for the exact cleanup and verification record.
+
+Independent local document-intelligence project.
+
 Turn images and PDFs into structured, reviewable data on your own computer.
 OCR Model combines PaddleOCR, a fine-tuned LayoutXLM checkpoint, evidence-based
 field extraction, and schema validation behind a one-command CLI and local web
@@ -7,21 +15,21 @@ GUI. Extraction uses no OpenAI API key and does not upload the document.
 
 [Watch the 2:54 demo](https://youtu.be/8BV8LnbK1GI) ·
 [View the OpenAI Build Week submission](https://devpost.com/software/ocr-model-local-document-intelligence) ·
-[Download the current portable release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade) ·
+[View the historical portable release](../../releases/tag/v1.1.0-ocr-upgrade) ·
 [Read the model card](reports/final_model/final_model_card.md)
 
 ![OCR Model showing extracted fields, OCR text, and a document preview](docs/devpost/assets/ocr-model-complete.png)
 
-## Current OCR upgrade
+## Archived OCR upgrade
 
 The OCR upgrade merged into `main` through
-[PR #2](https://github.com/PracticalSwan/csx4201-vision-info-extraction/pull/2)
+[PR #2](../../pull/2)
 on 2026-07-29. Its weights-included package is published as
-[`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
+[`v1.1.0-ocr-upgrade`](../../releases/tag/v1.1.0-ocr-upgrade).
 The public
-[`v1.0.0-build-week`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
+[`v1.0.0-build-week`](../../releases/tag/v1.0.0-build-week)
 Release remains the historical July 21 package. The selected checkpoint is
-`D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`,
+`D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`,
 with `model.safetensors` SHA-256
 `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`.
 
@@ -82,7 +90,7 @@ access for the one-time dependency install, and approximately 20 GB of free
 disk space.
 
 1. Download `OCR_Model.zip` and its `.sha256` sidecar from the
-   [`v1.1.0-ocr-upgrade` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
+   [`v1.1.0-ocr-upgrade` Release](../../releases/tag/v1.1.0-ocr-upgrade).
 2. Extract the ZIP to a normal writable folder.
 3. Run `setup_windows.bat` once.
 4. Run `launch_windows.bat`, select a document, and choose **Extract
@@ -284,7 +292,7 @@ deliberately excluded from the repository.
 
 ## Contributing
 
-This is a solo academic project maintained by Sithu Win San. Issues and pull
+This is an independent project maintained by Sithu Win San. Issues and pull
 requests are welcome, but the project is not adding collaborators,
 co-maintainers, or team members. Read [CONTRIBUTING.md](CONTRIBUTING.md) before
 opening a pull request, especially the privacy and test requirements.

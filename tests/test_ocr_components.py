@@ -362,7 +362,7 @@ def test_registry_selects_versioned_custom_models_and_preserves_original_aliases
                 "thai_recognizer": "original",
             },
             "models": {
-                "PP-OCRv6_medium_rec_csx4201_v1": {
+                "PP-OCRv6_medium_rec_ocrmodel_v1": {
                     "available": True,
                     "accepted": True,
                     "variant": "custom",
@@ -393,16 +393,16 @@ def test_registry_selects_versioned_custom_models_and_preserves_original_aliases
     detector, recognizer = registry.route_models("general")
 
     assert detector.runtime_name == "PP-OCRv6_medium_det"
-    assert recognizer.name == "PP-OCRv6_medium_rec_csx4201_v1"
+    assert recognizer.name == "PP-OCRv6_medium_rec_ocrmodel_v1"
     assert recognizer.runtime_name == "PP-OCRv6_medium_rec"
     assert registry.require("PP-OCRv6_medium_rec").path.is_dir()
     assert registry.selection["general_recognizer"] == recognizer.name
 
     upgrade_payload = json.loads(upgrade.read_text(encoding="utf-8"))
-    upgrade_payload["models"]["PP-OCRv6_medium_rec_csx4201_v1"][
+    upgrade_payload["models"]["PP-OCRv6_medium_rec_ocrmodel_v1"][
         "accepted"
     ] = False
-    upgrade_payload["models"]["PP-OCRv6_medium_rec_csx4201_v1"][
+    upgrade_payload["models"]["PP-OCRv6_medium_rec_ocrmodel_v1"][
         "local_path"
     ] = str(tmp_path / "missing-rejected-model")
     upgrade.write_text(json.dumps(upgrade_payload), encoding="utf-8")

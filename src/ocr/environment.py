@@ -13,7 +13,7 @@ from typing import Any
 
 from src.rotation_common import atomic_write_json
 
-DEFAULT_ASSET_ROOT = Path("D:/CSX4201/vision-info-extraction-assets")
+DEFAULT_ASSET_ROOT = Path("D:/OCR_Model_Assets")
 _DLL_HANDLES: list[Any] = []
 
 

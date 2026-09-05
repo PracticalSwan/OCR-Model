@@ -684,7 +684,7 @@ def render_upgrade_summary(evidence: Mapping[str, Any]) -> str:
         "python scripts/compile_ocr_upgrade_reports.py",
         "python -m pytest -q",
         "python -m compileall -q src scripts tests",
-        "D:\\CSX4201\\vision-info-extraction-assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
+        "D:\\OCR_Model_Assets\\environments\\ie-ocr\\Scripts\\python.exe scripts\\verify_information_extraction.py --complete",
         "```",
         "",
         "The exact training, evaluation, inference, portable-build, and privacy "

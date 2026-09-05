@@ -31,12 +31,12 @@ from src.rotation_common import (  # noqa: E402
 
 
 REAL_ROOT = Path(
-    "D:/CSX4201/vision-info-extraction-assets/data/recognition_training"
+    "D:/OCR_Model_Assets/data/recognition_training"
 )
 SYNTHETIC_ROOT = Path(
-    "D:/CSX4201/vision-info-extraction-assets/data/synthetic_recognition"
+    "D:/OCR_Model_Assets/data/synthetic_recognition"
 )
-VENDOR_ROOT = Path("D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR")
+VENDOR_ROOT = Path("D:/OCR_Model_Assets/vendor/PaddleOCR")
 
 
 def main() -> int:

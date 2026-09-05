@@ -33,7 +33,7 @@ def test_portable_builder_includes_license_and_contribution_policy(
     contributing_text = (target / "CONTRIBUTING.md").read_text(encoding="utf-8")
     assert "MIT License" in license_text
     assert "Copyright (c) 2026 Sithu Win San" in license_text
-    assert "solo academic project" in contributing_text
+    assert "independent project" in contributing_text
     assert "pull requests" in contributing_text
     assert "welcome" in contributing_text
     assert not (target / "docs" / "devpost").exists()

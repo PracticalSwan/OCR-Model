@@ -1,5 +1,9 @@
 # OCR Model — OpenAI Build Week portable release
 
+> **Historical release notes.** The local package/runtime was removed on
+> 2026-09-06, while the published GitHub Release remains an external archive.
+> See [the archive record](../../ARCHIVED.md).
+
 Portable, local-only OCR and document information extraction for Windows and
 the Docker-backed macOS route. The archive includes the exact final LayoutXLM
 and PaddleOCR weights, one-step CLI and GUI launchers, diagnostics, a synthetic

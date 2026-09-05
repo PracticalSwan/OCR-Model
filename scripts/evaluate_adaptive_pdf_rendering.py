@@ -67,7 +67,7 @@ def main() -> int:
     parser.add_argument(
         "--derived-pdf",
         default=(
-            "D:/CSX4201/vision-info-extraction-assets/evaluations/"
+            "D:/OCR_Model_Assets/evaluations/"
             "ocr_upgrade/adaptive_rendering/public_dev_select.pdf"
         ),
     )

@@ -1,410 +1,62 @@
-# AGENT_MEMORY.md — Shared project memory
+# AGENT_MEMORY.md — OCR Model working memory
 
-> **READ RULE (MUST):** This file is shared across agents and sessions as
-> orientation only. Its facts reflect a point in time. Verify every fact
-> against the live filesystem and current user request before relying on it.
-> Reading this file is not task completion. When a fact is stale, correct it
-> and add a concise note to the change log.
+> Orientation only. Verify live paths, Git state, model files, and metrics before relying on them.
 
-## Project status
+## Archive state — 2026-09-06
 
-- Dataset organization, audit, and validation are complete.
-- A bounded full-angle rotation-zone baseline completed on 2026-07-13.
-- The baseline is technically reproducible but performs modestly: public
-  validation/test zone accuracy is about 38%, and exact-angle reliability is
-  0% at the configured threshold.
-- A full rotation-robust OCR/information-extraction lifecycle completed on
-  2026-07-17. It includes exact PaddleOCR general/Thai models, public
-  annotation normalization, a Detectron2-free LayoutXLM text + 2D-layout
-  model, calibrated entities/relations/fields, schema-valid image/PDF
-  inference, locked public evaluation, unseen-domain testing, and
-  aggregate-only private operation.
-- OCR-upgrade build `final-8bfcf79fed04e375` contains 16,781 examples and
-  trained four epochs over 12,455 public TRAIN examples. Its selected fresh
-  checkpoint hash is
-  `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`;
-  the bound calibration hash is
-  `81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`.
-  Locked reference-token calibrated entity F1 is 0.9835, but the full
-  1,760-page locked image-to-JSON entity F1 is only 0.0944. Polygon F1 is
-  0.3815, text coverage 0.1663, and WER 0.9692. The requested end-to-end
-  quality targets were not reached. Treat it as an academic pre-model, not a
-  production or high-stakes system.
-- On 2026-07-21 the final model has a one-command CLI, repaired local Gradio GUI,
-  portable Windows installer, Docker-based macOS route, and a consent-gated
-  Codex/MCP review workflow that uses no OpenAI API key. The clean,
-  weights-included share archive is `D:\OCR_Model.zip`; its reviewed SHA-256
-  is `c6c874f5b0879478497c9a33529f6416d48be60d586197fb625540d795f9ec6b`
-  and its exact size is 1,152,835,265 bytes. It was built from clean commit
-  `e47023de2a201092df6fd3393ec297b2835e0a50`.
-  Native Windows GPU and Docker Linux/AMD64 CPU extraction produced identical
-  OCR text, field values, entity triplets, and relation triplets on the safe
-  validation document. A physical Mac was not available, so macOS support is
-  verified through the Docker build/run path rather than on Apple hardware.
-  The public GitHub Release `v1.0.0-build-week` is published from the exact
-  source commit above; its remote asset digest matches the local archive.
-  Devpost submission `1102544` is `Submitted` with the public 2:54 video and
-  `/feedback` Session ID `019f7669-11fd-7923-ad68-ea1a09bd7d74`.
-- On 2026-07-29, PR #2 merged `feat/domain-adapted-ocr` into `main` at
-  `c6303f6843de9af1c7c97fde1ef6ff43e01de553`. The initial
-  `v1.1.0-ocr-upgrade` asset targeted
-  `fcae32edc193ff6574bf99362da0e2368d5ef464`; its size and digest remain
-  historical evidence in the release notes. The July 30 GUI-state correction
-  targets clean commit `b7a2d10993cfd595c569797556e87eeed49aeaff`;
-  the live 1,159,080,320-byte archive and sidecar have SHA-256
-  `660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448`.
-  Require agreement with the tag, `BUILD_INFO.json`, exact source
-  candidate-tree hash, and generation-specific portable verification. The
-  historical `v1.0.0-build-week` Release remains available.
-- The workspace is a public Git repository with an existing GitHub remote.
-  Recheck live visibility and staged privacy before every push.
+- The source repository remains at `D:\Side Projects\OCR Model`.
+- `D:\OCR_Model`, `D:\OCR_Model_Assets`, and
+  `D:\CSX4201\vision-info-extraction-assets` were deleted; the empty
+  `D:\CSX4201` parent was then removed.
+- The global Codex `ocr_model` MCP registration, its obsolete trust entry, and
+  four matching server processes were removed.
+- The final cleanup snapshots measured 55,699,529,728 bytes (51.87 GiB)
+  reclaimed.
+- Pre-clean source verification: compileall passed; 421 tests passed, 2 skipped,
+  and 1 dependency-gated `ImageHash` test was deselected. No post-clean model
+  inference is possible without restoring weights and environments.
+- GitHub, historical Releases, Devpost, and YouTube remain external publication
+  records and were not removed during local cleanup.
 
-## Confirmed goal
+## Project scope
 
-- The professor confirmed a vision pre-model for information extraction from
-  images/files, with four rotation zones.
-- Current provisional zones are half-open: [0,90), [90,180), [180,270), and
-  [270,360). Positive angles are counterclockwise.
-- Boundary inclusivity, whether K-Means is mandatory, the expected
-  orientation-estimation method, and the meaning of “pre-model” remain open.
-  The current implementation choices do not settle those questions.
+- `D:\Side Projects\OCR Model` is an independent local-document-intelligence side project.
+- Do not use it as a workspace for unrelated model-training exercises.
+- Historical OCR/layout assets were referenced through `D:\OCR_Model_Assets`;
+  that junction and its target are no longer present.
+- The project extracts structured information from local images and PDFs without requiring an OpenAI API key.
 
-## Verified dataset facts
+## Current architecture
 
-- Workspace: C:\Assumption University\CSX4201\Project.
-- Raw data: 128,793 files and 35,459,126,772 bytes.
-- Public datasets: SROIE, FUNSD, FATURA, and CORU.
-- Private data: 26 real Gmail PDFs under data/raw/private/gmail.
-- The organization inventory contains 128,793 rows and no walk errors.
-- Known invalid/unreadable/empty count remains 408: FUNSD macOS artifacts,
-  six empty CORU text files, and four malformed CORU JSON files.
-- The legacy `vision_info_extraction_data` tree was verified to contain zero
-  files and no reparse points, then removed during cleanup on 2026-07-21.
+- PaddleOCR handles text detection/recognition with general and Thai routes.
+- A fine-tuned LayoutXLM model handles entity, document-type, canonical-evidence, and relation heads.
+- Output is validated against a versioned JSON Schema and augmented with evidence/rule checks.
+- A preserved PCA/K-Means rotation-quadrant branch is display-only.
+- Private-document mode uses opaque outputs, suppresses preview/share artifacts, and redacts source names and paths.
 
-## Verified rotation run
+## Verified model snapshot
 
-- Usable public full-document pool: 22,086 pages.
-- Unbounded capacity estimate: 416,028 rotations and 219.08 GiB of new space
-  with 16.12 GiB free at the final full-profile gate and a 10 GiB reserve;
-  correctly marked unsafe.
-- Bounded selection: 100 pages from each public dataset plus all 203 private
-  pages rendered from 26 PDFs; 603 pages total.
-- Public page splits: 280 train, 61 validation, 59 test. Private: 203
-  private_test pages.
-- Split grouping keeps logical documents, exact duplicates, reliable reported
-  near duplicates, FATURA template families, and shared CORU source stems
-  together. Latest split report records zero page, document, group, or
-  public/private leakage.
-- Smoke profile: 52 successful rotations.
-- Full profile: 8,332 successful rotations, zero failures; 5,600 train, 976
-  validation, 944 test, and 812 private_test.
-- Each of the four zones contains exactly 2,083 rotations.
-- Public sources remain read-only references. Private PDFs render at 200 DPI
-  to anonymous page IDs in ignored processed storage.
-- The frozen July 28 rotation verification passed 20/20 checks, including raw
-  integrity, page and rotation PNG provenance, manifest consistency, boundary
-  coverage, split isolation, private-name scan, and no generated files under
-  raw. A July 30 rerun is 18/20 because prior verified cleanup removed 203
-  derived private page renders, leaving 812 retained private rotations without
-  their re-hashable source render. All 8,332 rotation files and the 7,520
-  public rows remain present; do not regenerate private derived material only
-  to refresh historical evidence.
+- Selected LayoutXLM checkpoint SHA-256: `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`.
+- Public locked image-to-JSON evaluation previously measured polygon F1 0.3815, text coverage 0.1663, WER 0.9692, entity F1 0.0944, relation F1 0.0111, and canonical accuracy 0.2534.
+- Those end-to-end results are substantially weaker than reference-token layout-head metrics; keep the distinction explicit.
+- The custom Thai recognizer is experimental/synthetic-selected and is not a blanket replacement for the original calibrated OCR stack.
+- The preserved K-Means rotation baseline remains weak and diagnostic only.
 
-## Verified feature and model facts
+## Runtime and packaging
 
-- Feature vector: 1,957 values: 1,764 HOG, 48 Hough/line, 136 projection,
-  four directional-edge, and five geometry values.
-- Feature extraction produced 8,332 finite vectors with zero failures.
-- StandardScaler and PCA fit only 5,600 public training rows.
-- PCA output: 128 dimensions; cumulative explained variance 84.22%.
-- K-Means: k=4, seed 42, n_init=20; cluster sizes 1,112, 1,114, 1,686,
-  and 1,688.
-- Training-only Hungarian mapping: C0→Z1, C1→Z2, C2→Z4, C3→Z3.
-- Saved scaler, PCA, and K-Means artifacts passed reload checks.
-- Mapped-zone accuracy: train 50.00%, validation 37.81%, test 37.92%.
-- Public test ARI/NMI: 0.0871/0.1035. These are modest unsupervised results,
-  not evidence that the four clusters recover the required quadrants.
-- Private zone results are aggregate-only; no private row prediction is
-  written.
+- Windows OCR and CUDA layout inference use separate Python 3.10 runtimes because of binary-library compatibility.
+- Portable Windows and Docker-backed CPU packaging exist; host-specific macOS behavior was not validated on physical Apple hardware in the recorded evidence.
+- The current source checkout may rely on large local assets that are intentionally outside normal Git storage.
+- Release provenance, hashes, and historical reports are execution-specific and must be rechecked before publication or replacement.
 
-## Verified exact-angle facts
+## Working rules
 
-- Exact-angle evaluation runs on validation, test, and private_test only.
-- Public: 1,920 attempts, 1,904 estimates, 16 hard failures, zero reliable
-  estimates, circular MAE 89.74 degrees, median error 90 degrees.
-- Private aggregate: 812 attempts, 804 estimates, eight hard failures, zero
-  reliable estimates, circular MAE 90.00 degrees.
-- Every non-failed estimate was marked low-confidence at the configured 0.50
-  threshold.
-- Correction semantics are negative estimated angle, but the output is not a
-  dependable exact-angle corrector. Pixel orientation-score improvement does
-  not override the poor circular error.
+- Preserve private-data boundaries and never publish real private documents or derived private text/predictions.
+- Prefer measured evidence over claims of accuracy.
+- Do not alter historical reports merely to make old paths or metrics look current.
+- Use synthetic or redistributable public fixtures for tests.
+- Keep the active project identity, configuration, and documentation independent from unrelated workspaces.
 
-## Tooling and artifacts
+## Historical evidence
 
-- Organization CLIs: inspect_data.py, organize_data.py, audit_data.py,
-  verify_data.py.
-- Rotation CLIs: prepare_page_images.py, create_rotation_splits.py,
-  generate_rotation_data.py, verify_rotation_data.py,
-  extract_rotation_features.py, fit_rotation_preprocessing.py,
-  train_kmeans_rotation.py, evaluate_kmeans_rotation.py,
-  evaluate_angle_estimation.py, run_rotation_experiment.py.
-- Main rotation modules: rotation_common.py, page_preparation.py,
-  rotation_dataset.py, orientation_features.py, rotation_model.py,
-  angle_estimation.py.
-- Main result roots: data/metadata, data/splits, data/processed,
-  models/kmeans_rotation, and reports.
-- OCR/IE CLIs include normalization and verification, environment/model
-  setup, final dataset preparation, multi-task training/calibration,
-  image/PDF inference, locked and angle-grid evaluation, unseen CORU testing,
-  bounded private operation, integration smoke, report compilation, and the
-  complete information-extraction verifier.
-- Large OCR/layout/model/checkpoint/cache assets live below
-  D:\CSX4201\vision-info-extraction-assets in isolated Python 3.10 OCR and
-  CUDA-layout environments.
-- Required OCR models: PP-OCRv6_medium_det, PP-OCRv6_medium_rec, and
-  th_PP-OCRv5_mobile_rec; model hashes and GPU smoke initialization pass.
-  The global profile remains `original`. The original detector/general
-  inference-tree hashes are
-  `eccf59cf53c201173dbabb4e45115d067414e4db8aeeb37a84e0b035afba494d`
-  and
-  `6c46447e05189eb3f863dc75855f0cfccf16a4af188a249861377c69216f40b1`.
-  The accepted synthetic-only custom Thai inference-tree hash is
-  `0876e624221bf0ff2d888506c7b9fa84eacc99f98394b424e81c098769d91e73`.
-- Public annotation normalization produced 12,433 authoritative records. The
-  OCR-upgrade build contains 11,172 ground-truth, 2,038 PaddleOCR, 2,038
-  hybrid, and 1,533 train-only OCR-noise examples, with Gmail fit rows 0.
-- Final multi-task training saved/reloaded all heads with maximum logit
-  difference 0.0. Public-only calibration is bound to the exact build,
-  manifest, and checkpoint hashes.
-- Locked in-domain calibrated entity/canonical/relation F1 is
-  0.9835/0.9860/0.5603. The 540-case layout grid has minimum calibrated entity
-  F1 0.7683; the 72-case end-to-end grid exposes the weaker real-OCR path while
-  synthetic Thai recovery passes 18/18 angles.
-- Unseen CORU completed 100/100 pages without failures at 25.96 seconds/page.
-  Current private operational inference completed 2/2 anonymous
-  documents/pages and published aggregate counts only. The older 26-document,
-  203-page result belongs to the July 17 checkpoint.
-- Current test and verifier counts are recorded in
-  `reports/ocr_upgrade/verification_executions.json`; do not reuse the older
-  244/122/2 counts after the ledger is refreshed.
-
-## Open questions
-
-- Do the provisional canonical fields and document types match the professor's
-  final target scope?
-- Are exact boundary angles assigned to the lower or upper zone?
-- Is K-Means specifically required, or may a deterministic/supervised
-  four-way orientation method be used?
-- Which angle-estimation approach is expected?
-- What does “pre-model” mean in the final deliverable?
-- What are the professor's official quality thresholds and held-out protocol?
-  The executed locked and unseen-domain evaluations are project evidence, not
-  an official course benchmark.
-- May any additional derived artifact be produced from the private Gmail set
-  beyond ignored local inference and aggregate-only reporting?
-- The owner intentionally made the repository public on 2026-07-21. Raw and
-  derived private data must remain excluded despite that visibility.
-
-## Standing cautions
-
-- Never commit or externally upload private Gmail source or derived data.
-- Never write private per-row predictions, identifiers, paths, or previews to
-  public reports.
-- Recheck live ignore rules and repository visibility before any commit.
-- Do not call the bounded full-angle run a full-corpus run.
-- Do not present the current K-Means or exact-angle metrics as a successful
-  final model.
-- Verify artifact hashes and train-only provenance before reusing cached
-  features or models.
-- Materialized page and rotation PNG reuse must match embedded source and
-  configuration provenance. Privacy scans must include committable source,
-  tests, docs, and root config, not only generated report directories.
-
-## Change log
-
-- 2026-07-13 — Initialized with dataset structure, privacy cautions, and open
-  project questions.
-- 2026-07-13 — Recorded the professor-confirmed vision pre-model and four-zone
-  goal.
-- 2026-07-13 — Completed organization/audit/validation: 128,793 raw files,
-  public/private separation, reusable tooling, and 47 tests at that stage.
-- 2026-07-13 — Completed the bounded rotation-zone baseline: 603 pages, 8,332
-  rotations, 1,957-value features, train-only 128-component PCA and K-Means,
-  mapped/boundary evaluation, exact-angle evaluation, 20/20 rotation checks,
-  and 113 passing tests. Recorded modest zone accuracy and failed exact-angle
-  reliability without overstating the result.
-- 2026-07-13 - Independent review found private-name literals in synthetic
-  tests, incomplete privacy-scan coverage, stale derived-PNG reuse after config
-  changes, and an inert public-image materialization flag. Fixed all findings,
-  rebuilt the provenance-bound pipeline, and added regressions.
-- 2026-07-13 - The single follow-up review validated live-source hashing,
-  exact manifest enums, privacy coverage, artifact regeneration, tests, and
-  both verifiers; no reproducible violations remained.
-- 2026-07-15 - Added the D:-backed, process-isolated PaddleOCR/LayoutXLM
-  implementation; normalized public annotations; smoke-trained and reloaded a
-  public-only layout checkpoint; verified image, rotated, Thai, unknown, and
-  multipage-PDF inference; executed bounded public and aggregate-only private
-  evaluation; retained K-Means as a failure-isolated display branch. Recorded
-  low model-quality metrics without presenting the smoke checkpoint as final.
-- 2026-07-15 - Final-review correction pass replaced static integration claims
-  with a tracked hash-bound runner and independent semantic verification,
-  required real rotated phrase recovery, corrected automatic Thai retry and
-  bounded script scoring, and added polygon detection plus recognized-text
-  metrics. Public smoke detection P/R/F1 is 0.5483/0.3333/0.4146 and
-  recognized-text coverage is 0.2503; the development/OCR/layout partitions
-  pass 158 (1 skipped), 53, and 3 tests respectively. The repository remote was
-  confirmed private before publication; Gmail fit rows remain 0.
-- 2026-07-15 - The permitted second and final independent review rechecked the
-  three prior blockers, validated 11 integration artifacts plus 13 focused
-  regressions, and confirmed all three closed with no reproducible completion
-  blocker remaining.
-- 2026-07-17 - Completed the final public multi-task run, public-only
-  calibration, one locked in-domain test, required layout and end-to-end angle
-  grids, exact OCR/integration verification, deterministic 100-page unseen
-  CORU evaluation, and aggregate-only two-page private operation. The final
-  checkpoint reloads exactly; host/OCR/layout test partitions pass
-  227 (2 skipped), 122, and 2 tests. Real OCR remains the documented
-  end-to-end bottleneck, and K-Means remains display-only.
-- 2026-07-17 - Final independent review closed explicit-checkpoint
-  documentation, fail-closed calibration and private-input boundaries,
-  transitive learned-worker integration hashes, locked 100/100 unseen
-  verification, required private-inventory scanning, and exact model-example
-  reuse validation. Fresh integration passes with 17 source hashes, 11
-  external artifacts, four cases, and zero private inputs; complete IE
-  verification passes 46/46. Conservative cleanup removed 19.740 GiB of
-  obsolete development/smoke datasets and checkpoints while preserving and
-  re-hashing the final checkpoint, resume state, and final model dataset.
-- 2026-07-17 - Published the final working academic pre-model through private
-  GitHub PR #1. The feature branch merged cleanly into `main` at
-  `b38ebc2fc3de8975c03ef9ea5fe66334f40bd137`; the staged publication audit
-  found zero private filename, high-confidence secret, forbidden-path, or
-  symlink findings.
-- 2026-07-19 - Added the portable product and OpenAI Build Week submission
-  surfaces: one-command CLI and GUI, Windows setup, Docker/macOS setup,
-  bundled weights, runtime diagnostics, reviewed screenshots, a local MCP
-  server, and a consent-gated Codex skill. The extension intentionally uses no
-  OpenAI API key. Native GPU and Docker CPU full extractions match exactly on
-  the safe validation document, and the host suite passes 237 tests with two
-  environment-dependent skips.
-- 2026-07-19 - The one permitted independent reviewer found three packaging
-  issues: the clean ZIP had not yet been sealed, a GUI screenshot exposed an
-  absolute local output path, and temporary browser screenshots were visible
-  at the repository root. The archive was sealed and audited, the GUI now
-  shows a relative output path, and exact temporary filenames are ignored.
-  The same reviewer performed the single follow-up review and reported zero
-  blocker, high, medium, or low findings; the review loop ended.
-- 2026-07-19 - Published the portable and Build Week package to private GitHub
-  `main` at commit `79d2ad9`. The Devpost judge email resolved to GitHub user
-  `devposttesting`; it now has active pull-only access. After owner passkey
-  confirmation, GitHub created OpenAI email invitation `326199273`. The email
-  dialog defaulted to `write`, so the invitation was immediately reduced to
-  `read` and reverified through the authenticated API. Both official judge
-  access paths are now present without making the repository public.
-- 2026-07-19 - The authenticated Devpost connector populated project
-  `1350784`, slug `ocr-model-local-document-intelligence`, with the final
-  write-up, stack, private repository link, and privacy-safe GUI thumbnail.
-  The project is published on Devpost but has not yet been submitted to OpenAI
-  Build Week. Country is confirmed as Thailand. Submission remains gated on
-  the owner's viewable YouTube URL, final `/feedback` Session ID, and explicit
-  legal agreement.
-- 2026-07-20 - Replaced unsupported scikit-learn 1.8-to-1.7 pickle loading in
-  the display-only inference path with a hash-bound numeric scaler/PCA/K-Means
-  export. Public-only parity covered 7,520 feature rows with zero cluster-label
-  differences. The refreshed clean archive, built from `38b8575`, passed its
-  privacy/root/manifest audit, native Windows GPU extraction, and Docker
-  Linux/AMD64 CPU extraction with identical stable semantic output and no
-  `InconsistentVersionWarning`.
-- 2026-07-20 - A live Chrome audit confirmed the distinction between the
-  populated public Devpost project and the actual Build Week submission. The
-  hackathon editor reports Draft, 1/5 steps, and its Additional info fields are
-  empty. Thailand is now confirmed; the connector must perform the real
-  submission after the owner supplies the YouTube URL and `/feedback` Session
-  ID and explicitly accepts the legal agreement.
-- 2026-07-20 - Repaired the portable GUI with image and first-page PDF
-  previews, one Gradio-owned progress surface, bounded independent OCR/log
-  scrolling, ANSI-free logs, and atomic stale-result clearing. The host suite
-  passes 243 tests with two skips; live Chrome checks covered source and
-  packaged GPU execution. The rebuilt clean archive is 1,153,302,135 bytes
-  with SHA-256
-  `f6a057e5c37c6036bd1d4ad6c247aa0895e893d87fe17f997fd011e0c5064f9e`
-  and source commit `5b2c964f0affea209aefc03f6ce03183c7dd88de`.
-- 2026-07-20 - Rebuilt and probed the Docker Linux/AMD64 CPU image, completed
-  one real extraction with exact stable semantic parity against Windows, and
-  published private GitHub Release `v1.0.0-build-week`. GitHub reports the
-  expected 1,153,302,135-byte ZIP, matching SHA-256, exact source tag, and
-  read-only judge access. Devpost project `1350784` received the repaired
-  privacy-safe GUI thumbnail; final hackathon submission still waits for the
-  YouTube URL, `/feedback` Session ID, and explicit legal agreement.
-- 2026-07-21 - Published the corrected 2:54 video, submitted OpenAI Build Week
-  entry `1102544`, and verified the live `Submitted` state. The owner made the
-  repository public. Added the MIT license for original code/documentation and
-  a solo-maintainer contribution policy, rebuilt the public Release from clean
-  commit `e47023d`, excluded self-referential submission documents from the
-  runtime bundle, and passed ZIP integrity, privacy, doctor, import, and full
-  CPU sample-extraction checks. Conservative cleanup removed 558 generated
-  cache, log, screenshot, test-output, obsolete-package-doc, empty-legacy-tree,
-  and staging files totaling 2,443,608,061 bytes. It preserved raw/model data,
-  the demo MP4, canonical ZIP, `.runtime`, and `runtime.local.json`.
-- 2026-07-28 - Completed the public-only domain-adapted OCR training and
-  selection lifecycle. The selected global OCR profile remains original; a
-  synthetic-only custom Thai model is available to explicit custom/adaptive
-  OCR experiments, which require generic-layout fallback because the shipped
-  calibration is original-stack-bound. Fresh LayoutXLM checkpoint
-  `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`
-  and calibration
-  `81a55061554d760e42c492d16f283a78fea32c64fd697947cbeeb8c7c1e9fc44`
-  are frozen. The one-time 1,760-page locked image-to-JSON run had zero
-  failures but missed the requested accuracy targets (coverage 0.1663, WER
-  0.9692, entity F1 0.0944). CORU completed 100/100 unseen pages and the
-  bounded two-document private aggregate remained content-free. Documentation
-  now separates this branch evidence from the historical July 21 public
-  Release. The locally verified branch archive was built from clean commit
-  `fcae32edc193ff6574bf99362da0e2368d5ef464`; it is 1,159,061,897 bytes with
-  SHA-256
-  `d539c54f02c8e5bd204266eaed7e7372c4fd077d3cfa4062dccb1f894eb7d746`.
-  Fresh CPU setup plus CPU/GPU image, rotated-image, PDF, custom Thai,
-  adaptive, schema, visualization, fallback, privacy, archive, and GUI probes
-  pass. The archive is local and has not replaced the historical public
-  Release. The late independent review found no blocker and one medium
-  acceptance-control defect; registry construction and runtime selection now
-  refuse the rejected custom general recognizer before path/hash loading using
-  hash-bound acceptance evidence and focused regression tests.
-- 2026-07-29 - Created and reviewed PR #2, refreshed the complete verifier to
-  81/81 passing checks, merged the OCR upgrade into `main`, and published
-  `v1.1.0-ocr-upgrade` from the exact verified package-build commit. GitHub
-  reports the expected archive size and SHA-256, the published sidecar matches
-  the local sidecar, and the historical `v1.0.0-build-week` Release remains
-  intact.
-- 2026-07-30 - Corrected the release boundary without changing the version:
-  calibrated layout inference validates its OCR-stack binding and fails closed
-  on required worker errors; generic/rule fallback is explicit; portable
-  private-document mode uses opaque IDs and redacted/no-archive output; the
-  14 learned fields and 27 schema-supported fields are distinguished; and the
-  release builder uses isolated D: staging, exact clean candidate-tree
-  provenance, a completed-payload privacy scan, and ZIP-integrity validation.
-  Simplification removed 177 net lines: Gradio now uses one session cache,
-  private cleanup targets fixed outputs, the builder never deletes existing
-  targets, and portable generation facts live in one report/`BUILD_INFO`
-  comparison. The existing `v1.1.0-ocr-upgrade` tag and two stable assets were
-  replaced in place and re-downloaded successfully. The live archive is
-  1,159,079,957 bytes with SHA-256
-  `4584bc6d9e782a9e50c5dc801ac3b6e1e633ef40a57f64763d5765ce285c546a`.
-  Windows CPU, installed doctor, public/private Gradio, Docker Linux/AMD64 CPU,
-  manifest, sidecar, and live-download checks pass; physical Mac remains
-  untested.
-- 2026-07-30 - Repaired the current Gradio GUI without changing the release
-  version. Extraction no longer feeds back into the upload-change reset,
-  settings changes preserve completed output and the selected upload, repeat
-  private runs reuse one session cache until shutdown, and the broken Gradio
-  Settings control is absent. The centered responsive layout now uses a
-  dedicated Download tab. The full suite passes 420 tests with four
-  environment-dependent skips; the actual Gradio 6.0.1 focused suite passes
-  14 tests. Browser checks covered first-upload preview, real GPU extraction,
-  persistence, responsive layout, and zero console errors. The independent
-  specialized follow-up review found no defect. The clean build commit is
-  `b7a2d10993cfd595c569797556e87eeed49aeaff`; the live
-  1,159,080,320-byte asset and sidecar have SHA-256
-  `660d56b9d64d7ddabeb1ea4ca945f6ea58e1d7b58031a8cffaacfedfdc3c3448`.
-  Installed Windows GPU and Docker Linux/AMD64 CPU sample extraction passed,
-  and the exact Docker test resources were removed.
+Older generated reports can retain machine-local paths and experiment labels from the environment in which they were produced. Treat those as immutable provenance, not as current workspace identity or configuration. New work must use the current independent project paths and terminology.

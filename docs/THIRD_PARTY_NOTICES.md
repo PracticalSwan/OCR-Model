@@ -1,5 +1,10 @@
 # Distribution and third-party notices
 
+> **Historical distribution notice.** The local package was removed when the
+> project was archived on 2026-09-06. These upstream terms continue to apply to
+> historical Release assets and any future restoration. See
+> [the archive record](../ARCHIVED.md).
+
 This portable package is intended for academic and noncommercial evaluation.
 It contains original project code plus model artifacts with separate upstream
 terms. No raw datasets or private Gmail documents are distributed.

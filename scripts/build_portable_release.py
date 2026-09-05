@@ -24,7 +24,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.release_provenance import require_clean_git_worktree  # noqa: E402
 
-DEFAULT_ASSET_ROOT = Path("D:/CSX4201/vision-info-extraction-assets")
+DEFAULT_ASSET_ROOT = Path("D:/OCR_Model_Assets")
 INSTALLED_TARGET = Path("D:/OCR_Model")
 DEFAULT_TARGET = (
     DEFAULT_ASSET_ROOT / "release-staging" / "v1.1.0-in-place" / "OCR_Model"
@@ -154,7 +154,7 @@ def validate_build_location(target: Path, asset_root: Path) -> None:
     if asset_root.resolve() != assets:
         raise ValueError(
             "portable asset root must be exactly "
-            "D:\\CSX4201\\vision-info-extraction-assets"
+            "D:\\OCR_Model_Assets"
         )
     if resolved == installed:
         raise ValueError(
@@ -164,7 +164,7 @@ def validate_build_location(target: Path, asset_root: Path) -> None:
     if assets not in resolved.parents:
         raise ValueError(
             "portable release builds are allowed only below "
-            "D:\\CSX4201\\vision-info-extraction-assets"
+            "D:\\OCR_Model_Assets"
         )
 
 
@@ -845,7 +845,7 @@ def build_info(
         {
             "schema_version": "1.0",
             "built_at": datetime.now(timezone.utc).isoformat(),
-            "source_repository": "PracticalSwan/csx4201-vision-info-extraction",
+            "source_repository": "OCR Model",
             "source_commit": provenance["source_commit"],
             "source_tree_dirty_at_build": provenance["source_tree_dirty"],
             "source_tree_sha256": provenance["source_tree_sha256"],

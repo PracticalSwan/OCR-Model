@@ -22,7 +22,7 @@ from src.rotation_common import (  # noqa: E402
 
 
 DETECTOR_EXTERNAL_ROOT = Path(
-    "D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade/detector"
+    "D:/OCR_Model_Assets/checkpoints/ocr_upgrade/detector"
 )
 METRIC_PROVENANCE_FIELDS = (
     "build_id",

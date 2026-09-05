@@ -1,11 +1,15 @@
 # Domain-adapted OCR upgrade release notes
 
+> **Historical release record.** The source was archived locally on 2026-09-06,
+> and its runtime/model assets were removed. The hashes and results below remain
+> the frozen release evidence. See [the archive record](../ARCHIVED.md).
+
 **Source branch:** `feat/domain-adapted-ocr`
 
-**Merged:** [PR #2](https://github.com/PracticalSwan/csx4201-vision-info-extraction/pull/2)
+**Merged:** PR #2
 into `main` at `c6303f6843de9af1c7c97fde1ef6ff43e01de553` on 2026-07-29
 
-**Release:** [`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
+**Release:** `v1.1.0-ocr-upgrade`.
 The July 29 initial asset targeted
 `fcae32edc193ff6574bf99362da0e2368d5ef464`. The same release and asset names
 now identify the GUI-state correction built from clean commit
@@ -96,7 +100,7 @@ provenance sufficient for this training and redistribution boundary.
 
 All data reports record zero private rows. Raw inputs remain read-only, and
 large crops, images, lists, caches, environments, and checkpoints remain on
-`D:\CSX4201\vision-info-extraction-assets`.
+`D:\OCR_Model_Assets`.
 
 ## Detector trials
 
@@ -211,7 +215,7 @@ All declared reference, canonical, document, and relation regression gates
 passed. The selected checkpoint is:
 
 ```text
-D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
+D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
 ```
 
 Its `model.safetensors` SHA-256 is
@@ -298,9 +302,9 @@ intended.
 powershell -ExecutionPolicy Bypass -File scripts\setup_ie_environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\setup_ocr_training_environment.ps1
 
-$train = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr-train\Scripts\python.exe'
-$ocr = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr\Scripts\python.exe'
-$layout = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-layout\Scripts\python.exe'
+$train = 'D:\OCR_Model_Assets\environments\ie-ocr-train\Scripts\python.exe'
+$ocr = 'D:\OCR_Model_Assets\environments\ie-ocr\Scripts\python.exe'
+$layout = 'D:\OCR_Model_Assets\environments\ie-layout\Scripts\python.exe'
 
 & $train scripts\verify_ocr_training_environment.py --device gpu:0 --write-report
 & $ocr scripts\download_ocr_models.py
@@ -317,9 +321,9 @@ python scripts\build_ocr_detection_dataset.py --profile final --force
 python scripts\build_ocr_recognition_dataset.py --profile final `
   --line-crops --critical-word-crops --force
 python scripts\generate_synthetic_recognition_data.py `
-  --real-corpus-root 'D:\CSX4201\vision-info-extraction-assets\data\recognition_training' `
-  --output-root 'D:\CSX4201\vision-info-extraction-assets\data\synthetic_recognition' `
-  --font-root 'D:\CSX4201\vision-info-extraction-assets\fonts\google-fonts\9fab8b6cc7b2f20376914fd765d918c698c66d75' `
+  --real-corpus-root 'D:\OCR_Model_Assets\data\recognition_training' `
+  --output-root 'D:\OCR_Model_Assets\data\synthetic_recognition' `
+  --font-root 'D:\OCR_Model_Assets\fonts\google-fonts\9fab8b6cc7b2f20376914fd765d918c698c66d75' `
   --synthetic-fraction 0.20 --thai-train-count 12000 `
   --thai-validation-count 2000 --seed 42 --force
 python scripts\prepare_ocr_trial_lists.py --force
@@ -340,7 +344,7 @@ powershell -ExecutionPolicy Bypass -File scripts\train_ocr_recognizer.ps1 `
 
 ```powershell
 $manifest = 'data\metadata\final_model_dataset_manifest_ocr_v2_b_noise.csv'
-$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+$checkpoint = 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 
 & $layout scripts\train_multitask_model.py `
   --profile final --manifest $manifest --device cuda --epochs 4 `
@@ -385,7 +389,7 @@ model.
 
 ```powershell
 $input = 'path\to\document.pdf'
-$output = 'D:\CSX4201\vision-info-extraction-assets\generated\example'
+$output = 'D:\OCR_Model_Assets\generated\example'
 
 & $ocr scripts\extract_document.py --input $input --output "$output-original" `
   --language auto --device gpu:0 --ocr-profile original `
@@ -522,10 +526,10 @@ schema-valid degraded output; they did not prove calibrated LayoutXLM
 inference. The corrected portable CLI therefore narrows calibrated choices to
 original/auto.
 That initial archive and matching sidecar were published under
-[`v1.1.0-ocr-upgrade`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade);
+`v1.1.0-ocr-upgrade`;
 the current live assets supersede this historical package identity. The
 historical public
-[`v1.0.0-build-week`](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
+`v1.0.0-build-week`
 Release remains available.
 
 The current GUI-state correction has 183 ZIP entries and a 182-file payload

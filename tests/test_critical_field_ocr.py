@@ -7,7 +7,7 @@ from src.evaluation.critical_field_ocr import evaluate_critical_fields
 
 def test_field_aware_normalization_and_tolerance_metrics() -> None:
     reference = {
-        "organization_name": "Assumption University",
+        "organization_name": "Example Company",
         "date": "2026-07-24",
         "invoice_number": "INV-001-A",
         "total_amount": "1,234.50",
@@ -17,7 +17,7 @@ def test_field_aware_normalization_and_tolerance_metrics() -> None:
         "address": "88 Bang Na-Trat Road Bangkok",
     }
     prediction = {
-        "organization_name": "Assumption Univ.",
+        "organization_name": "Example Co.",
         "date": "24/07/2026",
         "invoice_number": "inv 001 a",
         "total_amount": "1234.49",

@@ -1,5 +1,10 @@
 # Local private-document testing
 
+> **Archived workflow (2026-09-06).** The private-test runtime, checkpoints,
+> and asset environments were removed. Do not run these commands until the
+> project is explicitly restored and its privacy boundary is revalidated. See
+> [the archive record](../ARCHIVED.md).
+
 Private Gmail documents are an operational test set only. This command runs
 the fixed final checkpoint locally; it cannot train, calibrate, select a
 checkpoint, or change thresholds.
@@ -8,8 +13,8 @@ Run the final aggregate-only evaluator from the OCR environment after training
 and calibration:
 
 ```powershell
-$ocr = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr\Scripts\python.exe'
-$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+$ocr = 'D:\OCR_Model_Assets\environments\ie-ocr\Scripts\python.exe'
+$checkpoint = 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 & $ocr scripts/evaluate_private_gmail.py `
   --layout-checkpoint $checkpoint --device gpu:0 --limit 2
 ```
@@ -23,10 +28,10 @@ image, or per-document prediction.
 For a larger owner-only manual-review run, use the separate private runner:
 
 ```powershell
-$checkpoint = 'D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
+$checkpoint = 'D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise'
 & $ocr scripts/run_private_test.py `
   --input-root 'data\raw\private\gmail' `
-  --output-root 'D:\CSX4201\vision-info-extraction-assets\private-evaluation\ocr-upgrade' `
+  --output-root 'D:\OCR_Model_Assets\private-evaluation\ocr-upgrade' `
   --language auto --device gpu:0 --private-output `
   --checkpoint $checkpoint --recursive --continue-on-error `
   --no-private-visualizations --aggregate-report `

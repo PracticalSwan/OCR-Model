@@ -1,4 +1,9 @@
-# CLAUDE.md — Claude Code layer for CSX4201/Project
+# CLAUDE.md — Claude Code layer for OCR Model
+
+> **Archived 2026-09-06:** read `ARCHIVED.md` before acting. Do not treat the
+> deliberately removed runtime, assets, or MCP registration as missing-file
+> defects, and do not restore them unless the user explicitly reopens the
+> project.
 
 > **Relationship to sibling files (they complement each other)**
 > - `AGENTS.md` is the **shared, cross-host** source of truth (Codex + Claude + Gemini). Shared rules, project identity, dataset structure, session-start protocol, privacy, and pending items all live there.

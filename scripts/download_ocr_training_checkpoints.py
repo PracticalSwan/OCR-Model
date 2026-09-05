@@ -77,13 +77,13 @@ def main() -> int:
     parser.add_argument(
         "--output-root",
         default=(
-            "D:/CSX4201/vision-info-extraction-assets/"
+            "D:/OCR_Model_Assets/"
             "models/paddleocr/training"
         ),
     )
     parser.add_argument(
         "--vendor-root",
-        default="D:/CSX4201/vision-info-extraction-assets/vendor/PaddleOCR",
+        default="D:/OCR_Model_Assets/vendor/PaddleOCR",
     )
     parser.add_argument("--retries", type=int, default=3)
     parser.add_argument("--force", action="store_true")
@@ -274,7 +274,7 @@ def download_with_resume(
             offset = partial.stat().st_size if partial.exists() else 0
             if offset > expected_size:
                 raise RuntimeError("partial download exceeds expected size")
-            request_headers = {"User-Agent": "csx4201-ocr-upgrade/1.0"}
+            request_headers = {"User-Agent": "ocr-model/1.0"}
             mode = "wb"
             if 0 < offset < expected_size:
                 request_headers["Range"] = f"bytes={offset}-"
@@ -364,7 +364,7 @@ def _head(url: str) -> dict[str, Any]:
     request = urllib.request.Request(
         url,
         method="HEAD",
-        headers={"User-Agent": "csx4201-ocr-upgrade/1.0"},
+        headers={"User-Agent": "ocr-model/1.0"},
     )
     with urllib.request.urlopen(request, timeout=60) as response:
         content_length = response.headers.get("Content-Length")

@@ -1,5 +1,10 @@
 # OCR Model portable package
 
+> **Archived 2026-09-06.** No portable installation remains on this computer.
+> This guide describes the historical GitHub Release and the restoration path;
+> it is not evidence of a currently installed runtime. See
+> [the archive record](../ARCHIVED.md).
+
 This package runs the finished PaddleOCR + LayoutXLM information-extraction
 pipeline on local images and PDFs. It includes the trained LayoutXLM checkpoint,
 the three pinned PaddleOCR model directories, calibration, rotation-display
@@ -154,16 +159,16 @@ Get-Content .\OCR_Model.zip.sha256
 ```
 
 Users and judges can download the archive and checksum from the public
-[`v1.1.0-ocr-upgrade` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.1.0-ocr-upgrade).
+`v1.1.0-ocr-upgrade` Release.
 The earlier
-[`v1.0.0-build-week` Release](https://github.com/PracticalSwan/csx4201-vision-info-extraction/releases/tag/v1.0.0-build-week)
+`v1.0.0-build-week` Release
 remains the historical July 21 package.
 
 Use the live Release asset and `OCR_Model.zip.sha256` sidecar for the current
 archive size and digest. `BUILD_INFO.json` records the clean source commit,
 exact Git candidate-tree SHA-256, candidate count, and clean-state flag. The
 release build runs only from isolated staging below
-`D:\CSX4201\vision-info-extraction-assets`; it rejects `D:\OCR_Model` as a
+`D:\OCR_Model_Assets`; it rejects `D:\OCR_Model` as a
 build target unconditionally. The builder never deletes or replaces an
 existing target; each build must use a new isolated staging path.
 
@@ -196,7 +201,7 @@ f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180
 The current source checkpoint is:
 
 ```text
-D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
+D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise
 ```
 
 The portable registry keeps the selected original detector and general

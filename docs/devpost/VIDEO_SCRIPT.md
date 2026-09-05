@@ -1,5 +1,9 @@
 # Three-minute demo script
 
+> **Historical recording script.** `D:\OCR_Model` was removed on 2026-09-06,
+> so these steps cannot be replayed without restoring the portable package. See
+> [the archive record](../../ARCHIVED.md).
+
 Target length: 2:35–2:50. Record at 1080p with audible narration. Use only the
 bundled synthetic sample and the sanitized screenshots in `assets/`.
 
@@ -21,7 +25,7 @@ Show the title slide, then the local GUI.
 Narration:
 
 > OCR Model turns scans and PDFs into structured, reviewable data on your own
-> computer. I converted my finished course model into a one-command tool for
+> computer. I converted my finished document-intelligence model into a one-command tool for
 > Windows and Docker-backed macOS, with no OpenAI API key.
 
 ## 0:20–1:10 — Local extraction

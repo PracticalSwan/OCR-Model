@@ -2,7 +2,7 @@ schema_version: "1.0"
 trial_id: det_ft_official_aug
 kind: detector
 base_config: configs/det/PP-OCRv6/PP-OCRv6_medium_det.yml
-source_checkpoint: D:/CSX4201/vision-info-extraction-assets/models/paddleocr/training/PP-OCRv6_medium_det_pretrained.pdparams
+source_checkpoint: D:/OCR_Model_Assets/models/paddleocr/training/PP-OCRv6_medium_det_pretrained.pdparams
 metadata:
   purpose: Official PP-OCRv6 document augmentation recipe with a bounded low learning rate.
   selection_split: dev_select
@@ -25,9 +25,9 @@ overrides:
       warmup_epoch: 0
   Train:
     dataset:
-      data_dir: D:/CSX4201/vision-info-extraction-assets/data/detector_training
+      data_dir: D:/OCR_Model_Assets/data/detector_training
       label_file_list:
-        - D:/CSX4201/vision-info-extraction-assets/data/detector_training/train_labels.txt
+        - D:/OCR_Model_Assets/data/detector_training/train_labels.txt
       ratio_list: [1.0]
     loader:
       shuffle: true
@@ -36,9 +36,9 @@ overrides:
       num_workers: 4
   Eval:
     dataset:
-      data_dir: D:/CSX4201/vision-info-extraction-assets/data/detector_training
+      data_dir: D:/OCR_Model_Assets/data/detector_training
       label_file_list:
-        - D:/CSX4201/vision-info-extraction-assets/data/detector_training/validation_labels.txt
+        - D:/OCR_Model_Assets/data/detector_training/validation_labels.txt
     loader:
       shuffle: false
       drop_last: false

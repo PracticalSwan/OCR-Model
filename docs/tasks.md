@@ -1,5 +1,21 @@
 # Information-Extraction Task Tracker
 
+> **Closed 2026-09-06.** The project is archived; its local runtime, assets,
+> generated data, and MCP integration were removed after final source checks.
+> No task below should be resumed unless the project is explicitly reopened.
+> See [the archive record](../ARCHIVED.md).
+
+## Archive closure
+
+- [x] Run pre-clean source compilation and repository tests.
+- [x] Correct the inconsistent anonymized critical-field test fixture.
+- [x] Remove the global Codex MCP registration and stop matching servers.
+- [x] Delete the portable runtime, asset junction, model/development asset tree,
+  and verified-empty asset parent.
+- [x] Verify the preserved source repository and unrelated coursework boundary.
+- [x] Record the 55,699,529,728-byte cleanup result and remaining external
+  publication boundary.
+
 ## Preserved baseline
 
 - [x] Freeze rotation artifacts, reports, and historical metrics.
@@ -41,7 +57,7 @@
 - [x] Add unit/regression tests and environment-specific test partitions.
 - [x] Run the locked public in-domain test once without post-test tuning.
 - [x] Train and package the final working academic pre-model over the eligible public corpus.
-- [ ] Run professor-approved labeled Thai and leave-one-dataset-out benchmarks.
+- [ ] Run labeled Thai and leave-one-dataset-out benchmarks when a suitable public benchmark is available.
 
 ## Finalization
 
@@ -50,7 +66,7 @@
 - [x] Complete the independent final review and fix every confirmed finding.
 - [x] Inspect staged content, commit the feature branch, merge it, and sync GitHub `main`.
 
-The only unchecked research item requires professor-approved data and protocol;
+The only unchecked research item requires suitable labeled data and a fixed evaluation protocol;
 it is not a hidden implementation failure. Final publication completed through
 GitHub PR #1 at merge commit `b38ebc2fc3de8975c03ef9ea5fe66334f40bd137`.
 

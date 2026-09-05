@@ -1,5 +1,10 @@
 # OCR and Layout Environment Setup
 
+> **Restoration guide (archived 2026-09-06).** All three environments and the
+> `D:\OCR_Model_Assets` junction were removed during local cleanup. Nothing in
+> this document implies they are still installed. See
+> [the archive record](../ARCHIVED.md).
+
 ## Why there are three environments
 
 PaddlePaddle GPU and CUDA PyTorch load incompatible cuDNN DLLs in one Windows
@@ -8,9 +13,9 @@ Python 3.10 inference environments on D:, and OCR fine-tuning uses a third,
 source-bound environment:
 
 ```text
-D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr
-D:\CSX4201\vision-info-extraction-assets\environments\ie-layout
-D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr-train
+D:\OCR_Model_Assets\environments\ie-ocr
+D:\OCR_Model_Assets\environments\ie-layout
+D:\OCR_Model_Assets\environments\ie-ocr-train
 ```
 
 The OCR environment contains PaddlePaddle GPU 3.3.0, PaddleOCR 3.7.0, PaddleX
@@ -39,7 +44,7 @@ unavailable.
 Run the training environment verifier directly after setup:
 
 ```powershell
-$train = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr-train\Scripts\python.exe'
+$train = 'D:\OCR_Model_Assets\environments\ie-ocr-train\Scripts\python.exe'
 & $train scripts\verify_ocr_training_environment.py --device gpu:0 --write-report
 ```
 
@@ -52,7 +57,7 @@ FP32/O2 forward-backward-optimizer steps, save/reload, and `pip check` in
 The configured external root is:
 
 ```text
-D:\CSX4201\vision-info-extraction-assets
+D:\OCR_Model_Assets
 ```
 
 It contains environments, Paddle/Hugging Face/Torch/pip caches, temporary
@@ -62,11 +67,11 @@ private outputs. These are ignored by Git.
 ## Download and verify models
 
 ```powershell
-$ocr = 'D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr\Scripts\python.exe'
+$ocr = 'D:\OCR_Model_Assets\environments\ie-ocr\Scripts\python.exe'
 & $ocr scripts/download_ocr_models.py
 & $ocr scripts/verify_ocr_models.py --device gpu:0
 & $ocr scripts/print_environment_report.py `
-  --layout-python 'D:\CSX4201\vision-info-extraction-assets\environments\ie-layout\Scripts\python.exe'
+  --layout-python 'D:\OCR_Model_Assets\environments\ie-layout\Scripts\python.exe'
 ```
 
 Required exact identities:
@@ -112,7 +117,7 @@ LayoutXLM extraction. This is not a claim of real-world Thai benchmark
 quality.
 
 The selected fresh LayoutXLM checkpoint is
-`D:\CSX4201\vision-info-extraction-assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`
+`D:\OCR_Model_Assets\checkpoints\layoutxlm_multitask\ocr_upgrade_fresh_b_noise`
 with `model.safetensors` SHA-256
 `f257538849bd2067a9df9df83385aa10ae468d0499510fb0621a03a5f0155180`.
 The bound calibration SHA-256 is

@@ -1,5 +1,10 @@
 # Domain-Adapted OCR Upgrade Implementation Plan
 
+> **Completed historical plan.** The resulting project was archived locally on
+> 2026-09-06 and its runtime/assets were removed. Do not execute this plan unless
+> the project is explicitly reopened. See
+> [the archive record](../../../ARCHIVED.md).
+
 > **For Codex:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task by task. Keep prediction-affecting review before the locked evaluation and use the one permitted specialized review agent only after implementation, evaluation, documentation, and tests are complete.
 
 **Goal:** Reduce OCR-driven end-to-end extraction loss with a public-only, leakage-safe detector/recognizer upgrade while preserving the original OCR fallback, LayoutXLM contract, private-data boundary, and display-only K-Means behavior.
@@ -92,10 +97,10 @@
 **Steps:**
 
 1. Write failing FATURA, SROIE, and FUNSD conversion tests for polygon preservation, box-to-polygon conversion, bounds/area/self-intersection validation, source image dimensions, and source provenance.
-2. Implement detector outputs under `D:\CSX4201\vision-info-extraction-assets\data\detector_training` with TRAIN images/labels, DEV_SELECT validation images/labels, manifest, errors, statistics, and checksums.
+2. Implement detector outputs under `D:\OCR_Model_Assets\data\detector_training` with TRAIN images/labels, DEV_SELECT validation images/labels, manifest, errors, statistics, and checksums.
 3. Enforce no DEV_CALIBRATION, TEST_IN_DOMAIN, CORU, Gmail, mixed build, private row, or cross-split duplicate.
 4. Write failing line-grouping and crop tests for baseline/vertical overlap, reading order, perspective rectification, proportional padding, aspect ratio, critical word crops, UTF-8 lists, and invalid-crop rejection.
-5. Implement recognition outputs under `D:\CSX4201\vision-info-extraction-assets\data\recognition_training`.
+5. Implement recognition outputs under `D:\OCR_Model_Assets\data\recognition_training`.
 6. Verify the general dictionary and required English, numeric, financial, currency, email, punctuation, and Turkish character inventory without silently changing pretrained indices.
 7. Record exact page/crop counts, exclusions, manifests, checksums, and storage.
 
@@ -135,8 +140,8 @@
 **Steps:**
 
 1. Verify current official PaddleOCR/PaddlePaddle training documentation and repository sources; record exact URLs, tag/commit, Python/CUDA compatibility, and PP-OCRv6/Thai configuration identities.
-2. Clone the official repository only under `D:\CSX4201\vision-info-extraction-assets\vendor\PaddleOCR` and pin the selected compatible commit.
-3. Create `D:\CSX4201\vision-info-extraction-assets\environments\ie-ocr-train` without modifying the existing inference environments.
+2. Clone the official repository only under `D:\OCR_Model_Assets\vendor\PaddleOCR` and pin the selected compatible commit.
+3. Create `D:\OCR_Model_Assets\environments\ie-ocr-train` without modifying the existing inference environments.
 4. Route Paddle, Hugging Face, pip, Torch, temporary, dataset, checkpoint, and log paths to D: and enforce the 15 GiB C: reserve plus 35% D: safety margin.
 5. Download only official trainable PP-OCRv6 medium detector/recognizer and Thai PP-OCRv5 mobile checkpoints with bounded retries, partial-download detection, type/config compatibility checks, and SHA-256.
 6. Prove imports, GPU visibility, one forward/backward/optimizer step, checkpoint save/reload/resume, evaluation, and inference export before counting a trial.
@@ -304,7 +309,7 @@
 1. Run locked TEST_IN_DOMAIN only after the candidate guard passes and record OCR/layout/end-to-end metrics by the required strata.
 2. Run the 18-angle grid with K-Means disabled and calculate coverage/entity/canonical/critical-field retention.
 3. Run deterministic CORU unseen evaluation without using it for any subsequent selection.
-4. Run fixed private Gmail operation only after public evaluation, store details solely under `D:\CSX4201\vision-info-extraction-assets\private-evaluation\ocr-upgrade-final`, publish aggregates only, and make no configuration change from private output.
+4. Run fixed private Gmail operation only after public evaluation, store details solely under `D:\OCR_Model_Assets\private-evaluation\ocr-upgrade-final`, publish aggregates only, and make no configuration change from private output.
 5. Compare quality, failure rate, and time against the frozen baseline without fabricating unsupported F1.
 
 ## Task 14: Update portable release, reports, documentation, and verification

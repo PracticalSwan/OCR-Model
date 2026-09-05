@@ -1,8 +1,13 @@
 # Repository visibility and judge access
 
+> **Historical submission access record.** The source was archived locally on
+> 2026-09-06. The public repository and submission links were retained; no judge
+> access setting was changed during cleanup. See
+> [the archive record](../../ARCHIVED.md).
+
 Repository:
 
-<https://github.com/PracticalSwan/csx4201-vision-info-extraction>
+<https://github.com/PracticalSwan/OCR-Model>
 
 ## Current state
 
@@ -27,7 +32,7 @@ Public visibility does not weaken the data boundary:
 Before any future visibility, access, or Release change, verify:
 
 ```powershell
-gh repo view PracticalSwan/csx4201-vision-info-extraction `
+gh repo view --web `
   --json visibility,url
 git status --short
 git ls-files | rg -i "gmail|private|\.env|token|secret|password"

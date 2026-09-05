@@ -19,9 +19,9 @@ from src.rotation_common import atomic_write_json, canonical_json, sha256_file  
 
 
 CUSTOM_IDS = {
-    "detector": "PP-OCRv6_medium_det_csx4201_v1",
-    "general": "PP-OCRv6_medium_rec_csx4201_v1",
-    "thai": "th_PP-OCRv5_mobile_rec_csx4201_v1",
+    "detector": "PP-OCRv6_medium_det_ocrmodel_v1",
+    "general": "PP-OCRv6_medium_rec_ocrmodel_v1",
+    "thai": "th_PP-OCRv5_mobile_rec_ocrmodel_v1",
 }
 
 
@@ -55,7 +55,7 @@ def main() -> int:
     parser.add_argument(
         "--thai-trial-root",
         default=(
-            "D:/CSX4201/vision-info-extraction-assets/checkpoints/ocr_upgrade/"
+            "D:/OCR_Model_Assets/checkpoints/ocr_upgrade/"
             "thai_recognizer/rec_thai_synthetic"
         ),
     )

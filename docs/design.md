@@ -1,5 +1,8 @@
 # Rotation-Robust Information-Extraction Design
 
+> **Archived design record (2026-09-06).** The source is preserved, but the
+> runtime and weights were removed. See [the archive record](../ARCHIVED.md).
+
 ## Separation of responsibilities
 
 The system has one controlling path and one diagnostic branch:
@@ -57,7 +60,7 @@ rather than calibrated LayoutXLM output.
 
 Environments, caches, aligned examples, checkpoints, generated documents, and
 private output live under
-`D:\CSX4201\vision-info-extraction-assets`. Storage gates preserve at least
+`D:\OCR_Model_Assets`. Storage gates preserve at least
 10 GiB for bounded rotation materialization and at least 15 GiB on both C: and
 D: before OCR/model setup, training, or portable setup.
 
@@ -166,7 +169,7 @@ the GUI shuts down.
 ## Release boundary
 
 Portable release construction uses isolated staging below
-`D:\CSX4201\vision-info-extraction-assets` and rejects the installed
+`D:\OCR_Model_Assets` and rejects the installed
 `D:\OCR_Model` working copy as a build target. The builder never deletes an
 existing target; each build uses a new isolated staging path. Copying never
 follows reparse points, verifies source stability and destination hashes, and

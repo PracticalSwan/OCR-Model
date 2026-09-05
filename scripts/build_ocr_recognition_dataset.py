@@ -82,7 +82,7 @@ def main() -> int:
     parser.add_argument(
         "--output-root",
         default=(
-            "D:/CSX4201/vision-info-extraction-assets/data/recognition_training"
+            "D:/OCR_Model_Assets/data/recognition_training"
         ),
     )
     parser.add_argument("--line-crops", action="store_true")

@@ -1,5 +1,10 @@
 # Privacy and Publication Rules
 
+> **Archive note (2026-09-06):** these privacy rules continue to apply to the
+> preserved source, Git history, reports, and historical publications even
+> though the local runtime/assets were removed. See
+> [the archive record](../ARCHIVED.md).
+
 `data/raw/private/gmail/` contains real personal financial and legal material.
 It is local private-test data, not training data or publication material.
 
